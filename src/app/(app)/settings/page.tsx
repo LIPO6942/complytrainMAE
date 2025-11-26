@@ -10,8 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useUser, useFirestore } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { FormEvent, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -31,9 +31,9 @@ export default function SettingsPage() {
     }
   }, [userProfile]);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!user) {
+    if (!user || !firestore) {
         toast({
             title: "Erreur",
             description: "Vous devez être connecté pour mettre à jour votre profil.",
@@ -42,25 +42,16 @@ export default function SettingsPage() {
         return;
     }
 
-    try {
-        const userRef = doc(firestore, 'users', user.uid);
-        await setDoc(userRef, {
-            firstName: firstName,
-            lastName: lastName,
-        }, { merge: true });
-        
-        toast({
-            title: "Succès",
-            description: "Votre profil a été mis à jour.",
-        });
-    } catch (error) {
-        console.error("Error updating profile: ", error);
-        toast({
-            title: "Erreur",
-            description: "Une erreur s'est produite lors de la mise à jour de votre profil.",
-            variant: "destructive",
-        });
-    }
+    const userRef = doc(firestore, 'users', user.uid);
+    setDocumentNonBlocking(userRef, {
+        firstName: firstName,
+        lastName: lastName,
+    }, { merge: true });
+    
+    toast({
+        title: "Succès",
+        description: "Votre profil a été mis à jour.",
+    });
   };
 
 
