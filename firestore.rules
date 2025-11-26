@@ -1,0 +1,136 @@
+/**
+ * Core Philosophy: This ruleset implements a Role-Based Access Control (RBAC) model
+ * with two primary roles: 'admin' and 'user'. Admins have broad read access for
+ * oversight, while regular users are strictly confined to their own data,
+ * ensuring strong privacy and data ownership.
+ *
+ * Data Structure: User-specific data is stored under `/users/{userId}`. Global
+ * data, such as departments, is located in the top-level `/departments`
+ * collection. Administrator status is efficiently managed in a separate
+ * `/roles_admin/{userId}` collection, where the mere existence of a document
+ * signifies admin privileges.
+ *
+ * Key Security Decisions:
+ * - Admin access is granted via a performant `exists()` check on the `/roles_admin`
+ *   collection. This is faster and more secure than reading a role field from a
+ *   user document for global authorization decisions.
+ * - Users can only read and modify their own `/users/{userId}` document. Listing
+ *   other users is forbidden to protect Personally Identifiable Information (PII).
+ * - The `/departments` collection is read-only for all signed-in users. Writes are
+ *   disallowed, indicating that this data should be managed by a trusted backend process.
+ * - The `/roles_admin` collection is completely locked down from client access,
+ *   serving only as a server-side lookup table for other rules.
+ *
+ * Denormalization for Authorization: The design uses a dedicated `/roles_admin/{userId}`
+ * collection to denormalize admin status for fast, secure lookups in rules.
+ * This avoids needing to read the `role` field from the `/users/{userId}`
+ * document for global authorization decisions, which is a more performant and
+ * scalable pattern.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------
+    // Helper Functions
+    // ----------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the given userId.
+     * This is the foundation for the ownership model.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    /**
+     * Checks if the user is a designated administrator by verifying the existence
+     * of a corresponding document in the roles_admin collection.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    /**
+     * Combines an ownership check with an existence check.
+     * CRITICAL: Ensures that update/delete operations target existing documents.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Validates that the user creating their own document also sets the
+     * internal 'id' field to their own UID, ensuring relational integrity.
+     */
+    function isCreatingOwnUserDoc(userId) {
+      return isOwner(userId) && request.resource.data.id == userId;
+    }
+
+    /**
+     * On update, ensures the internal 'id' field is immutable. This prevents
+     * re-assigning ownership of the document.
+     */
+    function userDocumentIsImmutable() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    // ----------------------------------------------------------------------
+    // Collection Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Users can create, read, and update their own profile. Admins can read any profile for oversight.
+     * @path        /users/{userId}
+     * @allow       (create) A new user 'user123' creates their own doc at /users/user123.
+     * @allow       (get) An admin user gets the doc at /users/user456.
+     * @deny        (get) A user 'user123' is denied from reading /users/user456.
+     * @deny        (list) Any user is denied from listing all documents in the /users collection to protect PII.
+     * @principle   Restricts access to a user's own data tree and provides read-only admin oversight.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if false;
+      allow create: if isCreatingOwnUserDoc(userId);
+      allow update: if isExistingOwner(userId) && userDocumentIsImmutable();
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows any signed-in user to read department information. Writes are disabled from the client.
+     * @path        /departments/{departmentId}
+     * @allow       (get) Any signed-in user gets a department document.
+     * @deny        (create) Any user is denied from creating a new department.
+     * @principle   Treats this collection as read-only data for clients. Writes must be managed by a trusted backend.
+     */
+    match /departments/{departmentId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    /**
+     * @description Lookup collection for admin roles. Not directly readable or writable by clients.
+     * @path        /roles_admin/{userId}
+     * @allow       (none) No client-side operations are permitted.
+     * @deny        (get) Any user, including an admin, is denied from reading a document in this collection.
+     * @principle   Secures authorization-critical data by making it inaccessible to clients. Its sole purpose is for server-side `exists()` checks within other rules.
+     */
+    match /roles_admin/{userId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}

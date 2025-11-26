@@ -1,0 +1,125 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user in the ComplyTrain platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "description": "Role of the user (e.g., admin, trainer, learner, BU, auditor)."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "First name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Last name of the user."
+        },
+        "departmentId": {
+          "type": "string",
+          "description": "Reference to Department. (Relationship: Department 1:N User)"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "role"
+      ]
+    },
+    "Department": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Department",
+      "type": "object",
+      "description": "Represents a department or business unit within the organization.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Department entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the department or business unit."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the department or business unit."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information. Uses path-based ownership for simplified security rules. Includes the denormalized 'departmentId' field for authorization purposes.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/departments/{departmentId}",
+        "definition": {
+          "entityName": "Department",
+          "schema": {
+            "$ref": "#/backend/entities/Department"
+          },
+          "description": "Stores department or business unit information.",
+          "params": [
+            {
+              "name": "departmentId",
+              "description": "The unique identifier for the department."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{userId}",
+        "definition": {
+          "entityName": "adminRole",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Indicates the user is an administrator. Existence of the document grants admin privileges. This enables secure role verification without reading document content.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the admin user."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support ComplyTrain's online training platform, focusing on compliance and regulation. It incorporates role-based access control (admin and user) and ensures authorization independence through denormalization. The structure segregates user data (profiles, departments) to simplify security rules and enhance scalability.\n\nAuthorization Independence is achieved by storing role information directly within the `users` document. This avoids costly and limiting `get()` operations in security rules, particularly crucial for atomic operations. The `departmentId` field in the user document is also denormalized, as is standard practice in these designs.\n\nQAPs (Rules are not Filters) are supported through structural segregation and membership models. User profiles are stored under `/users/{userId}`, allowing for secure `list` operations based on user ID. Admin roles are managed using a separate collection, `/roles_admin/{userId}`, which allows secure admin role verification using existence checks.\n\nThe structure employs path-based ownership for user-related data, simplifying security rules. This design ensures clarity, predictability, and maintainability, aligning with the core principles of secure Firestore design."
+  }
+}
