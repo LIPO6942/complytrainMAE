@@ -65,6 +65,31 @@ export async function authenticate(
   }
 }
 
+export async function signUp(
+  prevState: string | undefined,
+  formData: FormData,
+) {
+  try {
+    await createUserWithEmailAndPassword(auth, formData.get('email') as string, formData.get('password') as string);
+    revalidatePath('/');
+    redirect('/');
+  } catch (error: any) {
+    if (error.code) {
+        switch (error.code) {
+            case 'auth/email-already-in-use':
+                return 'Cet email est déjà utilisé.';
+            case 'auth/weak-password':
+                return 'Le mot de passe doit comporter au moins 6 caractères.';
+            case 'auth/invalid-email':
+                return 'Email invalide. Veuillez vérifier votre saisie.';
+            default:
+                return "Une erreur inattendue s'est produite.";
+        }
+    }
+    return "Une erreur inattendue s'est produite.";
+  }
+}
+
 export async function signInAnonymously() {
     try {
         await firebaseSignInAnonymously(auth);
