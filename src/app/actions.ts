@@ -6,6 +6,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnony
 import { auth } from '@/firebase/config-server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { getFirestore, doc, setDoc } from 'firebase-admin/firestore';
 
 const AskAIComplianceTutorSchema = z.object({
   question: z.string().min(5, 'La question doit comporter au moins 5 caractères.'),
@@ -69,8 +70,34 @@ export async function signUp(
   prevState: string | undefined,
   formData: FormData,
 ) {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+
   try {
-    await createUserWithEmailAndPassword(auth, formData.get('email') as string, formData.get('password') as string);
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    const db = getFirestore();
+
+    const userDoc = {
+      id: user.uid,
+      email: user.email,
+      role: 'user', // Default role
+    };
+    
+    // Check if the user is an admin
+    if (email === 'admin@example.com') {
+        userDoc.role = 'admin';
+        // Create a document in roles_admin to grant admin privileges
+        const adminRoleRef = doc(db, 'roles_admin', user.uid);
+        await setDoc(adminRoleRef, { isAdmin: true });
+    }
+    
+    // Create the user document in Firestore
+    const userRef = doc(db, 'users', user.uid);
+    await setDoc(userRef, userDoc);
+
+
     revalidatePath('/');
     redirect('/');
   } catch (error: any) {
