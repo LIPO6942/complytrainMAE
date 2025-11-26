@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
 import { redirect } from 'next/navigation';
 import { setDoc, doc, getFirestore } from 'firebase/firestore';
@@ -34,7 +34,6 @@ function AnonymousLoginButton() {
     const handleAnonymousSignIn = async () => {
         try {
             await signInAnonymously(auth);
-            redirect('/');
         } catch (error) {
             console.error("Anonymous sign in failed", error);
         }
@@ -82,7 +81,6 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
             } else {
                 await signInWithEmailAndPassword(auth, email, password);
             }
-            redirect('/');
         } catch (error: any) {
             switch (error.code) {
                 case 'auth/user-not-found':
@@ -147,6 +145,21 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
 }
 
 export default function LoginPage() {
+    const { user, isUserLoading } = useUser();
+
+    useEffect(() => {
+        if (!isUserLoading && user) {
+            redirect('/dashboard');
+        }
+    }, [user, isUserLoading]);
+
+    if (isUserLoading || user) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <p>Chargement...</p>
+            </div>
+        );
+    }
   return (
     <main className="flex items-center justify-center min-h-screen bg-background">
       <Card className="w-full max-w-sm">
