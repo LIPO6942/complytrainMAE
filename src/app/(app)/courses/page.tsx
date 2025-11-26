@@ -11,42 +11,55 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { courses as initialCourses } from '@/lib/data';
+import { useCollection, useUser, useFirestore, addDocumentNonBlocking, useMemoFirebase } from '@/firebase';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { ArrowRight, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { collection } from 'firebase/firestore';
 
 export default function CoursesPage() {
-  const [courses, setCourses] = useState(initialCourses);
+  const { userProfile } = useUser();
+  const firestore = useFirestore();
+
+  const coursesQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'courses');
+  }, [firestore]);
+  
+  const { data: courses, isLoading } = useCollection(coursesQuery);
 
   const getImage = (id: string) => {
     return PlaceHolderImages.find((img) => img.id === id);
   };
 
   const handleAddCourse = () => {
+    if (!firestore) return;
     const newCourse = {
-      id: `new-course-${Date.now()}`,
       title: 'Nouveau Cours de Conformité',
       category: 'Conformité',
       image: 'course-new',
       description: 'Ceci est un nouveau cours ajouté par l\'administrateur.',
     };
-    // In a real application, this would be a server action to create a course in the database.
-    setCourses(prevCourses => [...prevCourses, newCourse]);
+    const coursesCollection = collection(firestore, 'courses');
+    addDocumentNonBlocking(coursesCollection, newCourse);
   };
+
+  const isAdmin = userProfile?.role === 'admin';
 
   return (
     <div>
         <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Cours sur la conformité</h1>
-            <Button onClick={handleAddCourse}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Ajouter un cours
-            </Button>
+            {isAdmin && (
+                <Button onClick={handleAddCourse}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Ajouter un cours
+                </Button>
+            )}
         </div>
+        {isLoading && <p>Chargement des cours...</p>}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {courses.map((course) => {
+        {courses?.map((course) => {
             const image = getImage(course.image);
             return (
             <Card key={course.id} className="flex flex-col">

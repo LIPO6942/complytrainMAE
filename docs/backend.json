@@ -61,6 +61,41 @@
         "id",
         "name"
       ]
+    },
+    "Course": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Course",
+      "type": "object",
+      "description": "Represents a compliance training course.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the course."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the course."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the course (e.g., LCB, KYC)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the course content."
+        },
+        "image": {
+          "type": "string",
+          "description": "ID of the placeholder image for the course."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "category",
+        "description",
+        "image"
+      ]
     }
   },
   "auth": {
@@ -115,6 +150,22 @@
             {
               "name": "userId",
               "description": "The unique identifier for the admin user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/courses/{courseId}",
+        "definition": {
+          "entityName": "Course",
+          "schema": {
+            "$ref": "#/backend/entities/Course"
+          },
+          "description": "Stores all available compliance courses.",
+          "params": [
+            {
+              "name": "courseId",
+              "description": "The unique identifier for the course."
             }
           ]
         }

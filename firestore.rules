@@ -5,10 +5,9 @@
  * ensuring strong privacy and data ownership.
  *
  * Data Structure: User-specific data is stored under `/users/{userId}`. Global
- * data, such as departments, is located in the top-level `/departments`
- * collection. Administrator status is efficiently managed in a separate
- * `/roles_admin/{userId}` collection, where the mere existence of a document
- * signifies admin privileges.
+ * data, such as departments and courses, is located in top-level collections.
+ * Administrator status is efficiently managed in a separate `/roles_admin/{userId}`
+ * collection, where the mere existence of a document signifies admin privileges.
  *
  * Key Security Decisions:
  * - Admin access is granted via a performant `exists()` check on the `/roles_admin`
@@ -16,8 +15,9 @@
  *   user document for global authorization decisions.
  * - Users can only read and modify their own `/users/{userId}` document. Listing
  *   other users is forbidden to protect Personally Identifiable Information (PII).
- * - The `/departments` collection is read-only for all signed-in users. Writes are
- *   disallowed, indicating that this data should be managed by a trusted backend process.
+ * - Global data collections like `/departments` and `/courses` are read-only for
+ *   all signed-in users. Writes are restricted to admins, indicating that this
+ *   data should be managed by a trusted role.
  * - The `/roles_admin` collection is completely locked down from client access,
  *   serving only as a server-side lookup table for other rules.
  *
@@ -116,6 +116,19 @@ service cloud.firestore {
       allow create: if false;
       allow update: if false;
       allow delete: if false;
+    }
+    
+    /**
+     * @description Stores all available compliance courses. Readable by all signed-in users, but only writable by admins.
+     * @path        /courses/{courseId}
+     * @allow       (list, get) Any signed-in user can view the list of available courses.
+     * @allow       (create, update, delete) Only admins can add, modify, or remove courses.
+     * @principle   Enforces a clear separation of content consumption (all users) and content management (admins).
+     */
+    match /courses/{courseId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
     }
     
     /**

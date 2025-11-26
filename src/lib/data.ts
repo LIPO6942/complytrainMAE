@@ -38,51 +38,6 @@ export const earnedBadges = [
   { id: 'kyc-certified', name: 'Certifié KYC', description: 'A terminé tous les modules KYC avec succès.' },
 ];
 
-export const courses = [
-  {
-    id: 'aml-101',
-    title: 'Bases de la lutte contre le blanchiment d\'argent (LCB)',
-    category: 'LCB',
-    image: 'course-aml',
-    description: 'Une introduction aux principes et pratiques de la lutte contre le blanchiment d\'argent.'
-  },
-  {
-    id: 'kyc-101',
-    title: 'Essentiels de la connaissance du client (KYC)',
-    category: 'KYC',
-    image: 'course-kyc',
-    description: 'Comprendre les réglementations et procédures de connaissance du client (KYC).'
-  },
-  {
-    id: 'fraud-201',
-    title: 'Détection avancée de la fraude',
-    category: 'Fraude',
-    image: 'course-fraud',
-    description: 'Apprenez à identifier et à prévenir divers types de fraude financière.'
-  },
-  {
-    id: 'gdpr-101',
-    title: 'Conformité RGPD',
-    category: 'Protection des données',
-    image: 'course-gdpr',
-    description: 'Un guide complet sur le Règlement Général sur la Protection des Données (RGPD).'
-  },
-  {
-    id: 'sanctions-101',
-    title: 'Sanctions internationales',
-    category: 'Sanctions',
-    image: 'course-sanctions',
-    description: 'Naviguer dans le monde complexe des sanctions internationales et de la conformité.'
-  },
-  {
-    id: 'insurance-101',
-    title: 'Réglementation des assurances',
-    category: 'Assurance',
-    image: 'course-insurance',
-    description: 'Principes fondamentaux de la réglementation des assurances et des exigences de conformité.'
-  },
-];
-
 export const reportingData = {
   completionRate: [
     { month: 'Janvier', desktop: 186, mobile: 80 },
