@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useRef, useState, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { Bot, SendHorizonal, User, Zap } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -35,7 +35,7 @@ function SubmitButton() {
 
 export function AITutor() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [state, formAction] = useFormState(askAIComplianceTutor, initialState);
+  const [state, formAction] = useActionState(askAIComplianceTutor, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const { pending } = useFormStatus();
 
