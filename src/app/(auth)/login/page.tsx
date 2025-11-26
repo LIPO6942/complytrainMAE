@@ -1,8 +1,7 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { authenticate, signInAnonymously, signUp } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,13 +10,18 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from '@/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
+import { redirect } from 'next/navigation';
+import { setDoc, doc, getFirestore } from 'firebase/firestore';
+
 
 function AuthButton({ isSignUp }: { isSignUp: boolean }) {
   const { pending } = useFormStatus();
   const icon = isSignUp ? <UserPlus className="mr-2" /> : <LogIn className="mr-2" />;
   const text = isSignUp ? (pending ? "Création du compte..." : "S'inscrire") : (pending ? 'Connexion...' : 'Se connecter');
   return (
-    <Button className="w-full" aria-disabled={pending} disabled={pending}>
+    <Button className="w-full" type="submit" aria-disabled={pending} disabled={pending}>
       {icon}
       {text}
     </Button>
@@ -26,19 +30,84 @@ function AuthButton({ isSignUp }: { isSignUp: boolean }) {
 
 function AnonymousLoginButton() {
     const { pending } = useFormStatus();
+    const auth = useAuth();
+    const handleAnonymousSignIn = async () => {
+        try {
+            await signInAnonymously(auth);
+            redirect('/');
+        } catch (error) {
+            console.error("Anonymous sign in failed", error);
+        }
+    }
+
     return (
-        <Button type="button" variant="secondary" className="w-full" onClick={() => signInAnonymously()} disabled={pending}>
+        <Button type="button" variant="secondary" className="w-full" onClick={handleAnonymousSignIn} disabled={pending}>
             {pending ? 'Connexion...' : "Continuer en tant qu'invité"}
         </Button>
     )
 }
 
 function AuthForm({ isSignUp }: { isSignUp: boolean }) {
-    const action = isSignUp ? signUp : authenticate;
-    const [errorMessage, dispatch] = useActionState(action, undefined);
+    const auth = useAuth();
+    const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
+    
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setErrorMessage(undefined);
+        const formData = new FormData(event.currentTarget);
+        const email = formData.get('email') as string;
+        const password = formData.get('password') as string;
+
+        try {
+            if (isSignUp) {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                const db = getFirestore(auth.app);
+                
+                const userDoc: { id: string; email: string | null; role: string, departmentId?: string } = {
+                    id: user.uid,
+                    email: user.email,
+                    role: 'user', // Default role
+                };
+                
+                if (email === 'admin@example.com') {
+                    userDoc.role = 'admin';
+                    const adminRoleRef = doc(db, 'roles_admin', user.uid);
+                    await setDoc(adminRoleRef, { isAdmin: true });
+                }
+                
+                const userRef = doc(db, 'users', user.uid);
+                await setDoc(userRef, userDoc);
+
+            } else {
+                await signInWithEmailAndPassword(auth, email, password);
+            }
+            redirect('/');
+        } catch (error: any) {
+            switch (error.code) {
+                case 'auth/user-not-found':
+                    setErrorMessage('Utilisateur non trouvé. Veuillez vérifier votre email.');
+                    break;
+                case 'auth/wrong-password':
+                    setErrorMessage('Mot de passe incorrect. Veuillez réessayer.');
+                    break;
+                case 'auth/invalid-email':
+                    setErrorMessage('Email invalide. Veuillez vérifier votre saisie.');
+                    break;
+                case 'auth/email-already-in-use':
+                    setErrorMessage('Cet email est déjà utilisé.');
+                    break;
+                case 'auth/weak-password':
+                    setErrorMessage('Le mot de passe doit comporter au moins 6 caractères.');
+                    break;
+                default:
+                    setErrorMessage("Une erreur inattendue s'est produite.");
+            }
+        }
+    };
 
     return (
-        <form action={dispatch}>
+        <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor={isSignUp ? 'signup-email' : 'signin-email'}>Email</Label>
