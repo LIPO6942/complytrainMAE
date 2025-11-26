@@ -13,18 +13,18 @@ import {
 
 const chartConfig = {
   value: {
-    label: 'Success Rate',
+    label: 'Taux de réussite',
   },
   Marketing: {
     label: 'Marketing',
     color: 'hsl(var(--chart-1))',
   },
   Sales: {
-    label: 'Sales',
+    label: 'Ventes',
     color: 'hsl(var(--chart-2))',
   },
   Engineering: {
-    label: 'Engineering',
+    label: 'Ingénierie',
     color: 'hsl(var(--chart-3))',
   },
   Support: {

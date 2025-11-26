@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState, useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useRef, useState } from 'react';
+import { useFormStatus, useActionState } from 'react-dom';
 import { Bot, SendHorizonal, User, Zap } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -58,10 +58,10 @@ export function AITutor() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bot className="text-primary" />
-          <span>AI Compliance Tutor</span>
+          <span>Tuteur IA en Conformité</span>
         </CardTitle>
         <CardDescription>
-          Ask any compliance-related question. The AI tutor operates under strict regulatory guidelines.
+          Posez n'importe quelle question relative à la conformité. Le tuteur IA opère selon des directives réglementaires strictes.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow flex flex-col gap-4">
@@ -100,7 +100,7 @@ export function AITutor() {
       </CardContent>
       <CardFooter>
         <form ref={formRef} action={handleFormAction} className="flex w-full items-center space-x-2">
-          <Input id="question" name="question" placeholder="e.g., Explain the KYC process..." autoComplete="off" />
+          <Input id="question" name="question" placeholder="Ex: Expliquez le processus KYC..." autoComplete="off" />
           <SubmitButton />
         </form>
       </CardFooter>

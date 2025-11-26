@@ -43,16 +43,17 @@ const prompt = ai.definePrompt({
   name: 'personalizedRiskRecommendationsPrompt',
   input: {schema: PersonalizedRiskRecommendationsInputSchema},
   output: {schema: PersonalizedRiskRecommendationsOutputSchema},
-  prompt: `You are an AI compliance tutor. A learner has the following risk profile:
+  prompt: `Vous êtes un tuteur IA en conformité. Un apprenant a le profil de risque suivant (en français) :
 
   {{riskProfile}}
 
-  Provide personalized compliance recommendations to address their specific weaknesses.
-  Format the recommendations as a numbered list.
-  Do not include introductory or concluding remarks; only provide the list.
-  Be brief, listing only the titles of courses or modules to review; don't be conversational.
-  Focus specifically on compliance and regulatory requirements.
-  Ensure that the course titles you recommend cover topics mentioned in the risk profile.
+  Fournissez des recommandations de conformité personnalisées pour combler leurs faiblesses spécifiques.
+  Formatez les recommandations sous forme de liste numérotée.
+  N'incluez pas de remarques introductives ou de conclusion ; fournissez uniquement la liste.
+  Soyez bref, en ne listant que les titres des cours ou des modules à réviser ; ne soyez pas conversationnel.
+  Concentrez-vous spécifiquement sur les exigences de conformité et réglementaires.
+  Assurez-vous que les titres de cours que vous recommandez couvrent les sujets mentionnés dans le profil de risque.
+  La réponse doit être en français.
 `,
 });
 

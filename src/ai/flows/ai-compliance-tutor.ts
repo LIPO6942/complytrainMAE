@@ -28,9 +28,9 @@ const prompt = ai.definePrompt({
   name: 'aiComplianceTutorPrompt',
   input: {schema: AiComplianceTutorInputSchema},
   output: {schema: AiComplianceTutorOutputSchema},
-  prompt: `You are an AI compliance tutor providing answers to learners questions within strict regulatory guidelines.
+  prompt: `Vous êtes un tuteur en conformité IA qui répond aux questions des apprenants dans le respect de directives réglementaires strictes. La réponse doit être en français.
 
-  Learner Question: {{{question}}}
+  Question de l'apprenant: {{{question}}}
   `,
 });
 

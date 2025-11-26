@@ -16,11 +16,12 @@ import {
 import { auditLogs } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const getActionBadgeVariant = (action: string) => {
-  if (action.includes('Completed') || action.includes('Generated')) return 'default';
-  if (action.includes('Updated') || action.includes('Added')) return 'secondary';
-  if (action.includes('Failed') || action.includes('Deleted')) return 'destructive';
+  if (action.includes('Terminé') || action.includes('Généré')) return 'default';
+  if (action.includes('Mis à jour') || action.includes('Ajouté')) return 'secondary';
+  if (action.includes('Échec') || action.includes('Supprimé')) return 'destructive';
   return 'outline';
 };
 
@@ -28,19 +29,19 @@ export default function AuditPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Audit Trail</CardTitle>
+        <CardTitle>Piste d'audit</CardTitle>
         <CardDescription>
-          A log of all significant user and system actions.
+          Un journal de toutes les actions importantes des utilisateurs et du système.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>User</TableHead>
+              <TableHead>Utilisateur</TableHead>
               <TableHead>Action</TableHead>
-              <TableHead>Details</TableHead>
-              <TableHead className="text-right">Timestamp</TableHead>
+              <TableHead>Détails</TableHead>
+              <TableHead className="text-right">Horodatage</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -54,7 +55,7 @@ export default function AuditPage() {
                 </TableCell>
                 <TableCell className="text-muted-foreground">{log.details}</TableCell>
                 <TableCell className="text-right text-muted-foreground">
-                  {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true, locale: fr })}
                 </TableCell>
               </TableRow>
             ))}

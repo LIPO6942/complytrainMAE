@@ -37,12 +37,12 @@ const prompt = ai.definePrompt({
   name: 'pedagogicalSummaryPrompt',
   input: {schema: PedagogicalSummaryInputSchema},
   output: {schema: PedagogicalSummaryOutputSchema},
-  prompt: `You are an AI tutor specializing in compliance and regulation.  Your task is to provide a summary of the learning module and highlight any potential non-compliance issues.
+  prompt: `Vous êtes un tuteur IA spécialisé en conformité et réglementation. Votre tâche est de fournir un résumé du module d'apprentissage et de souligner tout problème potentiel de non-conformité. La réponse doit être en français.
 
-Learning Module Content: {{{moduleContent}}}
+Contenu du module d'apprentissage: {{{moduleContent}}}
 
-Summary:
-Non-Compliance Issues:
+Résumé:
+Problèmes de non-conformité:
 `,
 });
 

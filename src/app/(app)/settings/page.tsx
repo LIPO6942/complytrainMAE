@@ -14,49 +14,49 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Paramètres</h1>
         <p className="text-muted-foreground">
-          Manage your account settings and preferences.
+          Gérez les paramètres et les préférences de votre compte.
         </p>
       </div>
       <Tabs defaultValue="profile" className="w-full">
         <TabsList>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="profile">Profil</TabsTrigger>
+          <TabsTrigger value="account">Compte</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="appearance">Apparence</TabsTrigger>
         </TabsList>
         <TabsContent value="profile">
           <Card>
             <CardHeader>
-              <CardTitle>Profile</CardTitle>
+              <CardTitle>Profil</CardTitle>
               <CardDescription>
-                This is how others will see you on the site.
+                C'est ainsi que les autres vous verront sur le site.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">Nom</Label>
                 <Input id="name" defaultValue="Alex Dupont" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" defaultValue="alex.dupont@example.com" />
               </div>
-              <Button>Save Changes</Button>
+              <Button>Enregistrer les modifications</Button>
             </CardContent>
           </Card>
         </TabsContent>
         <TabsContent value="account">
           <Card>
             <CardHeader>
-              <CardTitle>Account</CardTitle>
+              <CardTitle>Compte</CardTitle>
               <CardDescription>
-                Manage your account settings.
+                Gérez les paramètres de votre compte.
               </CardDescription>
-            </CardHeader>
+            </Header>
             <CardContent>
-              <p>Account settings will be here.</p>
+              <p>Les paramètres du compte seront ici.</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -65,24 +65,24 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle>Notifications</CardTitle>
               <CardDescription>
-                Configure how you receive notifications.
+                Configurez la manière dont vous recevez les notifications.
               </CardDescription>
-            </CardHeader>
+            </Header>
             <CardContent>
-              <p>Notification settings will be here.</p>
+              <p>Les paramètres de notification seront ici.</p>
             </CardContent>
           </Card>
         </TabsContent>
          <TabsContent value="appearance">
            <Card>
             <CardHeader>
-              <CardTitle>Appearance</CardTitle>
+              <CardTitle>Apparence</CardTitle>
               <CardDescription>
-                Customize the look and feel of the app.
+                Personnalisez l'apparence de l'application.
               </CardDescription>
-            </CardHeader>
+            </Header>
             <CardContent>
-              <p>Appearance settings will be here.</p>
+              <p>Les paramètres d'apparence seront ici.</p>
             </CardContent>
           </Card>
         </TabsContent>

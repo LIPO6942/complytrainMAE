@@ -33,10 +33,10 @@ async function PersonalizedRecommendations() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="text-primary" />
-          <span>Personalized Recommendations</span>
+          <span>Recommandations Personnalisées</span>
         </CardTitle>
         <CardDescription>
-          Based on your risk profile, we suggest focusing on these areas.
+          En fonction de votre profil de risque, nous vous suggérons de vous concentrer sur ces domaines.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -58,9 +58,9 @@ export default function DashboardPage() {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
       <Card className="lg:col-span-4">
         <CardHeader>
-          <CardTitle>Welcome back, {user.name.split(' ')[0]}!</CardTitle>
+          <CardTitle>Bonjour, {user.name.split(' ')[0]} !</CardTitle>
           <CardDescription>
-            Here is a summary of your compliance training progress.
+            Voici un résumé de votre progression en formation de conformité.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -69,7 +69,7 @@ export default function DashboardPage() {
               <div className="flex justify-between items-center mb-2">
                 <h3 className="font-medium">{path.title}</h3>
                 <span className="text-sm text-muted-foreground">
-                  {path.completion}% Complete
+                  {path.completion}% Terminé
                 </span>
               </div>
               <Progress value={path.completion} className="h-2" />
@@ -83,10 +83,10 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="text-primary" />
-              <span>Earned Badges</span>
+              <span>Badges Obtenus</span>
             </CardTitle>
             <CardDescription>
-              Your collection of completed compliance milestones.
+              Votre collection de jalons de conformité terminés.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-4">

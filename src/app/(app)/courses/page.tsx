@@ -44,7 +44,7 @@ export default function CoursesPage() {
             <CardFooter className="mt-auto">
               <Button asChild className="w-full">
                 <Link href="#">
-                  View Course <ArrowRight className="ml-2 h-4 w-4" />
+                  Voir le cours <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </CardFooter>

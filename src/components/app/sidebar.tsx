@@ -23,11 +23,11 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 const menuItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: Home },
-  { href: '/courses', label: 'Courses', icon: BookOpen },
-  { href: '/reporting', label: 'Reporting', icon: FileText },
-  { href: '/audit', label: 'Audit Trail', icon: ShieldCheck },
-  { href: '/settings', label: 'Settings', icon: Settings },
+  { href: '/dashboard', label: 'Tableau de bord', icon: Home },
+  { href: '/courses', label: 'Cours', icon: BookOpen },
+  { href: '/reporting', label: 'Rapports', icon: FileText },
+  { href: '/audit', label: 'Piste d\'audit', icon: ShieldCheck },
+  { href: '/settings', label: 'Paramètres', icon: Settings },
 ];
 
 export function AppSidebar() {

@@ -4,7 +4,7 @@ import { aiComplianceTutor } from '@/ai/flows/ai-compliance-tutor';
 import { z } from 'zod';
 
 const AskAIComplianceTutorSchema = z.object({
-  question: z.string().min(5, 'Question must be at least 5 characters long.'),
+  question: z.string().min(5, 'La question doit comporter au moins 5 caractères.'),
 });
 
 type State = {
@@ -24,14 +24,14 @@ export async function askAIComplianceTutor(prevState: State, formData: FormData)
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Validation failed. Please check your input.',
+      message: 'La validation a échoué. Veuillez vérifier votre saisie.',
     };
   }
   
   try {
     const result = await aiComplianceTutor({ question: validatedFields.data.question });
-    return { answer: result.answer, message: "Success" };
+    return { answer: result.answer, message: "Succès" };
   } catch (error) {
-    return { message: 'An error occurred while fetching the answer.' };
+    return { message: 'Une erreur s\'est produite lors de la récupération de la réponse.' };
   }
 }

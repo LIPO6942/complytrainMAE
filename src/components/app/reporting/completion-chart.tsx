@@ -11,7 +11,7 @@ import {
 
 const chartConfig = {
   desktop: {
-    label: 'Completions',
+    label: 'Achèvements',
     color: 'hsl(var(--primary))',
   },
 } satisfies ChartConfig;
