@@ -54,7 +54,7 @@ export default function SettingsPage() {
               <CardDescription>
                 Gérez les paramètres de votre compte.
               </CardDescription>
-            </Header>
+            </CardHeader>
             <CardContent>
               <p>Les paramètres du compte seront ici.</p>
             </CardContent>
@@ -67,7 +67,7 @@ export default function SettingsPage() {
               <CardDescription>
                 Configurez la manière dont vous recevez les notifications.
               </CardDescription>
-            </Header>
+            </CardHeader>
             <CardContent>
               <p>Les paramètres de notification seront ici.</p>
             </CardContent>
@@ -80,7 +80,7 @@ export default function SettingsPage() {
               <CardDescription>
                 Personnalisez l'apparence de l'application.
               </CardDescription>
-            </Header>
+            </CardHeader>
             <CardContent>
               <p>Les paramètres d'apparence seront ici.</p>
             </CardContent>
