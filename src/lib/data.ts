@@ -90,7 +90,7 @@ export const reportingData = {
     { month: 'March', desktop: 237, mobile: 120 },
     { month: 'April', desktop: 73, mobile: 190 },
     { month: 'May', desktop: 209, mobile: 130 },
-    { month'Jun', desktop: 214, mobile: 140 },
+    { month: 'Jun', desktop: 214, mobile: 140 },
   ],
   successRate: [
     { name: 'Marketing', value: 92, fill: 'var(--color-chart-1)' },
