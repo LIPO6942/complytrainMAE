@@ -56,10 +56,10 @@ export function AppSidebar() {
                   isActive={isActive(item.href)}
                   tooltip={item.label}
                 >
-                  <>
+                  <span className="flex items-center gap-2">
                     <item.icon />
                     <span>{item.label}</span>
-                  </>
+                  </span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
