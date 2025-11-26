@@ -126,8 +126,7 @@ service cloud.firestore {
      * @principle   Enforces a clear separation of content consumption (all users) and content management (admins).
      */
     match /courses/{courseId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow get, list: if isSignedIn();
       allow create, update, delete: if isAdmin();
     }
     
@@ -139,11 +138,7 @@ service cloud.firestore {
      * @principle   Secures authorization-critical data by making it inaccessible to clients. Its sole purpose is for server-side `exists()` checks within other rules.
      */
     match /roles_admin/{userId} {
-      allow get: if false;
-      allow list: if false;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow read, write: if false;
     }
   }
 }

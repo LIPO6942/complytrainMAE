@@ -68,10 +68,6 @@
       "type": "object",
       "description": "Represents a compliance training course.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the course."
-        },
         "title": {
           "type": "string",
           "description": "The title of the course."
@@ -90,7 +86,6 @@
         }
       },
       "required": [
-        "id",
         "title",
         "category",
         "description",

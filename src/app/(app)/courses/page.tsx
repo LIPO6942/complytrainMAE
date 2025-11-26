@@ -58,38 +58,45 @@ export default function CoursesPage() {
             )}
         </div>
         {isLoading && <p>Chargement des cours...</p>}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {courses?.map((course) => {
-            const image = getImage(course.image);
-            return (
-            <Card key={course.id} className="flex flex-col">
-                <CardHeader>
-                <div className="relative h-40 w-full mb-4">
-                    {image && (
-                    <Image
-                        src={image.imageUrl}
-                        alt={course.title}
-                        fill
-                        className="rounded-lg object-cover"
-                        data-ai-hint={image.imageHint}
-                    />
-                    )}
-                </div>
-                <Badge variant="secondary" className="w-fit">{course.category}</Badge>
-                <CardTitle>{course.title}</CardTitle>
-                <CardDescription className="line-clamp-2">{course.description}</CardDescription>
-                </CardHeader>
-                <CardFooter className="mt-auto">
-                <Button asChild className="w-full">
-                    <Link href="#">
-                    Voir le cours <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                </Button>
-                </CardFooter>
-            </Card>
-            );
-        })}
-        </div>
+        {!isLoading && courses && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses.map((course) => {
+                    const image = getImage(course.image);
+                    return (
+                    <Card key={course.id} className="flex flex-col">
+                        <CardHeader>
+                        <div className="relative h-40 w-full mb-4">
+                            {image && (
+                            <Image
+                                src={image.imageUrl}
+                                alt={course.title}
+                                fill
+                                className="rounded-lg object-cover"
+                                data-ai-hint={image.imageHint}
+                            />
+                            )}
+                        </div>
+                        <Badge variant="secondary" className="w-fit">{course.category}</Badge>
+                        <CardTitle>{course.title}</CardTitle>
+                        <CardDescription className="line-clamp-2">{course.description}</CardDescription>
+                        </CardHeader>
+                        <CardFooter className="mt-auto">
+                        <Button asChild className="w-full">
+                            <Link href="#">
+                            Voir le cours <ArrowRight className="ml-2 h-4 w-4" />
+                            </Link>
+                        </Button>
+                        </CardFooter>
+                    </Card>
+                    );
+                })}
+            </div>
+        )}
+        {!isLoading && !courses && (
+             <div className="text-center py-10">
+                <p>Aucun cours n'a été trouvé. Les administrateurs peuvent en ajouter.</p>
+            </div>
+        )}
     </div>
   );
 }
