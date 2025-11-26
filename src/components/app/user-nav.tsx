@@ -15,13 +15,13 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useUser } from '@/firebase';
+import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { auth } from '@/firebase/config-server';
 
 
 export function UserNav() {
   const { user } = useUser();
+  const auth = useAuth();
 
   const handleSignOut = async () => {
     await signOut(auth);
