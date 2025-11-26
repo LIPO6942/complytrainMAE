@@ -1,13 +1,39 @@
+
+'use client';
 import type { ReactNode } from 'react';
 import { AppSidebar } from '@/components/app/sidebar';
 import { UserNav } from '@/components/app/user-nav';
-import { SidebarProvider, Sidebar, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useUser } from '@/firebase';
+import { redirect } from 'next/navigation';
+import { useEffect } from 'react';
+import { Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
+  const { user, isUserLoading } = useUser();
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      redirect('/login');
+    }
+  }, [user, isUserLoading]);
+
+  if (isUserLoading) {
+    return (
+        <div className="flex items-center justify-center min-h-screen">
+            <p>Chargement...</p>
+        </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">

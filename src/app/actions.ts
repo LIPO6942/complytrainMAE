@@ -2,6 +2,10 @@
 
 import { aiComplianceTutor } from '@/ai/flows/ai-compliance-tutor';
 import { z } from 'zod';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously as firebaseSignInAnonymously } from 'firebase/auth';
+import { auth } from '@/firebase/config-server';
+import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 
 const AskAIComplianceTutorSchema = z.object({
   question: z.string().min(5, 'La question doit comporter au moins 5 caractères.'),
@@ -34,4 +38,39 @@ export async function askAIComplianceTutor(prevState: State, formData: FormData)
   } catch (error) {
     return { message: 'Une erreur s\'est produite lors de la récupération de la réponse.' };
   }
+}
+
+export async function authenticate(
+  prevState: string | undefined,
+  formData: FormData,
+) {
+  try {
+    await signInWithEmailAndPassword(auth, formData.get('email') as string, formData.get('password') as string);
+    revalidatePath('/');
+    redirect('/');
+  } catch (error: any) {
+    if (error.code) {
+        switch (error.code) {
+            case 'auth/user-not-found':
+                return 'Utilisateur non trouvé. Veuillez vérifier votre email.';
+            case 'auth/wrong-password':
+                return 'Mot de passe incorrect. Veuillez réessayer.';
+            case 'auth/invalid-email':
+                return 'Email invalide. Veuillez vérifier votre saisie.';
+            default:
+                return "Une erreur inattendue s'est produite.";
+        }
+    }
+    return "Une erreur inattendue s'est produite.";
+  }
+}
+
+export async function signInAnonymously() {
+    try {
+        await firebaseSignInAnonymously(auth);
+        revalidatePath('/');
+        redirect('/');
+    } catch (error) {
+        console.error("Anonymous sign in failed", error);
+    }
 }
