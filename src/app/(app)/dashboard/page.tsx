@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -9,7 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { learningPath, user, earnedBadges } from '@/lib/data';
 import { personalizedRiskRecommendations } from '@/ai/flows/personalized-risk-recommendations';
-import { Award, Target, BookMarked } from 'lucide-react';
+import { Award, Target, BookMarked, AlertTriangle } from 'lucide-react';
 import { BadgeAmlExpert, BadgeKycCertified } from '@/components/icons';
 import { AITutor } from './ai-tutor';
 
@@ -19,38 +20,62 @@ const badgeIcons: { [key: string]: React.ElementType } = {
 };
 
 async function PersonalizedRecommendations() {
-  const recommendations = await personalizedRiskRecommendations({
-    riskProfile: user.riskProfile,
-  });
+  try {
+    const recommendations = await personalizedRiskRecommendations({
+      riskProfile: user.riskProfile,
+    });
 
-  const recommendationItems = recommendations.recommendations
-    .split('\n')
-    .map((item) => item.replace(/^\d+\.\s/, ''))
-    .filter(Boolean);
+    const recommendationItems = recommendations.recommendations
+      .split('\n')
+      .map((item) => item.replace(/^\d+\.\s/, ''))
+      .filter(Boolean);
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Target className="text-primary" />
-          <span>Recommandations Personnalisées</span>
-        </CardTitle>
-        <CardDescription>
-          En fonction de votre profil de risque, nous vous suggérons de vous concentrer sur ces domaines.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ul className="space-y-2 text-sm">
-          {recommendationItems.map((item, index) => (
-            <li key={index} className="flex items-start gap-2">
-              <BookMarked className="h-4 w-4 mt-1 shrink-0 text-accent" />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
-  );
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="text-primary" />
+            <span>Recommandations Personnalisées</span>
+          </CardTitle>
+          <CardDescription>
+            En fonction de votre profil de risque, nous vous suggérons de vous concentrer sur ces domaines.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-2 text-sm">
+            {recommendationItems.map((item, index) => (
+              <li key={index} className="flex items-start gap-2">
+                <BookMarked className="h-4 w-4 mt-1 shrink-0 text-accent" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+    );
+  } catch (error) {
+    console.error("Failed to fetch personalized recommendations:", error);
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="text-primary" />
+            <span>Recommandations Personnalisées</span>
+          </CardTitle>
+          <CardDescription>
+            En fonction de votre profil de risque, nous vous suggérons de vous concentrer sur ces domaines.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center text-center text-muted-foreground bg-muted/50 p-4 rounded-lg">
+            <AlertTriangle className="h-8 w-8 mb-2 text-destructive" />
+            <p className="font-semibold text-foreground">Erreur de chargement</p>
+            <p className="text-sm">Les recommandations n'ont pas pu être chargées pour le moment.</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 }
 
 export default function DashboardPage() {
