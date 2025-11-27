@@ -72,7 +72,7 @@
         },
         "category": {
           "type": "string",
-          "description": "The category of the course (e.g., LCB, KYC)."
+          "description": "The category of the course (e.g., LAB, KYC)."
         },
         "description": {
           "type": "string",

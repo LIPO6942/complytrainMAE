@@ -158,7 +158,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked }: QuizPr
       title: 'Quiz : Blanchiment d\'argent',
       questions: [
         {
-          text: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LCB) ?',
+          text: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LAB) ?',
           options: ['Marketing sur les réseaux sociaux', 'Intégration des employés', 'Déclaration de transaction suspecte (DTS)'],
           correctAnswers: [2]
         }
