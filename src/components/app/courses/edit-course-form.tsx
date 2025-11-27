@@ -31,6 +31,7 @@ type Course = {
   videoUrl?: string;
   markdownContent?: string;
   image: string;
+  pdfUrl?: string;
 };
 
 interface EditCourseFormProps {
@@ -47,6 +48,7 @@ export function EditCourseForm({ course, onFinished }: EditCourseFormProps) {
     videoUrl: course.videoUrl || '',
     markdownContent: course.markdownContent || '',
     image: course.image,
+    pdfUrl: course.pdfUrl || '',
   });
 
   const handleChange = (
@@ -127,6 +129,16 @@ export function EditCourseForm({ course, onFinished }: EditCourseFormProps) {
               name="videoUrl"
               placeholder="https://.../video.mp4"
               value={formData.videoUrl}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="pdfUrl">URL du PDF</Label>
+            <Input
+              id="pdfUrl"
+              name="pdfUrl"
+              placeholder="https://.../document.pdf"
+              value={formData.pdfUrl}
               onChange={handleChange}
             />
           </div>

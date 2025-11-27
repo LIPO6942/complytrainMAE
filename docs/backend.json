@@ -93,6 +93,10 @@
         "markdownContent": {
           "type": "string",
           "description": "The course content in Markdown format."
+        },
+        "pdfUrl": {
+          "type": "string",
+          "description": "URL of the course PDF document."
         }
       },
       "required": ["title", "category", "description", "image", "quizId"]

@@ -16,9 +16,10 @@ import { Quiz } from '@/components/app/courses/quiz';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Pencil } from 'lucide-react';
+import { Pencil, FileText } from 'lucide-react';
 import { EditCourseForm } from '@/components/app/courses/edit-course-form';
 import { DeleteCourseDialog } from '@/components/app/courses/delete-course-dialog';
+import Link from 'next/link';
 
 function VideoPlayer({ url }: { url: string }) {
     return (
@@ -129,6 +130,14 @@ export default function CourseDetailPage() {
                 </CardHeader>
                 <CardContent>
                     <p className="text-muted-foreground">{course.description}</p>
+                    {course.pdfUrl && (
+                        <Button asChild className="mt-4">
+                            <Link href={course.pdfUrl} target="_blank" rel="noopener noreferrer">
+                                <FileText className="mr-2 h-4 w-4" />
+                                Ouvrir le PDF
+                            </Link>
+                        </Button>
+                    )}
                 </CardContent>
             </Card>
 
