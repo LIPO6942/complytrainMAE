@@ -28,13 +28,14 @@ import { PlusCircle } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const courseCategories = [
-    "LCB / FT",
+    "LAB / FT",
     "KYC",
     "Fraude",
     "RGPD",
     "Sanctions Internationales",
     "Conformité Assurance",
-    "Quiz Thématique"
+    "Quiz Thématique",
+    "QCM (réponse multiple)"
 ];
 
 export function AddCourseDialog() {
@@ -48,7 +49,7 @@ export function AddCourseDialog() {
       category: 'Quiz Thématique',
       image: 'course-new',
       quizTitle: 'Quiz sur le blanchiment d\'argent',
-      quizQuestionText: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LCB) ?'
+      quizQuestionText: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LAB) ?'
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -112,7 +113,7 @@ export function AddCourseDialog() {
             category: 'Quiz Thématique',
             image: 'course-new',
             quizTitle: 'Quiz sur le blanchiment d\'argent',
-            quizQuestionText: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LCB) ?'
+            quizQuestionText: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LAB) ?'
         });
         setOpen(false);
 
