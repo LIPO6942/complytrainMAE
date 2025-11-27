@@ -73,9 +73,9 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 
                 if (email === 'admin@example.com') {
                     userDoc.role = 'admin';
-                    const adminRoleRef = doc(db, 'roles_admin', user.uid);
-                    // Use non-blocking write for the admin role
-                    setDocumentNonBlocking(adminRoleRef, { isAdmin: true }, { merge: false });
+                    // Note: Creating the roles_admin document from the client is restricted by security rules.
+                    // This must be done manually in the Firebase Console or via a secure backend function
+                    // for the admin user to have administrative privileges.
                 }
                 
                 const userRef = doc(db, 'users', user.uid);
