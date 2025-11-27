@@ -202,8 +202,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
         </Card>
     );
   }
-  
-  const isDisabled = isLocked && !isAdmin;
 
   const handleAnswerChange = (questionIndex: number, answerIndex: number, checked: boolean) => {
     setSelectedAnswers(prev => {
@@ -248,14 +246,14 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   }
 
   return (
-    <Card className={cn(isDisabled && "bg-muted/50")}>
+    <Card className={cn(isLocked && "bg-muted/50")}>
       <CardHeader>
         <CardTitle>{quiz.title}</CardTitle>
         <CardDescription>Testez vos connaissances sur ce module. Plusieurs réponses peuvent être correctes.</CardDescription>
       </CardHeader>
-      <CardContent className={cn("space-y-4", isDisabled && "opacity-50 pointer-events-none")}>
+      <CardContent className={cn("space-y-4", isLocked && "opacity-50 pointer-events-none")}>
         {quiz.questions.map((question, qIndex) => (
-          <Accordion key={qIndex} type="single" collapsible disabled={isDisabled}>
+          <Accordion key={qIndex} type="single" collapsible disabled={isLocked}>
             <AccordionItem value={`item-${qIndex}`}>
               <AccordionTrigger>Question {qIndex + 1}</AccordionTrigger>
               <AccordionContent>
@@ -267,7 +265,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                         <Checkbox 
                             id={`q${qIndex}o${oIndex}`}
                             onCheckedChange={(checked) => handleAnswerChange(qIndex, oIndex, checked as boolean)}
-                            disabled={showResults || isDisabled}
+                            disabled={showResults || isLocked}
                         />
                         <Label htmlFor={`q${qIndex}o${oIndex}`}>{option}</Label>
                       </div>
@@ -296,7 +294,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
         )}
       </CardContent>
       <CardFooter className="flex-col gap-4">
-        {isDisabled ? (
+        {isLocked ? (
             <div className="flex items-center justify-center text-sm text-muted-foreground p-4 text-center">
                 <Lock className="mr-2 h-4 w-4" />
                 Veuillez confirmer la lecture du contenu pour débloquer le quiz.
@@ -307,7 +305,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             </Button>
         )}
         
-        {showResults && !isDisabled && (
+        {showResults && !isLocked && (
             <div className="text-center font-bold text-lg">
                 Votre score : {getScore()}%
             </div>

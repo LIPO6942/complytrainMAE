@@ -88,6 +88,8 @@ export default function CourseDetailPage() {
   const isAdmin = userProfile?.role === 'admin';
   const hasContent = currentCourse && (currentCourse.videoUrl || currentCourse.pdfUrl || currentCourse.markdownContent);
 
+  const isQuizLocked = hasContent && !isContentReviewed && !isAdmin;
+
   if (isLoading && !isStatic) {
     return (
       <div className="space-y-6">
@@ -180,6 +182,7 @@ export default function CourseDetailPage() {
                     id="content-reviewed" 
                     checked={isContentReviewed} 
                     onCheckedChange={(checked) => setIsContentReviewed(checked as boolean)}
+                    disabled={isAdmin}
                   />
                   <Label htmlFor="content-reviewed" className="font-medium cursor-pointer">
                     Je confirme avoir lu et compris le contenu ci-dessus.
@@ -194,7 +197,7 @@ export default function CourseDetailPage() {
               isQuizLoading={isLoading && !isStatic}
               courseId={courseId} 
               quizId={quizId as string}
-              isLocked={hasContent && !isContentReviewed}
+              isLocked={isQuizLocked}
               isStatic={isStatic}
             />
         </div>
