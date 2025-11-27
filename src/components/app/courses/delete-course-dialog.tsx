@@ -19,9 +19,11 @@ import { useRouter } from 'next/navigation';
 
 interface DeleteCourseDialogProps {
   courseId: string;
+  onDeleted?: () => void;
+  trigger?: React.ReactNode;
 }
 
-export function DeleteCourseDialog({ courseId }: DeleteCourseDialogProps) {
+export function DeleteCourseDialog({ courseId, onDeleted, trigger }: DeleteCourseDialogProps) {
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
@@ -37,17 +39,24 @@ export function DeleteCourseDialog({ courseId }: DeleteCourseDialogProps) {
       description: 'Le cours a été supprimé avec succès.',
     });
     
-    // Redirect to courses page after deletion
-    router.push('/courses');
+    if (onDeleted) {
+        onDeleted();
+    } else {
+        router.push('/courses');
+    }
   };
+
+  const dialogTrigger = trigger ? trigger : (
+    <Button variant="destructive">
+      <Trash2 className="mr-2 h-4 w-4" />
+      Supprimer
+    </Button>
+  );
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive">
-          <Trash2 className="mr-2 h-4 w-4" />
-          Supprimer
-        </Button>
+        {dialogTrigger}
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
