@@ -1,3 +1,4 @@
+
 export type Question = {
     text: string;
     options: string[];
@@ -57,7 +58,7 @@ export const staticCourses: Course[] = [
                     correctAnswers: [1]
                 },
                 {
-                    text: "Le Comité Général des Assurances (CGA) est l'autorité de tutelle et de contrôle du secteur des assurances. Quelle est l'une de ses missions dans le cadre de la LBA/FT ?",
+                    text: "Le Comité Général des Assurances (CGA) est l'autorité de tutelle et de contrôle du secteur des assurances. Quelle est l'une de ses missions dans le cadre de la LAB/FT ?",
                     options: [
                         "Assurer la représentation de la Tunisie auprès du GAFI (Groupe d'action financière).",
                         "Superviser les banques et les établissements de microfinance.",
@@ -190,5 +191,228 @@ export const staticCourses: Course[] = [
                 }
             ]
         }
+    },
+    {
+        id: 'quiz-definitions-cadre-legal',
+        title: "Quiz : Définitions et Cadre Légal",
+        category: "QCM (réponse multiple)",
+        description: "Un quiz sur les définitions clés et le cadre légal de la LBA/FT en Tunisie.",
+        image: "course-aml",
+        isStatic: true,
+        quiz: {
+            id: 'quiz-definitions-q',
+            title: "Définitions et Cadre Légal",
+            questions: [
+                {
+                    text: "Quelle est la loi organique fondamentale relative à la lutte contre le terrorisme et à la répression du blanchiment d'argent, telle que modifiée en 2019, qui sert de référence au dispositif réglementaire tunisien ?",
+                    options: [
+                        "Le Décret n°2016-1098 du 15 août 2016 fixant l'organisation de la CTAF.",
+                        "La Loi organique n° 2015-26 du 7 août 2015, telle que modifiée et complétée par la loi organique n° 2019-9 du 23 janvier 2019.",
+                        "Le Règlement du CGA n°2 du 28 août 2019.",
+                        "L'Arrêté du Ministre des Finances du 24 juillet 2019 fixant les montants."
+                    ],
+                    correctAnswers: [1]
+                },
+                {
+                    text: "Pour qu'un acte soit considéré comme du blanchiment d'argent en Tunisie (selon l'article 92 de la loi organique n°2015-26), l'origine illicite des biens doit provenir d'un crime ou d'un délit passible d'une peine d'emprisonnement de combien de temps au minimum ?",
+                    options: [
+                        "Un an ou plus.",
+                        "Trois ans ou plus.",
+                        "Six ans ou plus.",
+                        "Dix ans ou plus."
+                    ],
+                    correctAnswers: [1]
+                },
+                {
+                    text: "Quelle est la sanction d'emprisonnement prévue pour quiconque, même tenu au secret professionnel, s’abstient de signaler sans délai aux autorités compétentes des faits ou informations concernant la commission d’infractions terroristes ?",
+                    options: [
+                        "Six à douze ans d'emprisonnement.",
+                        "Cinq à dix ans d'emprisonnement.",
+                        "Un an à cinq ans d’emprisonnement et une amende de cinq mille à dix mille dinars.",
+                        "Seize jours à six mois d'emprisonnement."
+                    ],
+                    correctAnswers: [2]
+                }
+            ]
+        }
+    },
+    {
+        id: 'quiz-phases-blanchiment',
+        title: "Quiz : Les Phases du Blanchiment d'Argent",
+        category: "QCM (réponse multiple)",
+        description: "Ce quiz teste vos connaissances sur les trois phases distinctes du processus de blanchiment d'argent.",
+        image: "course-fraud",
+        isStatic: true,
+        quiz: {
+            id: 'quiz-phases-blanchiment-q',
+            title: "Les Phases du Blanchiment d'Argent",
+            questions: [
+                {
+                    text: "Comment nomme-t-on la première phase du processus de blanchiment d’argent, qui consiste à introduire les sommes d'argent en espèces (produit des délits) dans le système financier ou économique ?",
+                    options: [
+                        "L’intégration (ou essorage).",
+                        "L’empilage (ou dispersion).",
+                        "La dissimulation.",
+                        "Le placement (ou prélavage/immersion)."
+                    ],
+                    correctAnswers: [3]
+                },
+                {
+                    text: "Quel est le terme utilisé pour désigner la phase du blanchiment d'argent qui vise à dissimuler la source illégitime des fonds en créant un enchevêtrement d’opérations financières complexes dans le but de brouiller la piste de vérification ?",
+                    options: [
+                        "Le prélavage.",
+                        "L’empilage (ou dispersion/lavage/transformation).",
+                        "L'intégration (ou recyclage).",
+                        "Le transfert licite."
+                    ],
+                    correctAnswers: [1]
+                },
+                {
+                    text: "La phase finale du blanchiment d'argent, appelée \"l’intégration\" (ou essorage), a pour objectif de :",
+                    options: [
+                        "Déclarer les fonds à la CTAF.",
+                        "Réintroduire les fonds dont l’origine est masquée dans l’économie légale et les utiliser en toute liberté.",
+                        "Transférer les fonds vers un pays à haut risque.",
+                        "Convertir les actifs en crypto-monnaies."
+                    ],
+                    correctAnswers: [1]
+                }
+            ]
+        }
+    },
+    {
+        id: 'quiz-obligations-vigilance',
+        title: "Quiz : Obligations de Vigilance (KYC) et Diligences",
+        category: "QCM (réponse multiple)",
+        description: "Évaluez votre compréhension des mesures de vigilance (KYC) et des diligences renforcées.",
+        image: "course-kyc",
+        isStatic: true,
+        quiz: {
+            id: 'quiz-obligations-vigilance-q',
+            title: "Obligations de Vigilance (KYC) et Diligences",
+            questions: [
+                {
+                    text: "Selon le Règlement du CGA n°2019-02, dans quels cas spécifiques les compagnies d'assurance doivent-elles prendre des mesures de vigilance renforcée (Diligences Renforcées) ?",
+                    options: [
+                        "Uniquement pour les Personnes Politiquement Exposées (PPE).",
+                        "Uniquement pour les clients dont la prime est payée en liquide et dépasse 5 000 TND.",
+                        "Uniquement pour les clients à risque élevé selon la matrice des risques de l’entreprise.",
+                        "Dans tous les cas ci-dessus (PPE, primes en liquide dépassant 5 000 TND, clients à risque élevé)."
+                    ],
+                    correctAnswers: [3]
+                },
+                {
+                    text: "Pour les contrats d’assurance vie ou de capitalisation, à partir de quel seuil minimal de prime périodique (en l'absence de soupçon) les compagnies d'assurance sont-elles tenues de collecter les données du client (KYC) ?",
+                    options: [
+                        "Dépassant 3 000 TND.",
+                        "Dépassant 1 000 TND.",
+                        "Dépassant 5 000 TND.",
+                        "Quel que soit le montant."
+                    ],
+                    correctAnswers: [1]
+                },
+                {
+                    text: "Si, au moment de la souscription, le client ne peut présenter les documents d’identité originaux ou si les informations obligatoires de la fiche KYC sont manquantes, quelle est l'obligation du chargé de la souscription ?",
+                    options: [
+                        "Il peut accepter une copie certifiée conforme transmise par e-mail.",
+                        "Il doit transmettre le dossier au responsable de la conformité pour une étude approfondie.",
+                        "Il doit s’abstenir de souscrire le contrat d’assurance et envisager une déclaration de soupçon.",
+                        "Il doit compléter la fiche KYC ultérieurement."
+                    ],
+                    correctAnswers: [2]
+                }
+            ]
+        }
+    },
+    {
+        id: 'quiz-beneficiaire-effectif-ppe',
+        title: "Quiz : Bénéficiaire Effectif (BE) et PPE",
+        category: "QCM (réponse multiple)",
+        description: "Un quiz sur l'identification des Bénéficiaires Effectifs (BE) et des Personnes Politiquement Exposées (PPE).",
+        image: "course-sanctions",
+        isStatic: true,
+        quiz: {
+            id: 'quiz-beneficiaire-effectif-ppe-q',
+            title: "Bénéficiaire Effectif (BE) et PPE",
+            questions: [
+                {
+                    text: "Selon le Règlement du CGA n°2019-02, dans la première étape d'identification du Bénéficiaire Effectif (BE) d'une personne morale (Approche Mathématique), quel est le seuil minimum de détention (directe ou indirecte) du capital ou des droits de vote qui déclenche l'identification comme BE ?",
+                    options: [
+                        "10 % ou plus.",
+                        "20 % ou plus.",
+                        "30 % ou plus.",
+                        "51 % ou plus."
+                    ],
+                    correctAnswers: [1]
+                },
+                {
+                    text: "Une \"Personne Politiquement Exposée\" (PPE) inclut :",
+                    options: [
+                        "Le Chef d’État, le Chef du gouvernement ou un membre d’un gouvernement.",
+                        "Les officiers militaires supérieurs.",
+                        "Les membres d’un organe de direction, de contrôle ou d’administration d’une entreprise publique.",
+                        "Toutes les réponses ci-dessus."
+                    ],
+                    correctAnswers: [3]
+                },
+                {
+                    text: "En plus des mesures de vigilance renforcée sur les relations d'affaires avec les Personnes Politiquement Exposées (PPE), quelle action est requise selon le règlement CGA n°2019-02 ?",
+                    options: [
+                        "Informer le CGA uniquement.",
+                        "Obtenir l’autorisation de la direction générale avant de nouer ou de poursuivre une relation d’affaire avec elles.",
+                        "Déclarer systématiquement une suspicion à la CTAF.",
+                        "S’assurer que le client n'a qu'une seule nationalité."
+                    ],
+                    correctAnswers: [1]
+                }
+            ]
+        }
+    },
+    {
+        id: 'quiz-listes-sanctions-roles',
+        title: "Quiz : Listes de Sanctions et Rôles Institutionnels",
+        category: "QCM (réponse multiple)",
+        description: "Ce quiz couvre les listes de sanctions, le gel des avoirs et les rôles des différentes institutions de régulation.",
+        image: "course-aml",
+        isStatic: true,
+        quiz: {
+            id: 'quiz-listes-sanctions-roles-q',
+            title: "Listes de Sanctions et Rôles Institutionnels",
+            questions: [
+                {
+                    text: "Quel organisme tunisien est le centre national chargé de la réception et de l’analyse des déclarations de soupçon (DS) et de leur transmission au Procureur de la République des déclarations dont l’analyse a confirmé le soupçon ?",
+                    options: [
+                        "Le Comité Général des Assurances (CGA).",
+                        "La Commission Nationale de Lutte Contre le Terrorisme (CNLCT).",
+                        "La Banque Centrale de Tunisie (BCT).",
+                        "La Commission Tunisienne des Analyses Financières (CTAF)."
+                    ],
+                    correctAnswers: [3]
+                },
+                {
+                    text: "La liste de sanctions établie par la Commission Nationale de Lutte Contre le Terrorisme (CNLCT) est qualifiée de :",
+                    options: [
+                        "Liste de surveillance.",
+                        "Liste du Conseil de Sécurité des Nations Unies (NU).",
+                        "Liste OFAC.",
+                        "Liste nationale."
+                    ],
+                    correctAnswers: [3]
+                },
+                {
+                    text: "L'obligation d'appliquer les mesures de gel des avoirs concernant les personnes et entités inscrites sur la liste onusienne ou nationale est une obligation de :",
+                    options: [
+                        "Résultats, dépendante du profil de risque du client.",
+                        "Résultat, et doit être effectuée indépendamment du profil de risque du client.",
+                        "Moyens, si l’entreprise a un faible niveau de risque.",
+                        "Résultat, mais seulement pour les nouveaux clients."
+                    ],
+                    correctAnswers: [1]
+                }
+            ]
+        }
     }
 ];
+
+
+    
