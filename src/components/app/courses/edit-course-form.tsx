@@ -92,11 +92,11 @@ export function EditCourseForm({ course, onFinished }: EditCourseFormProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="videoUrl">URL de la vidéo (YouTube)</Label>
+            <Label htmlFor="videoUrl">URL de la vidéo</Label>
             <Input
               id="videoUrl"
               name="videoUrl"
-              placeholder="https://www.youtube.com/watch?v=..."
+              placeholder="https://.../video.mp4"
               value={formData.videoUrl}
               onChange={handleChange}
             />

@@ -19,22 +19,16 @@ import { Button } from '@/components/ui/button';
 import { Pencil } from 'lucide-react';
 import { EditCourseForm } from '@/components/app/courses/edit-course-form';
 
-function YouTubeEmbed({ url }: { url: string }) {
-    const videoId = url.split('v=')[1]?.split('&')[0];
-    if (!videoId) return <p>URL de vidéo YouTube invalide.</p>;
-
+function VideoPlayer({ url }: { url: string }) {
     return (
-        <div className="aspect-video">
-        <iframe
-            width="100%"
-            height="100%"
-            src={`https://www.youtube.com/embed/${videoId}`}
-            title="Lecteur vidéo YouTube"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="rounded-lg"
-        ></iframe>
+        <div className="aspect-video w-full">
+        <video
+            controls
+            src={url}
+            className="w-full h-full rounded-lg bg-black"
+        >
+            Votre navigateur ne supporte pas la balise vidéo.
+        </video>
         </div>
     );
 }
@@ -124,7 +118,7 @@ export default function CourseDetailPage() {
                 )}
                 {course.videoUrl && (
                     <div className="p-6">
-                        <YouTubeEmbed url={course.videoUrl} />
+                        <VideoPlayer url={course.videoUrl} />
                     </div>
                 )}
                 <CardHeader>
