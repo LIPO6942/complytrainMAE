@@ -126,12 +126,15 @@
                   "type": "string"
                 }
               },
-              "correctAnswer": {
-                "type": "number",
-                "description": "The index of the correct answer in the options array."
+              "correctAnswers": {
+                "type": "array",
+                "description": "The indices of the correct answers in the options array.",
+                "items": {
+                  "type": "number"
+                }
               }
             },
-            "required": ["text", "options", "correctAnswer"]
+            "required": ["text", "options", "correctAnswers"]
           }
         }
       },

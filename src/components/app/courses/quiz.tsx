@@ -14,7 +14,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useUser, useFirestore, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
@@ -22,12 +22,13 @@ import { doc, collection, arrayUnion } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 
 type Question = {
   text: string;
   options: string[];
-  correctAnswer: number;
+  correctAnswers: number[];
 };
 
 type QuizData = {
@@ -46,7 +47,7 @@ function AddQuestionForm({ courseId, quizId, onAdd }: { courseId: string; quizId
     const firestore = useFirestore();
     const [questionText, setQuestionText] = useState('');
     const [options, setOptions] = useState(['', '', '']);
-    const [correctAnswer, setCorrectAnswer] = useState(0);
+    const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
     const { toast } = useToast();
 
     const handleOptionChange = (index: number, value: string) => {
@@ -54,12 +55,22 @@ function AddQuestionForm({ courseId, quizId, onAdd }: { courseId: string; quizId
         newOptions[index] = value;
         setOptions(newOptions);
     };
+    
+    const handleCorrectAnswerChange = (index: number, checked: boolean) => {
+        setCorrectAnswers(prev => {
+            if (checked) {
+                return [...prev, index];
+            } else {
+                return prev.filter(i => i !== index);
+            }
+        });
+    };
 
     const handleAddQuestion = () => {
-        if (!questionText || options.some(opt => !opt)) {
+        if (!questionText || options.some(opt => !opt.trim()) || correctAnswers.length === 0) {
             toast({
                 title: "Champs incomplets",
-                description: "Veuillez remplir la question et toutes les options.",
+                description: "Veuillez remplir la question, toutes les options, et sélectionner au moins une bonne réponse.",
                 variant: "destructive"
             });
             return;
@@ -70,7 +81,7 @@ function AddQuestionForm({ courseId, quizId, onAdd }: { courseId: string; quizId
         const newQuestion = {
             text: questionText,
             options: options,
-            correctAnswer: correctAnswer
+            correctAnswers: correctAnswers.sort((a, b) => a - b)
         };
 
         setDocumentNonBlocking(quizRef, {
@@ -85,7 +96,7 @@ function AddQuestionForm({ courseId, quizId, onAdd }: { courseId: string; quizId
         // Reset form
         setQuestionText('');
         setOptions(['', '', '']);
-        setCorrectAnswer(0);
+        setCorrectAnswers([]);
         onAdd(); // Close the form
     };
 
@@ -105,15 +116,19 @@ function AddQuestionForm({ courseId, quizId, onAdd }: { courseId: string; quizId
                 ))}
             </div>
              <div className="space-y-2">
-                <Label>Bonne réponse</Label>
-                 <RadioGroup onValueChange={(val) => setCorrectAnswer(Number(val))} defaultValue={String(correctAnswer)}>
-                    {options.map((_, index) => (
+                <Label>Bonnes réponses (choix multiples)</Label>
+                 <div className="space-y-2">
+                    {options.map((option, index) => (
                         <div key={index} className="flex items-center space-x-2">
-                            <RadioGroupItem value={String(index)} id={`r${index}`} />
-                            <Label htmlFor={`r${index}`}>Option {index + 1}</Label>
+                            <Checkbox 
+                                id={`correct-opt-${index}`} 
+                                onCheckedChange={(checked) => handleCorrectAnswerChange(index, checked as boolean)}
+                                checked={correctAnswers.includes(index)}
+                            />
+                            <Label htmlFor={`correct-opt-${index}`}>Option {index + 1}</Label>
                         </div>
                     ))}
-                </RadioGroup>
+                </div>
             </div>
             <div className="flex gap-2">
               <Button onClick={handleAddQuestion}>Enregistrer la question</Button>
@@ -128,7 +143,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId }: QuizProps) {
   const { userProfile } = useUser();
   const firestore = useFirestore();
   const isAdmin = userProfile?.role === 'admin';
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number[]>>({});
   const [showResults, setShowResults] = useState(false);
   const [showAddQuestion, setShowAddQuestion] = useState(false);
   
@@ -142,7 +157,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId }: QuizProps) {
         {
           text: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LCB) ?',
           options: ['Marketing sur les réseaux sociaux', 'Intégration des employés', 'Déclaration de transaction suspecte (DTS)'],
-          correctAnswer: 2
+          correctAnswers: [2]
         }
       ]
     });
@@ -194,32 +209,51 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId }: QuizProps) {
     );
   }
 
-  const handleAnswerChange = (questionIndex: number, answerIndex: number) => {
-    setSelectedAnswers(prev => ({
-      ...prev,
-      [questionIndex]: answerIndex,
-    }));
+  const handleAnswerChange = (questionIndex: number, answerIndex: number, checked: boolean) => {
+    setSelectedAnswers(prev => {
+        const currentAnswers = prev[questionIndex] || [];
+        if (checked) {
+            return { ...prev, [questionIndex]: [...currentAnswers, answerIndex] };
+        } else {
+            return { ...prev, [questionIndex]: currentAnswers.filter(i => i !== answerIndex) };
+        }
+    });
   };
 
   const handleSubmit = () => {
     setShowResults(true);
   };
   
+  const isCorrect = (questionIndex: number) => {
+    const userAnswers = (selectedAnswers[questionIndex] || []).sort();
+    const correctAnswers = quiz.questions[questionIndex].correctAnswers.sort();
+    
+    if (userAnswers.length !== correctAnswers.length) {
+        return false;
+    }
+    
+    return userAnswers.every((val, index) => val === correctAnswers[index]);
+  }
+
   const getScore = () => {
       let correctCount = 0;
-      quiz.questions.forEach((q, index) => {
-          if (selectedAnswers[index] === q.correctAnswer) {
+      quiz.questions.forEach((_, index) => {
+          if (isCorrect(index)) {
               correctCount++;
           }
       });
       return ((correctCount / quiz.questions.length) * 100).toFixed(0);
   }
 
+  const getCorrectAnswersText = (question: Question) => {
+    return question.correctAnswers.map(i => `"${question.options[i]}"`).join(', ');
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{quiz.title}</CardTitle>
-        <CardDescription>Testez vos connaissances sur ce module.</CardDescription>
+        <CardDescription>Testez vos connaissances sur ce module. Plusieurs réponses peuvent être correctes.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {quiz.questions.map((question, qIndex) => (
@@ -229,20 +263,21 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId }: QuizProps) {
               <AccordionContent>
                 <div className="space-y-4">
                   <p className="font-medium">{question.text}</p>
-                  <RadioGroup
-                     onValueChange={(val) => handleAnswerChange(qIndex, Number(val))}
-                     disabled={showResults}
-                  >
+                  <div className='space-y-2'>
                     {question.options.map((option, oIndex) => (
                       <div key={oIndex} className="flex items-center space-x-2">
-                        <RadioGroupItem value={String(oIndex)} id={`q${qIndex}o${oIndex}`} />
+                        <Checkbox 
+                            id={`q${qIndex}o${oIndex}`}
+                            onCheckedChange={(checked) => handleAnswerChange(qIndex, oIndex, checked as boolean)}
+                            disabled={showResults}
+                        />
                         <Label htmlFor={`q${qIndex}o${oIndex}`}>{option}</Label>
                       </div>
                     ))}
-                  </RadioGroup>
+                  </div>
                    {showResults && (
-                      <div className={`mt-2 text-sm font-semibold ${selectedAnswers[qIndex] === question.correctAnswer ? 'text-green-600' : 'text-red-600'}`}>
-                          {selectedAnswers[qIndex] === question.correctAnswer ? 'Correct !' : `Incorrect. La bonne réponse est : ${question.options[question.correctAnswer]}`}
+                      <div className={cn("mt-2 text-sm font-semibold", isCorrect(qIndex) ? 'text-green-600' : 'text-red-600')}>
+                          {isCorrect(qIndex) ? 'Correct !' : `Incorrect. La ou les bonne(s) réponse(s) était(ent) : ${getCorrectAnswersText(question)}`}
                       </div>
                   )}
                 </div>
