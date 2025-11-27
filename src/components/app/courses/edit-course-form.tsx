@@ -16,12 +16,21 @@ import { Button } from '@/components/ui/button';
 import { useFirestore, setDocumentNonBlocking, type WithId } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 type Course = {
   title: string;
   description: string;
   videoUrl?: string;
   markdownContent?: string;
+  image: string;
 };
 
 interface EditCourseFormProps {
@@ -37,6 +46,7 @@ export function EditCourseForm({ course, onFinished }: EditCourseFormProps) {
     description: course.description,
     videoUrl: course.videoUrl || '',
     markdownContent: course.markdownContent || '',
+    image: course.image,
   });
 
   const handleChange = (
@@ -44,6 +54,10 @@ export function EditCourseForm({ course, onFinished }: EditCourseFormProps) {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, image: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -80,6 +94,21 @@ export function EditCourseForm({ course, onFinished }: EditCourseFormProps) {
               value={formData.title}
               onChange={handleChange}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="image">Image du cours</Label>
+            <Select value={formData.image} onValueChange={handleImageChange}>
+                <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une image" />
+                </SelectTrigger>
+                <SelectContent>
+                    {PlaceHolderImages.map((img) => (
+                        <SelectItem key={img.id} value={img.id}>
+                            {img.description}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
