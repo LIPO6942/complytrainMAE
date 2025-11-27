@@ -65,18 +65,11 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 const user = userCredential.user;
                 const db = getFirestore(auth.app);
                 
-                const userDoc: { id: string; email: string | null; role: string, departmentId?: string } = {
+                const userDoc = {
                     id: user.uid,
                     email: user.email,
                     role: 'user', // Default role
                 };
-                
-                if (email === 'admin@example.com') {
-                    userDoc.role = 'admin';
-                    // Note: Creating the roles_admin document from the client is restricted by security rules.
-                    // This must be done manually in the Firebase Console or via a secure backend function
-                    // for the admin user to have administrative privileges.
-                }
                 
                 const userRef = doc(db, 'users', user.uid);
                 // Use non-blocking write for the user document
