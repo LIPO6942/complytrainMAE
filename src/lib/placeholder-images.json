@@ -2,45 +2,45 @@
   "placeholderImages": [
     {
       "id": "course-aml",
-      "description": "An introduction to Anti-Money Laundering principles and practices.",
-      "imageUrl": "https://images.unsplash.com/photo-1760970901951-92b4d3abaefc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjb21wbGlhbmNlJTIwdHJhaW5pbmd8ZW58MHx8fHwxNzY0MTY4ODMzfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "compliance training"
+      "description": "Introduction à la lutte anti-blanchiment (LAB)",
+      "imageUrl": "https://images.unsplash.com/photo-1556742523-01c3e3419045?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "finance security"
     },
     {
       "id": "course-kyc",
-      "description": "Understanding Know Your Customer (KYC) regulations and procedures.",
-      "imageUrl": "https://images.unsplash.com/photo-1657468664053-633d02e11c3b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzZWN1cml0eSUyMGZpbmFuY2V8ZW58MHx8fHwxNzY0MTY4ODMyfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "security finance"
+      "description": "Connaissance du client (KYC) et obligations réglementaires",
+      "imageUrl": "https://images.unsplash.com/photo-1553729459-efe14ef6055d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "finance documents"
     },
     {
       "id": "course-fraud",
-      "description": "Learn to identify and prevent various types of financial fraud.",
-      "imageUrl": "https://images.unsplash.com/photo-1633265486064-086b219458ec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxkYXRhJTIwcHJvdGVjdGlvbnxlbnwwfHx8fDE3NjQwODk3NDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "data protection"
+      "description": "Détection et prévention de la fraude financière",
+      "imageUrl": "https://images.unsplash.com/photo-1628191137426-c391a14b53a0?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "digital security"
     },
     {
       "id": "course-gdpr",
-      "description": "A comprehensive guide to the General Data Protection Regulation (GDPR).",
-      "imageUrl": "https://images.unsplash.com/photo-1468779036391-52341f60b55d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxsZWdhbCUyMGRvY3VtZW50c3xlbnwwfHx8fDE3NjQwODQzOTZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "legal documents"
+      "description": "Guide complet sur le Règlement Général sur la Protection des Données (RGPD)",
+      "imageUrl": "https://images.unsplash.com/photo-1555949963-ff980877a258?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "data protection"
     },
     {
       "id": "course-sanctions",
-      "description": "Navigating the complex world of international sanctions and compliance.",
-      "imageUrl": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxnbG9iYWwlMjBidXNpbmVzc3xlbnwwfHx8fDE3NjQwNjI1NTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "global business"
+      "description": "Naviguer dans le monde complexe des sanctions internationales",
+      "imageUrl": "https://images.unsplash.com/photo-1665686306574-1ace09918530?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "global regulations"
     },
     {
       "id": "course-insurance",
-      "description": "Core principles of insurance regulation and compliance requirements.",
-      "imageUrl": "https://images.unsplash.com/photo-1735795798441-89cb505e1970?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxpbnN1cmFuY2UlMjBwb2xpY3l8ZW58MHx8fHwxNzY0MTY4ODMzfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "insurance policy"
+      "description": "Réglementation et conformité dans le secteur de l'assurance",
+      "imageUrl": "https://images.unsplash.com/photo-1616401784845-1808143d4183?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "insurance contract"
     },
     {
       "id": "course-new",
-      "description": "A new compliance course added by the admin.",
-      "imageUrl": "https://images.unsplash.com/photo-1763718528755-4bca23f82ac3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjb21wbGlhbmNlJTIwbmV3fGVufDB8fHx8MTc2NDE2OTc5NXww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "compliance new"
+      "description": "Nouveau cours de conformité (image générique)",
+      "imageUrl": "https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "business meeting"
     }
   ]
 }
