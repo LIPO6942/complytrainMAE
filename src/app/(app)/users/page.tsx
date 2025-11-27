@@ -24,10 +24,11 @@ import {
     SelectValue,
   } from "@/components/ui/select"
 import { Badge } from '@/components/ui/badge';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { AddUserDialog } from '@/components/app/users/add-user-dialog';
 
 type UserProfile = {
     id: string;
@@ -75,11 +76,14 @@ export default function UsersPage() {
 
     return (
         <Card>
-            <CardHeader>
-                <CardTitle>Gestion des utilisateurs</CardTitle>
-                <CardDescription>
-                    Gérer les utilisateurs et leurs rôles.
-                </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Gestion des utilisateurs</CardTitle>
+                    <CardDescription>
+                        Inviter des utilisateurs et gérer leurs rôles.
+                    </CardDescription>
+                </div>
+                <AddUserDialog />
             </CardHeader>
             <CardContent>
                  <Table>

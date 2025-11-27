@@ -32,16 +32,12 @@
           "description": "Reference to Department. (Relationship: Department 1:N User)"
         },
         "lastSignInTime": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The last time the user signed in."
+          "type": "string",
+          "format": "date-time",
+          "description": "The last time the user signed in."
         }
       },
-      "required": [
-        "id",
-        "email",
-        "role"
-      ]
+      "required": ["id", "email", "role"]
     },
     "Department": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -62,10 +58,7 @@
           "description": "Description of the department or business unit."
         }
       },
-      "required": [
-        "id",
-        "name"
-      ]
+      "required": ["id", "name"]
     },
     "Course": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -102,13 +95,7 @@
           "description": "The course content in Markdown format."
         }
       },
-      "required": [
-        "title",
-        "category",
-        "description",
-        "image",
-        "quizId"
-      ]
+      "required": ["title", "category", "description", "image", "quizId"]
     },
     "Quiz": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -145,13 +132,33 @@
         }
       },
       "required": ["title", "questions"]
+    },
+    "Invitation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Invitation",
+      "type": "object",
+      "description": "Represents an invitation for a new user.",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email of the invited user."
+        },
+        "role": {
+          "type": "string",
+          "description": "Role assigned to the invited user."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "completed"],
+          "description": "Status of the invitation."
+        }
+      },
+      "required": ["email", "role", "status"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous"]
   },
   "firestore": {
     "structure": [
@@ -222,8 +229,24 @@
             }
           ]
         }
+      },
+      {
+        "path": "/invitations/{invitationId}",
+        "definition": {
+          "entityName": "Invitation",
+          "schema": {
+            "$ref": "#/backend/entities/Invitation"
+          },
+          "description": "Stores user invitations. Admins can create them.",
+          "params": [
+            {
+              "name": "invitationId",
+              "description": "The unique identifier for the invitation."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to support ComplyTrain's online training platform, focusing on compliance and regulation. It incorporates role-based access control (admin and user) and ensures authorization independence through denormalization. The structure segregates user data (profiles, departments) to simplify security rules and enhance scalability. Quizzes are stored as a sub-collection of courses to maintain a clear hierarchical relationship and enable efficient data retrieval for a given course. Authorization Independence is achieved by storing role information directly within the `users` document. This avoids costly and limiting `get()` operations in security rules, particularly crucial for atomic operations. The `departmentId` field in the user document is also denormalized, as is standard practice in these designs. QAPs (Rules are not Filters) are supported through structural segregation and membership models. User profiles are stored under `/users/{userId}`, allowing for secure `list` operations based on user ID. Admin roles are managed using a separate collection, `/roles_admin/{userId}`, which allows secure admin role verification using existence checks. The structure employs path-based ownership for user-related data, simplifying security rules. This design ensures clarity, predictability, and maintainability, aligning with the core principles of secure Firestore design."
+    "reasoning": "The Firestore structure is designed to support ComplyTrain's online training platform, focusing on compliance and regulation. It incorporates role-based access control (admin and user) and ensures authorization independence through denormalization. The structure segregates user data (profiles, departments) to simplify security rules and enhance scalability. Quizzes are stored as a sub-collection of courses to maintain a clear hierarchical relationship and enable efficient data retrieval for a given course. Authorization Independence is achieved by storing role information directly within the `users` document. This avoids costly and limiting `get()` operations in security rules, particularly crucial for atomic operations. The `departmentId` field in the user document is also denormalized, as is standard practice in these designs. QAPs (Rules are not Filters) are supported through structural segregation and membership models. User profiles are stored under `/users/{userId}`, allowing for secure `list` operations based on user ID. Admin roles are managed using a `role` field in the user's document. The structure employs path-based ownership for user-related data, simplifying security rules. The `invitations` collection is added to allow admins to invite new users with a specific role."
   }
 }

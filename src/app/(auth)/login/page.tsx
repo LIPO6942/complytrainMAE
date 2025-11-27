@@ -11,9 +11,9 @@ import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth, useUser, setDocumentNonBlocking, initiateAnonymousSignIn } from '@/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { redirect } from 'next/navigation';
-import { setDoc, doc, getFirestore } from 'firebase/firestore';
+import { setDoc, doc, getFirestore, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 
 
 function AuthButton({ isSignUp }: { isSignUp: boolean }) {
@@ -61,12 +61,23 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
 
         try {
             if (isSignUp) {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
                 const db = getFirestore(auth.app);
                 
-                // Set role to 'admin' if the email matches, otherwise 'user'
-                const userRole = email === 'admin@example.com' ? 'admin' : 'user';
+                // Check for pending invitation
+                const invitationsRef = collection(db, 'invitations');
+                const q = query(invitationsRef, where('email', '==', email), where('status', '==', 'pending'));
+                const invitationSnap = await getDocs(q);
+
+                let userRole = 'user'; // Default role
+                if (email === 'admin@example.com') {
+                    userRole = 'admin';
+                } else if (!invitationSnap.empty) {
+                    const invitationDoc = invitationSnap.docs[0];
+                    userRole = invitationDoc.data().role;
+                }
+
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
 
                 const userDoc = {
                     id: user.uid,
@@ -76,8 +87,17 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 };
                 
                 const userRef = doc(db, 'users', user.uid);
-                // Use non-blocking write for the user document
-                setDocumentNonBlocking(userRef, userDoc, { merge: false });
+                
+                const batch = writeBatch(db);
+                batch.set(userRef, userDoc);
+                
+                // Mark invitation as completed
+                if (!invitationSnap.empty) {
+                    const invitationDocRef = invitationSnap.docs[0].ref;
+                    batch.update(invitationDocRef, { status: 'completed' });
+                }
+
+                await batch.commit();
 
             } else {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
