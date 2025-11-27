@@ -83,6 +83,9 @@ export function AddCourseDialog() {
             category: formData.category,
             image: formData.image,
             quizId: newQuizDocRef.id,
+            videoUrl: '',
+            pdfUrl: '',
+            markdownContent: '',
         });
 
         batch.set(newQuizDocRef, {
@@ -199,3 +202,5 @@ export function AddCourseDialog() {
     </Dialog>
   );
 }
+
+    

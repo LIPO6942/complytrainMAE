@@ -67,6 +67,7 @@ function AddQuestionForm({ courseId, quizId, onAdd }: { courseId: string; quizId
     };
 
     const handleAddQuestion = () => {
+        if (!firestore) return;
         if (!questionText || options.some(opt => !opt.trim()) || correctAnswers.length === 0) {
             toast({
                 title: "Champs incomplets",
@@ -152,6 +153,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId }: QuizProps) {
 
     const quizRef = doc(collection(firestore, 'courses', courseId, 'quizzes'), quizId);
     setDocumentNonBlocking(quizRef, {
+      id: quizId,
       title: 'Quiz : Blanchiment d\'argent',
       questions: [
         {
@@ -160,7 +162,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId }: QuizProps) {
           correctAnswers: [2]
         }
       ]
-    });
+    }, { merge: true });
   };
 
   if (isQuizLoading) {
@@ -236,6 +238,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId }: QuizProps) {
   }
 
   const getScore = () => {
+      if (quiz.questions.length === 0) return '0';
       let correctCount = 0;
       quiz.questions.forEach((_, index) => {
           if (isCorrect(index)) {
@@ -310,3 +313,5 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId }: QuizProps) {
     </Card>
   );
 }
+
+    
