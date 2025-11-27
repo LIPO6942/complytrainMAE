@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { useUser, useFirestore, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, arrayUnion } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -41,6 +41,7 @@ interface QuizProps {
     isQuizLoading: boolean;
     courseId: string;
     quizId: string;
+    isLocked: boolean;
 }
 
 function AddQuestionForm({ courseId, quizId, onAdd }: { courseId: string; quizId: string; onAdd: () => void }) {
@@ -140,7 +141,7 @@ function AddQuestionForm({ courseId, quizId, onAdd }: { courseId: string; quizId
 }
 
 
-export function Quiz({ quiz, isQuizLoading, courseId, quizId }: QuizProps) {
+export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked }: QuizProps) {
   const { userProfile } = useUser();
   const firestore = useFirestore();
   const isAdmin = userProfile?.role === 'admin';
@@ -210,6 +211,8 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId }: QuizProps) {
         </Card>
     );
   }
+  
+  const isDisabled = isLocked && !isAdmin;
 
   const handleAnswerChange = (questionIndex: number, answerIndex: number, checked: boolean) => {
     setSelectedAnswers(prev => {
@@ -253,14 +256,14 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId }: QuizProps) {
   }
 
   return (
-    <Card>
+    <Card className={cn(isDisabled && "bg-muted/50")}>
       <CardHeader>
         <CardTitle>{quiz.title}</CardTitle>
         <CardDescription>Testez vos connaissances sur ce module. Plusieurs réponses peuvent être correctes.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className={cn("space-y-4", isDisabled && "opacity-50 pointer-events-none")}>
         {quiz.questions.map((question, qIndex) => (
-          <Accordion key={qIndex} type="single" collapsible>
+          <Accordion key={qIndex} type="single" collapsible disabled={isDisabled}>
             <AccordionItem value={`item-${qIndex}`}>
               <AccordionTrigger>Question {qIndex + 1}</AccordionTrigger>
               <AccordionContent>
@@ -272,7 +275,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId }: QuizProps) {
                         <Checkbox 
                             id={`q${qIndex}o${oIndex}`}
                             onCheckedChange={(checked) => handleAnswerChange(qIndex, oIndex, checked as boolean)}
-                            disabled={showResults}
+                            disabled={showResults || isDisabled}
                         />
                         <Label htmlFor={`q${qIndex}o${oIndex}`}>{option}</Label>
                       </div>
@@ -301,10 +304,18 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId }: QuizProps) {
         )}
       </CardContent>
       <CardFooter className="flex-col gap-4">
-        <Button onClick={handleSubmit} className="w-full" disabled={showResults}>
-            Soumettre le quiz
-        </Button>
-        {showResults && (
+        {isDisabled ? (
+            <div className="flex items-center justify-center text-sm text-muted-foreground p-4 text-center">
+                <Lock className="mr-2 h-4 w-4" />
+                Veuillez confirmer la lecture du contenu pour débloquer le quiz.
+            </div>
+        ) : (
+             <Button onClick={handleSubmit} className="w-full" disabled={showResults}>
+                Soumettre le quiz
+            </Button>
+        )}
+        
+        {showResults && !isDisabled && (
             <div className="text-center font-bold text-lg">
                 Votre score : {getScore()}%
             </div>

@@ -20,6 +20,8 @@ import { Pencil } from 'lucide-react';
 import { EditCourseForm } from '@/components/app/courses/edit-course-form';
 import { DeleteCourseDialog } from '@/components/app/courses/delete-course-dialog';
 import { GoogleDrivePdfViewer } from '@/components/app/courses/google-drive-pdf-viewer';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 function VideoPlayer({ url }: { url: string }) {
     return (
@@ -41,6 +43,7 @@ export default function CourseDetailPage() {
   const firestore = useFirestore();
   const { userProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
+  const [isContentReviewed, setIsContentReviewed] = useState(false);
 
   const courseRef = useMemoFirebase(() => {
     if (!firestore || !courseId) return null;
@@ -62,6 +65,7 @@ export default function CourseDetailPage() {
   };
   const image = course ? getImage(course.image) : null;
   const isAdmin = userProfile?.role === 'admin';
+  const hasContent = course && (course.videoUrl || course.pdfUrl || course.markdownContent);
 
   if (isCourseLoading) {
     return (
@@ -137,7 +141,7 @@ export default function CourseDetailPage() {
                 <GoogleDrivePdfViewer url={course.pdfUrl} />
             )}
 
-            {course.markdownContent && (
+            {course.markdownContent && course.markdownContent.trim() !== '' && (
                 <Card>
                     <CardHeader>
                         <CardTitle>Contenu du cours</CardTitle>
@@ -147,6 +151,21 @@ export default function CourseDetailPage() {
                     </CardContent>
                 </Card>
             )}
+
+            {hasContent && (
+              <Card>
+                <CardContent className="p-6 flex items-center space-x-2">
+                  <Checkbox 
+                    id="content-reviewed" 
+                    checked={isContentReviewed} 
+                    onCheckedChange={(checked) => setIsContentReviewed(checked as boolean)}
+                  />
+                  <Label htmlFor="content-reviewed" className="font-medium cursor-pointer">
+                    Je confirme avoir lu et compris le contenu ci-dessus.
+                  </Label>
+                </CardContent>
+              </Card>
+            )}
         </div>
         <div>
            <Quiz 
@@ -154,6 +173,7 @@ export default function CourseDetailPage() {
               isQuizLoading={isQuizLoading}
               courseId={courseId} 
               quizId={quizId as string}
+              isLocked={hasContent && !isContentReviewed}
             />
         </div>
       </div>
