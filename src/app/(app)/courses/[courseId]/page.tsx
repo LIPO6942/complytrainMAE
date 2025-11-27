@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import {
@@ -22,6 +22,7 @@ import { DeleteCourseDialog } from '@/components/app/courses/delete-course-dialo
 import { GoogleDrivePdfViewer } from '@/components/app/courses/google-drive-pdf-viewer';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { staticCourses, type Course, type QuizData } from '@/lib/quiz-data';
 
 function VideoPlayer({ url }: { url: string }) {
     return (
@@ -44,30 +45,50 @@ export default function CourseDetailPage() {
   const { userProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [isContentReviewed, setIsContentReviewed] = useState(false);
+  const [isStatic, setIsStatic] = useState(false);
+  
+  const [currentCourse, setCurrentCourse] = useState<Course | null>(null);
+  const [currentQuiz, setCurrentQuiz] = useState<QuizData | null>(null);
 
   const courseRef = useMemoFirebase(() => {
-    if (!firestore || !courseId) return null;
+    if (!firestore || !courseId || isStatic) return null;
     return doc(firestore, 'courses', courseId);
-  }, [firestore, courseId]);
+  }, [firestore, courseId, isStatic]);
 
-  const { data: course, isLoading: isCourseLoading } = useDoc(courseRef);
-  const quizId = course?.quizId;
+  const { data: courseFromDb, isLoading: isCourseLoading } = useDoc(courseRef);
+  const quizId = courseFromDb?.quizId;
 
   const quizRef = useMemoFirebase(() => {
-    if (!firestore || !courseId || !quizId) return null;
+    if (!firestore || !courseId || !quizId || isStatic) return null;
     return doc(collection(firestore, 'courses', courseId, 'quizzes'), quizId);
-  }, [firestore, courseId, quizId]);
+  }, [firestore, courseId, quizId, isStatic]);
   
-  const { data: quiz, isLoading: isQuizLoading } = useDoc(quizRef);
+  const { data: quizFromDb, isLoading: isQuizLoading } = useDoc(quizRef);
+  
+  useEffect(() => {
+    const staticCourse = staticCourses.find(c => c.id === courseId);
+    if (staticCourse) {
+        setCurrentCourse(staticCourse);
+        setCurrentQuiz(staticCourse.quiz);
+        setIsStatic(true);
+    } else if (courseFromDb) {
+        setCurrentCourse(courseFromDb as Course);
+        if(quizFromDb) {
+          setCurrentQuiz(quizFromDb);
+        }
+    }
+  }, [courseId, courseFromDb, quizFromDb]);
+  
+  const isLoading = isCourseLoading || isQuizLoading;
 
   const getImage = (id: string) => {
     return PlaceHolderImages.find((img) => img.id === id);
   };
-  const image = course ? getImage(course.image) : null;
+  const image = currentCourse ? getImage(currentCourse.image) : null;
   const isAdmin = userProfile?.role === 'admin';
-  const hasContent = course && (course.videoUrl || course.pdfUrl || course.markdownContent);
+  const hasContent = currentCourse && (currentCourse.videoUrl || currentCourse.pdfUrl || currentCourse.markdownContent);
 
-  if (isCourseLoading) {
+  if (isLoading && !isStatic) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-10 w-2/3" />
@@ -86,28 +107,28 @@ export default function CourseDetailPage() {
     )
   }
 
-  if (!course) {
+  if (!currentCourse) {
     return <div>Cours non trouvé. Il a peut-être été supprimé.</div>;
   }
   
-  if (isEditing) {
-    return <EditCourseForm course={course} onFinished={() => setIsEditing(false)} />
+  if (isEditing && currentCourse && !isStatic) {
+    return <EditCourseForm course={currentCourse} onFinished={() => setIsEditing(false)} />
   }
 
   return (
     <div className="space-y-6">
        <div className="flex justify-between items-start">
         <div>
-            <h1 className="text-3xl font-bold tracking-tight">{course.title}</h1>
-            <Badge variant="secondary" className="mt-2">{course.category}</Badge>
+            <h1 className="text-3xl font-bold tracking-tight">{currentCourse.title}</h1>
+            <Badge variant="secondary" className="mt-2">{currentCourse.category}</Badge>
         </div>
-        {isAdmin && (
+        {isAdmin && !isStatic && (
             <div className="flex gap-2">
                 <Button onClick={() => setIsEditing(true)} variant="outline">
                     <Pencil className="mr-2 h-4 w-4" />
                     Modifier le cours
                 </Button>
-                <DeleteCourseDialog courseId={course.id} />
+                <DeleteCourseDialog courseId={currentCourse.id} />
             </div>
         )}
       </div>
@@ -115,14 +136,14 @@ export default function CourseDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
             <Card>
-                 {course.videoUrl && course.videoUrl.trim() !== '' ? (
+                 {currentCourse.videoUrl && currentCourse.videoUrl.trim() !== '' ? (
                     <div className="p-6">
-                        <VideoPlayer url={course.videoUrl} />
+                        <VideoPlayer url={currentCourse.videoUrl} />
                     </div>
                 ) : image && (
                     <Image
                         src={image.imageUrl}
-                        alt={course.title}
+                        alt={currentCourse.title}
                         width={800}
                         height={400}
                         className="rounded-t-lg object-cover w-full aspect-video"
@@ -133,21 +154,21 @@ export default function CourseDetailPage() {
                     <CardTitle>Description du cours</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground">{course.description}</p>
+                    <p className="text-muted-foreground">{currentCourse.description}</p>
                 </CardContent>
             </Card>
 
-            {course.pdfUrl && course.pdfUrl.trim() !== '' && (
-                <GoogleDrivePdfViewer url={course.pdfUrl} />
+            {currentCourse.pdfUrl && currentCourse.pdfUrl.trim() !== '' && (
+                <GoogleDrivePdfViewer url={currentCourse.pdfUrl} />
             )}
 
-            {course.markdownContent && course.markdownContent.trim() !== '' && (
+            {currentCourse.markdownContent && currentCourse.markdownContent.trim() !== '' && (
                 <Card>
                     <CardHeader>
                         <CardTitle>Contenu du cours</CardTitle>
                     </CardHeader>
                     <CardContent className="prose dark:prose-invert max-w-none">
-                        <div dangerouslySetInnerHTML={{ __html: course.markdownContent.replace(/\n/g, '<br />') }} />
+                        <div dangerouslySetInnerHTML={{ __html: currentCourse.markdownContent.replace(/\n/g, '<br />') }} />
                     </CardContent>
                 </Card>
             )}
@@ -169,11 +190,12 @@ export default function CourseDetailPage() {
         </div>
         <div>
            <Quiz 
-              quiz={quiz} 
-              isQuizLoading={isQuizLoading}
+              quiz={currentQuiz} 
+              isQuizLoading={isLoading && !isStatic}
               courseId={courseId} 
               quizId={quizId as string}
               isLocked={hasContent && !isContentReviewed}
+              isStatic={isStatic}
             />
         </div>
       </div>

@@ -18,6 +18,7 @@ import { DeleteCourseDialog } from '@/components/app/courses/delete-course-dialo
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { AddCourseDialog } from '@/components/app/courses/add-course-dialog';
+import { staticCourses, type Course } from '@/lib/quiz-data';
 
 export default function CoursesPage() {
   const { userProfile } = useUser();
@@ -28,7 +29,9 @@ export default function CoursesPage() {
     return collection(firestore, 'courses');
   }, [firestore]);
   
-  const { data: courses, isLoading } = useCollection(coursesQuery);
+  const { data: dynamicCourses, isLoading } = useCollection(coursesQuery);
+
+  const allCourses = [...staticCourses, ...(dynamicCourses || [])];
 
   const getImage = (id: string) => {
     return PlaceHolderImages.find((img) => img.id === id);
@@ -43,10 +46,11 @@ export default function CoursesPage() {
             {isAdmin && <AddCourseDialog />}
         </div>
         {isLoading && <p>Chargement des cours...</p>}
-        {!isLoading && courses && (
+        {!isLoading && allCourses && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {courses.map((course) => {
+                {allCourses.map((course) => {
                     const image = getImage(course.image);
+                    const isStatic = 'isStatic' in course && course.isStatic;
                     return (
                       <Card key={course.id} className="flex flex-col w-full group/card relative">
                           <Link href={`/courses/${course.id}`} className="flex flex-col w-full h-full hover:border-primary transition-colors">
@@ -70,7 +74,7 @@ export default function CoursesPage() {
                                 <p className="text-primary font-semibold text-sm">Voir les détails</p>
                             </CardFooter>
                           </Link>
-                          {isAdmin && (
+                          {isAdmin && !isStatic && (
                               <div className="absolute top-2 right-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
                                   <DeleteCourseDialog 
                                       courseId={course.id}
@@ -87,7 +91,7 @@ export default function CoursesPage() {
                 })}
             </div>
         )}
-        {!isLoading && courses?.length === 0 && (
+        {!isLoading && allCourses?.length === 0 && (
              <div className="text-center py-10">
                 <p>Aucun cours n'a été trouvé. Les administrateurs peuvent en ajouter.</p>
             </div>

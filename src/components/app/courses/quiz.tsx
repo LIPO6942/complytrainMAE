@@ -23,25 +23,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PlusCircle, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import type { QuizData, Question } from '@/lib/quiz-data';
 
-
-type Question = {
-  text: string;
-  options: string[];
-  correctAnswers: number[];
-};
-
-type QuizData = {
-  title: string;
-  questions: Question[];
-} | null;
 
 interface QuizProps {
-    quiz: QuizData;
+    quiz: QuizData | null;
     isQuizLoading: boolean;
     courseId: string;
     quizId: string;
     isLocked: boolean;
+    isStatic?: boolean;
 }
 
 function AddQuestionForm({ courseId, quizId, onAdd }: { courseId: string; quizId: string; onAdd: () => void }) {
@@ -141,7 +132,7 @@ function AddQuestionForm({ courseId, quizId, onAdd }: { courseId: string; quizId
 }
 
 
-export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked }: QuizProps) {
+export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic }: QuizProps) {
   const { userProfile } = useUser();
   const firestore = useFirestore();
   const isAdmin = userProfile?.role === 'admin';
@@ -182,7 +173,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked }: QuizPr
     );
   }
   
-  if (!quiz && isAdmin) {
+  if (!quiz && isAdmin && !isStatic) {
     return (
         <Card className="text-center">
             <CardHeader>
@@ -230,6 +221,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked }: QuizPr
   };
   
   const isCorrect = (questionIndex: number) => {
+    if (!quiz) return false;
     const userAnswers = (selectedAnswers[questionIndex] || []).sort();
     const correctAnswers = quiz.questions[questionIndex].correctAnswers.sort();
     
@@ -241,7 +233,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked }: QuizPr
   }
 
   const getScore = () => {
-      if (quiz.questions.length === 0) return '0';
+      if (!quiz || quiz.questions.length === 0) return '0';
       let correctCount = 0;
       quiz.questions.forEach((_, index) => {
           if (isCorrect(index)) {
@@ -292,7 +284,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked }: QuizPr
           </Accordion>
         ))}
 
-        {isAdmin && (
+        {isAdmin && !isStatic && (
             showAddQuestion ? (
                 <AddQuestionForm courseId={courseId} quizId={quizId} onAdd={() => setShowAddQuestion(false)} />
             ) : (
@@ -324,5 +316,3 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked }: QuizPr
     </Card>
   );
 }
-
-    
