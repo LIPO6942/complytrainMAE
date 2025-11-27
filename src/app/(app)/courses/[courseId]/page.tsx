@@ -111,7 +111,7 @@ export default function CourseDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
             <Card>
-                 {course.videoUrl ? (
+                 {course.videoUrl && course.videoUrl.trim() !== '' ? (
                     <div className="p-6">
                         <VideoPlayer url={course.videoUrl} />
                     </div>
