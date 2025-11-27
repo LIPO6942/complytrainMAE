@@ -83,14 +83,55 @@
         "image": {
           "type": "string",
           "description": "ID of the placeholder image for the course."
+        },
+        "quizId": {
+          "type": "string",
+          "description": "The ID of the quiz associated with this course."
         }
       },
       "required": [
         "title",
         "category",
         "description",
-        "image"
+        "image",
+        "quizId"
       ]
+    },
+    "Quiz": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Quiz",
+      "type": "object",
+      "description": "Represents a quiz associated with a course.",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the quiz."
+        },
+        "questions": {
+          "type": "array",
+          "description": "An array of questions for the quiz.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "correctAnswer": {
+                "type": "number",
+                "description": "The index of the correct answer in the options array."
+              }
+            },
+            "required": ["text", "options", "correctAnswer"]
+          }
+        }
+      },
+      "required": ["title", "questions"]
     }
   },
   "auth": {
@@ -164,8 +205,28 @@
             }
           ]
         }
+      },
+      {
+        "path": "/courses/{courseId}/quizzes/{quizId}",
+        "definition": {
+          "entityName": "Quiz",
+          "schema": {
+            "$ref": "#/backend/entities/Quiz"
+          },
+          "description": "Stores quiz data for a specific course.",
+          "params": [
+            {
+              "name": "courseId",
+              "description": "The ID of the course."
+            },
+            {
+              "name": "quizId",
+              "description": "The ID of the quiz."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to support ComplyTrain's online training platform, focusing on compliance and regulation. It incorporates role-based access control (admin and user) and ensures authorization independence through denormalization. The structure segregates user data (profiles, departments) to simplify security rules and enhance scalability.\n\nAuthorization Independence is achieved by storing role information directly within the `users` document. This avoids costly and limiting `get()` operations in security rules, particularly crucial for atomic operations. The `departmentId` field in the user document is also denormalized, as is standard practice in these designs.\n\nQAPs (Rules are not Filters) are supported through structural segregation and membership models. User profiles are stored under `/users/{userId}`, allowing for secure `list` operations based on user ID. Admin roles are managed using a separate collection, `/roles_admin/{userId}`, which allows secure admin role verification using existence checks.\n\nThe structure employs path-based ownership for user-related data, simplifying security rules. This design ensures clarity, predictability, and maintainability, aligning with the core principles of secure Firestore design."
+    "reasoning": "The Firestore structure is designed to support ComplyTrain's online training platform, focusing on compliance and regulation. It incorporates role-based access control (admin and user) and ensures authorization independence through denormalization. The structure segregates user data (profiles, departments) to simplify security rules and enhance scalability. Quizzes are stored as a sub-collection of courses to maintain a clear hierarchical relationship and enable efficient data retrieval for a given course. Authorization Independence is achieved by storing role information directly within the `users` document. This avoids costly and limiting `get()` operations in security rules, particularly crucial for atomic operations. The `departmentId` field in the user document is also denormalized, as is standard practice in these designs. QAPs (Rules are not Filters) are supported through structural segregation and membership models. User profiles are stored under `/users/{userId}`, allowing for secure `list` operations based on user ID. Admin roles are managed using a separate collection, `/roles_admin/{userId}`, which allows secure admin role verification using existence checks. The structure employs path-based ownership for user-related data, simplifying security rules. This design ensures clarity, predictability, and maintainability, aligning with the core principles of secure Firestore design."
   }
 }

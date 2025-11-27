@@ -126,8 +126,20 @@ service cloud.firestore {
      * @principle   Enforces a clear separation of content consumption (all users) and content management (admins).
      */
     match /courses/{courseId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+
+      /**
+       * @description Stores quiz data for a specific course. Readable by all signed-in users, but only writable by admins.
+       * @path        /courses/{courseId}/quizzes/{quizId}
+       * @allow       (list, get) Any signed-in user can view the quiz for a course.
+       * @allow       (create, update, delete) Only admins can manage quizzes.
+       * @principle   Nested data inherits the parent's read/write restrictions but can be further restricted.
+       */
+      match /quizzes/{quizId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin();
+      }
     }
     
     /**

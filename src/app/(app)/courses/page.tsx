@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCollection, useUser, useFirestore, addDocumentNonBlocking, useMemoFirebase } from '@/firebase';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { ArrowRight, PlusCircle } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { collection } from 'firebase/firestore';
 
@@ -39,6 +39,7 @@ export default function CoursesPage() {
       category: 'Conformité',
       image: 'course-new',
       description: 'Ceci est un nouveau cours ajouté par l\'administrateur.',
+      quizId: 'new-quiz', // Default quizId for new courses
     };
     const coursesCollection = collection(firestore, 'courses');
     addDocumentNonBlocking(coursesCollection, newCourse);
@@ -63,36 +64,34 @@ export default function CoursesPage() {
                 {courses.map((course) => {
                     const image = getImage(course.image);
                     return (
-                    <Card key={course.id} className="flex flex-col">
-                        <CardHeader>
-                        <div className="relative h-40 w-full mb-4">
-                            {image && (
-                            <Image
-                                src={image.imageUrl}
-                                alt={course.title}
-                                fill
-                                className="rounded-lg object-cover"
-                                data-ai-hint={image.imageHint}
-                            />
-                            )}
-                        </div>
-                        <Badge variant="secondary" className="w-fit">{course.category}</Badge>
-                        <CardTitle>{course.title}</CardTitle>
-                        <CardDescription className="line-clamp-2">{course.description}</CardDescription>
-                        </CardHeader>
-                        <CardFooter className="mt-auto">
-                        <Button asChild className="w-full">
-                            <Link href="#">
-                            Voir le cours <ArrowRight className="ml-2 h-4 w-4" />
-                            </Link>
-                        </Button>
-                        </CardFooter>
-                    </Card>
+                    <Link href={`/courses/${course.id}`} key={course.id} className="flex">
+                      <Card className="flex flex-col w-full hover:border-primary transition-colors">
+                          <CardHeader>
+                          <div className="relative h-40 w-full mb-4">
+                              {image && (
+                              <Image
+                                  src={image.imageUrl}
+                                  alt={course.title}
+                                  fill
+                                  className="rounded-lg object-cover"
+                                  data-ai-hint={image.imageHint}
+                              />
+                              )}
+                          </div>
+                          <Badge variant="secondary" className="w-fit">{course.category}</Badge>
+                          <CardTitle>{course.title}</CardTitle>
+                          <CardDescription className="line-clamp-2">{course.description}</CardDescription>
+                          </CardHeader>
+                          <CardFooter className="mt-auto">
+                              <p className="text-primary font-semibold text-sm">Voir les détails</p>
+                          </CardFooter>
+                      </Card>
+                    </Link>
                     );
                 })}
             </div>
         )}
-        {!isLoading && !courses && (
+        {!isLoading && courses?.length === 0 && (
              <div className="text-center py-10">
                 <p>Aucun cours n'a été trouvé. Les administrateurs peuvent en ajouter.</p>
             </div>
