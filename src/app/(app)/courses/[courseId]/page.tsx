@@ -1,5 +1,5 @@
 'use client';
-import { useDoc, useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import {
   Card,
@@ -13,9 +13,11 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Badge } from '@/components/ui/badge';
 import { Quiz } from '@/components/app/courses/quiz';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useParams } from 'next/navigation';
 
-export default function CourseDetailPage({ params }: { params: { courseId: string } }) {
-  const { courseId } = params;
+export default function CourseDetailPage() {
+  const params = useParams();
+  const courseId = params.courseId as string;
   const firestore = useFirestore();
 
   const courseRef = useMemoFirebase(() => {
@@ -94,7 +96,7 @@ export default function CourseDetailPage({ params }: { params: { courseId: strin
               quiz={quiz} 
               isQuizLoading={isQuizLoading}
               courseId={courseId} 
-              quizId={quizId}
+              quizId={quizId as string}
             />
         </div>
       </div>
