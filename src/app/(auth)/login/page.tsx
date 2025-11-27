@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, setDocumentNonBlocking, initiateAnonymousSignIn, initiateEmailSignUp, initiateEmailSignIn } from '@/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
 import { redirect } from 'next/navigation';
 import { setDoc, doc, getFirestore } from 'firebase/firestore';
@@ -32,8 +32,9 @@ function AnonymousLoginButton() {
     const { pending } = useFormStatus();
     const auth = useAuth();
     const handleAnonymousSignIn = async () => {
+        if (!auth) return;
         try {
-            await signInAnonymously(auth);
+            initiateAnonymousSignIn(auth);
         } catch (error) {
             console.error("Anonymous sign in failed", error);
         }
@@ -52,6 +53,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
     
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (!auth) return;
         setErrorMessage(undefined);
         const formData = new FormData(event.currentTarget);
         const email = formData.get('email') as string;
@@ -72,14 +74,16 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 if (email === 'admin@example.com') {
                     userDoc.role = 'admin';
                     const adminRoleRef = doc(db, 'roles_admin', user.uid);
-                    await setDoc(adminRoleRef, { isAdmin: true });
+                    // Use non-blocking write for the admin role
+                    setDocumentNonBlocking(adminRoleRef, { isAdmin: true }, { merge: false });
                 }
                 
                 const userRef = doc(db, 'users', user.uid);
-                await setDoc(userRef, userDoc);
+                // Use non-blocking write for the user document
+                setDocumentNonBlocking(userRef, userDoc, { merge: false });
 
             } else {
-                await signInWithEmailAndPassword(auth, email, password);
+                initiateEmailSignIn(auth, email, password);
             }
         } catch (error: any) {
             switch (error.code) {
