@@ -18,6 +18,7 @@ import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Pencil } from 'lucide-react';
 import { EditCourseForm } from '@/components/app/courses/edit-course-form';
+import { DeleteCourseDialog } from '@/components/app/courses/delete-course-dialog';
 
 function VideoPlayer({ url }: { url: string }) {
     return (
@@ -81,7 +82,7 @@ export default function CourseDetailPage() {
   }
 
   if (!course) {
-    return <div>Cours non trouvé.</div>;
+    return <div>Cours non trouvé. Il a peut-être été supprimé.</div>;
   }
   
   if (isEditing) {
@@ -96,10 +97,13 @@ export default function CourseDetailPage() {
             <Badge variant="secondary" className="mt-2">{course.category}</Badge>
         </div>
         {isAdmin && (
-            <Button onClick={() => setIsEditing(true)} variant="outline">
-                <Pencil className="mr-2 h-4 w-4" />
-                Modifier le cours
-            </Button>
+            <div className="flex gap-2">
+                <Button onClick={() => setIsEditing(true)} variant="outline">
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Modifier le cours
+                </Button>
+                <DeleteCourseDialog courseId={course.id} />
+            </div>
         )}
       </div>
 
