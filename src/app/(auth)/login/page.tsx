@@ -10,8 +10,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth, useUser, setDocumentNonBlocking, initiateAnonymousSignIn, initiateEmailSignUp, initiateEmailSignIn } from '@/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
+import { useAuth, useUser, setDocumentNonBlocking, initiateAnonymousSignIn } from '@/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { redirect } from 'next/navigation';
 import { setDoc, doc, getFirestore } from 'firebase/firestore';
 
@@ -83,7 +83,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 setDocumentNonBlocking(userRef, userDoc, { merge: false });
 
             } else {
-                initiateEmailSignIn(auth, email, password);
+                await signInWithEmailAndPassword(auth, email, password);
             }
         } catch (error: any) {
             switch (error.code) {
@@ -102,6 +102,9 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 case 'auth/weak-password':
                     setErrorMessage('Le mot de passe doit comporter au moins 6 caractères.');
                     break;
+                case 'auth/invalid-credential':
+                     setErrorMessage('Les informations d\'identification sont invalides.');
+                     break;
                 default:
                     setErrorMessage("Une erreur inattendue s'est produite.");
             }
