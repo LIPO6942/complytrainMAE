@@ -78,19 +78,20 @@ service cloud.firestore {
     // ----------------------------------------------------------------------
 
     /**
-     * @description Users can create, read, and update their own profile. Admins can read any profile for oversight.
+     * @description Users can create, read, and update their own profile. Admins can read any profile for oversight and manage roles.
      * @path        /users/{userId}
      * @allow       (create) A new user 'user123' creates their own doc at /users/user123.
      * @allow       (get) An admin user gets the doc at /users/user456.
+     * @allow       (list) Admins can list all users.
+     * @allow       (update) An admin can update any user's role.
      * @deny        (get) A user 'user123' is denied from reading /users/user456.
-     * @deny        (list) Any user is denied from listing all documents in the /users collection to protect PII.
      * @principle   Restricts access to a user's own data tree and provides read-only admin oversight.
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if false;
+      allow list: if isAdmin();
       allow create: if isCreatingOwnUserDoc(userId);
-      allow update: if isExistingOwner(userId) && userDocumentIsImmutable();
+      allow update: if (isExistingOwner(userId) && userDocumentIsImmutable()) || isAdmin();
       allow delete: if false;
     }
 
@@ -131,17 +132,6 @@ service cloud.firestore {
         allow read: if isSignedIn();
         allow write: if isAdmin();
       }
-    }
-    
-    /**
-     * @description Lookup collection for admin roles. Not directly readable or writable by clients.
-     * @path        /roles_admin/{userId}
-     * @allow       (none) No client-side operations are permitted.
-     * @deny        (get) Any user, including an admin, is denied from reading a document in this collection.
-     * @principle   Secures authorization-critical data by making it inaccessible to clients. Its sole purpose is for server-side `exists()` checks within other rules.
-     */
-    match /roles_admin/{userId} {
-      allow read, write: if false;
     }
   }
 }

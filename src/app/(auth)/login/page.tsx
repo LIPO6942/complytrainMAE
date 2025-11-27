@@ -11,7 +11,7 @@ import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth, useUser, setDocumentNonBlocking, initiateAnonymousSignIn } from '@/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { redirect } from 'next/navigation';
 import { setDoc, doc, getFirestore } from 'firebase/firestore';
 
@@ -72,6 +72,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                     id: user.uid,
                     email: user.email,
                     role: userRole,
+                    lastSignInTime: new Date().toISOString(),
                 };
                 
                 const userRef = doc(db, 'users', user.uid);
@@ -79,7 +80,11 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 setDocumentNonBlocking(userRef, userDoc, { merge: false });
 
             } else {
-                await signInWithEmailAndPassword(auth, email, password);
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                const db = getFirestore(auth.app);
+                const userRef = doc(db, 'users', user.uid);
+                setDocumentNonBlocking(userRef, { lastSignInTime: new Date().toISOString() }, { merge: true });
             }
         } catch (error: any) {
             switch (error.code) {

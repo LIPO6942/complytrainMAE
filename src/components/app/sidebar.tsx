@@ -7,6 +7,7 @@ import {
   Home,
   Settings,
   ShieldCheck,
+  Users,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -21,17 +22,27 @@ import {
 import { Logo } from '@/components/icons';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useUser } from '@/firebase';
 
 const menuItems = [
   { href: '/dashboard', label: 'Tableau de bord', icon: Home },
   { href: '/courses', label: 'Cours', icon: BookOpen },
   { href: '/reporting', label: 'Rapports', icon: FileText },
   { href: '/audit', label: 'Piste d\'audit', icon: ShieldCheck },
-  { href: '/settings', label: 'Paramètres', icon: Settings },
 ];
+
+const adminMenuItems = [
+    { href: '/users', label: 'Utilisateurs', icon: Users },
+]
+
+const bottomMenuItems = [
+    { href: '/settings', label: 'Paramètres', icon: Settings },
+]
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { userProfile } = useUser();
+  const isAdmin = userProfile?.role === 'admin';
 
   const isActive = (href: string) => {
     return pathname === href;
@@ -47,7 +58,7 @@ export function AppSidebar() {
             <SidebarTrigger className="ml-auto" />
           </div>
         </SidebarHeader>
-        <SidebarMenu className="p-2">
+        <SidebarMenu className="p-2 flex-1">
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.label}>
               <Link href={item.href} passHref>
@@ -64,6 +75,40 @@ export function AppSidebar() {
               </Link>
             </SidebarMenuItem>
           ))}
+          {isAdmin && adminMenuItems.map((item) => (
+             <SidebarMenuItem key={item.label}>
+              <Link href={item.href} passHref>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive(item.href)}
+                  tooltip={item.label}
+                >
+                  <span className="flex items-center gap-2">
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+        <SidebarMenu className="p-2 mt-auto">
+             {bottomMenuItems.map((item) => (
+                <SidebarMenuItem key={item.label}>
+                <Link href={item.href} passHref>
+                    <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.href)}
+                    tooltip={item.label}
+                    >
+                    <span className="flex items-center gap-2">
+                        <item.icon />
+                        <span>{item.label}</span>
+                    </span>
+                    </SidebarMenuButton>
+                </Link>
+                </SidebarMenuItem>
+            ))}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-2">
