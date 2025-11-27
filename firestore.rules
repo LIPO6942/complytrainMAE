@@ -6,26 +6,17 @@
  *
  * Data Structure: User-specific data is stored under `/users/{userId}`. Global
  * data, such as departments and courses, is located in top-level collections.
- * Administrator status is efficiently managed in a separate `/roles_admin/{userId}`
- * collection, where the mere existence of a document signifies admin privileges.
+ * Administrator status is efficiently managed by a `role` field within each
+ * user's document.
  *
  * Key Security Decisions:
- * - Admin access is granted via a performant `exists()` check on the `/roles_admin`
- *   collection. This is faster and more secure than reading a role field from a
- *   user document for global authorization decisions.
+ * - Admin access is granted by reading the `role` field from the user's own
+ *   document. This is a common pattern for RBAC.
  * - Users can only read and modify their own `/users/{userId}` document. Listing
  *   other users is forbidden to protect Personally Identifiable Information (PII).
  * - Global data collections like `/departments` and `/courses` are read-only for
  *   all signed-in users. Writes are restricted to admins, indicating that this
  *   data should be managed by a trusted role.
- * - The `/roles_admin` collection is completely locked down from client access,
- *   serving only as a server-side lookup table for other rules.
- *
- * Denormalization for Authorization: The design uses a dedicated `/roles_admin/{userId}`
- * collection to denormalize admin status for fast, secure lookups in rules.
- * This avoids needing to read the `role` field from the `/users/{userId}`
- * document for global authorization decisions, which is a more performant and
- * scalable pattern.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -51,11 +42,11 @@ service cloud.firestore {
     }
     
     /**
-     * Checks if the user is a designated administrator by verifying the existence
-     * of a corresponding document in the roles_admin collection.
+     * Checks if the user is a designated administrator by checking the 'role'
+     * field in their own user document.
      */
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     /**

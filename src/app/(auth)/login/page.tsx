@@ -65,10 +65,13 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 const user = userCredential.user;
                 const db = getFirestore(auth.app);
                 
+                // Set role to 'admin' if the email matches, otherwise 'user'
+                const userRole = email === 'admin@example.com' ? 'admin' : 'user';
+
                 const userDoc = {
                     id: user.uid,
                     email: user.email,
-                    role: 'user', // Default role
+                    role: userRole,
                 };
                 
                 const userRef = doc(db, 'users', user.uid);
