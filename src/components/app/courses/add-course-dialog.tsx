@@ -22,10 +22,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection, writeBatch } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import { collection, writeBatch, doc } from 'firebase/firestore';
 import { PlusCircle } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+
+const courseCategories = [
+    "LCB / FT",
+    "KYC",
+    "Fraude",
+    "RGPD",
+    "Sanctions Internationales",
+    "Conformité Assurance",
+    "Quiz Thématique"
+];
 
 export function AddCourseDialog() {
   const { toast } = useToast();
@@ -35,7 +45,7 @@ export function AddCourseDialog() {
   const [formData, setFormData] = useState({
       title: 'Nouveau Quiz Thématique',
       description: 'Un nouveau quiz thématique prêt à être configuré.',
-      category: 'Quiz',
+      category: 'Quiz Thématique',
       image: 'course-new',
       quizTitle: 'Quiz sur le blanchiment d\'argent',
       quizQuestionText: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LCB) ?'
@@ -61,25 +71,22 @@ export function AddCourseDialog() {
     }
     
     try {
+        const newCourseDocRef = doc(collection(firestore, 'courses'));
+        const newQuizDocRef = doc(collection(firestore, 'courses', newCourseDocRef.id, 'quizzes'));
+
         const batch = writeBatch(firestore);
 
-        const newCourseRef = collection(firestore, 'courses');
-        const newQuizRef = collection(newCourseRef, 'quizzes'); // This is a bit of a trick, as we need the course ID first. Let's do it in two steps.
-        
-        const courseDocRef = await addDocumentNonBlocking(newCourseRef, {
+        batch.set(newCourseDocRef, {
+            id: newCourseDocRef.id,
             title: formData.title,
             description: formData.description,
             category: formData.category,
             image: formData.image,
-            quizId: 'placeholder', // a temp id
+            quizId: newQuizDocRef.id,
         });
-        
-        if (!courseDocRef) throw new Error("La création du cours a échoué");
 
-        const quizCollectionForCourse = collection(firestore, 'courses', courseDocRef.id, 'quizzes');
-
-        // We can't use addDocumentNonBlocking here as we need the ID for the course update
-        const quizDocRef = await addDocumentNonBlocking(quizCollectionForCourse, {
+        batch.set(newQuizDocRef, {
+             id: newQuizDocRef.id,
              title: formData.quizTitle,
              questions: [{
                  text: formData.quizQuestionText,
@@ -87,11 +94,6 @@ export function AddCourseDialog() {
                  correctAnswers: [2]
              }]
         });
-
-        if (!quizDocRef) throw new Error("La création du quiz a échoué");
-
-        // Now update the course with the real quizId
-        batch.update(courseDocRef, { quizId: quizDocRef.id });
 
         await batch.commit();
 
@@ -104,7 +106,7 @@ export function AddCourseDialog() {
         setFormData({
             title: 'Nouveau Quiz Thématique',
             description: 'Un nouveau quiz thématique prêt à être configuré.',
-            category: 'Quiz',
+            category: 'Quiz Thématique',
             image: 'course-new',
             quizTitle: 'Quiz sur le blanchiment d\'argent',
             quizQuestionText: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LCB) ?'
@@ -148,7 +150,18 @@ export function AddCourseDialog() {
           </div>
            <div className="space-y-2">
             <Label htmlFor="category">Catégorie</Label>
-            <Input id="category" name="category" value={formData.category} onChange={handleChange} />
+            <Select value={formData.category} onValueChange={(value) => handleSelectChange('category', value)}>
+                <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                    {courseCategories.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                            {cat}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="image">Image du cours</Label>
