@@ -1,5 +1,6 @@
 'use client';
-import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { useState } from 'react';
+import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import {
   Card,
@@ -14,11 +15,36 @@ import { Badge } from '@/components/ui/badge';
 import { Quiz } from '@/components/app/courses/quiz';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Pencil } from 'lucide-react';
+import { EditCourseForm } from '@/components/app/courses/edit-course-form';
+
+function YouTubeEmbed({ url }: { url: string }) {
+    const videoId = url.split('v=')[1]?.split('&')[0];
+    if (!videoId) return <p>URL de vidéo YouTube invalide.</p>;
+
+    return (
+        <div className="aspect-video">
+        <iframe
+            width="100%"
+            height="100%"
+            src={`https://www.youtube.com/embed/${videoId}`}
+            title="Lecteur vidéo YouTube"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="rounded-lg"
+        ></iframe>
+        </div>
+    );
+}
 
 export default function CourseDetailPage() {
   const params = useParams();
   const courseId = params.courseId as string;
   const firestore = useFirestore();
+  const { userProfile } = useUser();
+  const [isEditing, setIsEditing] = useState(false);
 
   const courseRef = useMemoFirebase(() => {
     if (!firestore || !courseId) return null;
@@ -39,6 +65,7 @@ export default function CourseDetailPage() {
     return PlaceHolderImages.find((img) => img.id === id);
   };
   const image = course ? getImage(course.image) : null;
+  const isAdmin = userProfile?.role === 'admin';
 
   if (isCourseLoading) {
     return (
@@ -62,18 +89,30 @@ export default function CourseDetailPage() {
   if (!course) {
     return <div>Cours non trouvé.</div>;
   }
+  
+  if (isEditing) {
+    return <EditCourseForm course={course} onFinished={() => setIsEditing(false)} />
+  }
 
   return (
     <div className="space-y-6">
-       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{course.title}</h1>
-        <Badge variant="secondary" className="mt-2">{course.category}</Badge>
+       <div className="flex justify-between items-start">
+        <div>
+            <h1 className="text-3xl font-bold tracking-tight">{course.title}</h1>
+            <Badge variant="secondary" className="mt-2">{course.category}</Badge>
+        </div>
+        {isAdmin && (
+            <Button onClick={() => setIsEditing(true)} variant="outline">
+                <Pencil className="mr-2 h-4 w-4" />
+                Modifier le cours
+            </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-8">
             <Card>
-                 {image && (
+                 {image && !course.videoUrl && (
                     <Image
                         src={image.imageUrl}
                         alt={course.title}
@@ -83,6 +122,11 @@ export default function CourseDetailPage() {
                         data-ai-hint={image.imageHint}
                     />
                 )}
+                {course.videoUrl && (
+                    <div className="p-6">
+                        <YouTubeEmbed url={course.videoUrl} />
+                    </div>
+                )}
                 <CardHeader>
                     <CardTitle>Description du cours</CardTitle>
                 </CardHeader>
@@ -90,6 +134,17 @@ export default function CourseDetailPage() {
                     <p className="text-muted-foreground">{course.description}</p>
                 </CardContent>
             </Card>
+
+            {course.markdownContent && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Contenu du cours</CardTitle>
+                    </CardHeader>
+                    <CardContent className="prose dark:prose-invert max-w-none">
+                        <div dangerouslySetInnerHTML={{ __html: course.markdownContent.replace(/\n/g, '<br />') }} />
+                    </CardContent>
+                </Card>
+            )}
         </div>
         <div>
            <Quiz 

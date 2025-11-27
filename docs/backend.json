@@ -87,6 +87,14 @@
         "quizId": {
           "type": "string",
           "description": "The ID of the quiz associated with this course."
+        },
+        "videoUrl": {
+          "type": "string",
+          "description": "URL of the course video content (e.g., YouTube)."
+        },
+        "markdownContent": {
+          "type": "string",
+          "description": "The course content in Markdown format."
         }
       },
       "required": [
@@ -170,22 +178,6 @@
             {
               "name": "departmentId",
               "description": "The unique identifier for the department."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles_admin/{userId}",
-        "definition": {
-          "entityName": "adminRole",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Indicates the user is an administrator. Existence of the document grants admin privileges. This enables secure role verification without reading document content.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the admin user."
             }
           ]
         }
