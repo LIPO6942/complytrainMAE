@@ -35,10 +35,10 @@ export default function CoursesPage() {
   const handleAddCourse = () => {
     if (!firestore) return;
     const newCourse = {
-      title: 'Nouveau Cours de Conformité',
-      category: 'Conformité',
+      title: 'Nouveau Quiz Thématique',
+      category: 'Quiz',
       image: 'course-new',
-      description: 'Ceci est un nouveau cours ajouté par l\'administrateur.',
+      description: 'Un nouveau quiz thématique prêt à être configuré.',
       quizId: 'new-quiz', // Default quizId for new courses
     };
     const coursesCollection = collection(firestore, 'courses');

@@ -137,12 +137,12 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId }: QuizProps) {
 
     const quizRef = doc(collection(firestore, 'courses', courseId, 'quizzes'), quizId);
     setDocumentNonBlocking(quizRef, {
-      title: 'Quiz de Conformité',
+      title: 'Quiz : Blanchiment d\'argent',
       questions: [
         {
-          text: 'Quelle est la première étape du processus KYC ?',
-          options: ['Analyse des risques', 'Identification du client', 'Surveillance continue'],
-          correctAnswer: 1
+          text: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LCB) ?',
+          options: ['Marketing sur les réseaux sociaux', 'Intégration des employés', 'Déclaration de transaction suspecte (DTS)'],
+          correctAnswer: 2
         }
       ]
     });
