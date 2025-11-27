@@ -16,10 +16,9 @@ import { Quiz } from '@/components/app/courses/quiz';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Pencil, FileText } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { EditCourseForm } from '@/components/app/courses/edit-course-form';
 import { DeleteCourseDialog } from '@/components/app/courses/delete-course-dialog';
-import Link from 'next/link';
 
 function VideoPlayer({ url }: { url: string }) {
     return (
@@ -33,6 +32,25 @@ function VideoPlayer({ url }: { url: string }) {
         </video>
         </div>
     );
+}
+
+function PdfViewer({ url }: { url: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Document PDF</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="aspect-[4/3] w-full">
+            <iframe
+                src={url}
+                className="w-full h-full rounded-lg border"
+                title="PDF Viewer"
+            />
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function CourseDetailPage() {
@@ -130,16 +148,12 @@ export default function CourseDetailPage() {
                 </CardHeader>
                 <CardContent>
                     <p className="text-muted-foreground">{course.description}</p>
-                    {course.pdfUrl && (
-                        <Button asChild className="mt-4">
-                            <Link href={course.pdfUrl} target="_blank" rel="noopener noreferrer">
-                                <FileText className="mr-2 h-4 w-4" />
-                                Ouvrir le PDF
-                            </Link>
-                        </Button>
-                    )}
                 </CardContent>
             </Card>
+
+            {course.pdfUrl && course.pdfUrl.trim() !== '' && (
+                <PdfViewer url={course.pdfUrl} />
+            )}
 
             {course.markdownContent && (
                 <Card>
