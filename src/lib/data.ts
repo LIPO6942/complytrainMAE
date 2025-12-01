@@ -53,6 +53,9 @@ export const staticDepartments = [
     { id: 'tunis-sud', name: 'Délégation Tunis Sud' },
     { id: 'tunis-centre', name: 'Délégation Tunis Centre' },
     { id: 'cap-bon', name: 'Délégation Cap bon' },
+    { id: 'delegation-sud', name: 'Délégation Sud' },
+    { id: 'delegation-sahel', name: 'Délégation Sahel' },
+    { id: 'delegation-nord-ouest', name: 'Délégation Nord Ouest' },
 ];
 
 export const reportingData = {

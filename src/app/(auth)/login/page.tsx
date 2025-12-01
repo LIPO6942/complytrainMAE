@@ -186,7 +186,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                                 id="agencyCode"
                                 type="text"
                                 name="agencyCode"
-                                placeholder="ex: 1234"
+                                placeholder="ex: 101"
                             />
                         </div>
                     </>
