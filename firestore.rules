@@ -64,7 +64,7 @@ service cloud.firestore {
       allow create: if isOwner(userId);
       allow read, update: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow delete: if false; // Prevent accidental deletion
+      allow delete: if false;
     }
 
     /**
