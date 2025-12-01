@@ -77,12 +77,9 @@ service cloud.firestore {
      * @principle   Restricts access to a user's own data tree and provides read-only admin oversight.
      */
     match /users/{userId} {
+      allow create: if isOwner(userId);
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      // A user can create their own document.
-      allow create: if isOwner(userId);
-      // Users can update their own doc if they don't change immutable fields.
-      // Admins have full update rights.
       allow update: if (isOwner(userId) && userDocumentIsImmutable()) || isAdmin();
       allow delete: if false;
     }

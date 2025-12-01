@@ -125,19 +125,15 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     const userDocRef = doc(firestore, 'users', firebaseUser.uid);
     
     const manageUserProfile = async () => {
-        // This variable needs to be accessible in the catch block.
         let newUserDoc: UserProfile | null = null;
         try {
             const docSnap = await getDoc(userDocRef);
 
             if (docSnap.exists()) {
-                // Document already exists, no need to create it.
-                // The onSnapshot listener below will handle updates.
                 return;
             }
             
-            // Document does not exist, so we create it.
-            if (!firebaseUser.email) return; // Should not happen if signup requires email
+            if (!firebaseUser.email) return;
 
             const invitationsRef = collection(firestore, 'invitations');
             const q = query(invitationsRef, where('email', '==', firebaseUser.email), where('status', '==', 'pending'));
