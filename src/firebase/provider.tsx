@@ -2,7 +2,7 @@
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore, doc, onSnapshot } from 'firebase/firestore';
+import { Firestore, doc, onSnapshot, getDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 
@@ -14,6 +14,7 @@ interface UserProfile {
   firstName?: string;
   lastName?: string;
   departmentId?: string;
+  badges?: string[];
 }
 
 interface FirebaseProviderProps {
@@ -115,15 +116,63 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       }
       return;
     }
+    
+    const firebaseUser = userAuthState.user;
+    const userDocRef = doc(firestore, 'users', firebaseUser.uid);
+    
+    // This function runs the logic to create or update the user profile
+    const manageUserProfile = async () => {
+        const docSnap = await getDoc(userDocRef);
 
-    const userDocRef = doc(firestore, 'users', userAuthState.user.uid);
+        if (!docSnap.exists()) {
+             // Profile doesn't exist, so this is a new user sign-up
+             try {
+                // Check for pending invitation
+                const invitationsRef = collection(firestore, 'invitations');
+                const q = query(invitationsRef, where('email', '==', firebaseUser.email), where('status', '==', 'pending'));
+                const invitationSnap = await getDocs(q);
+
+                let userRole = 'user'; // Default role
+                if (firebaseUser.email === 'admin@example.com') {
+                    userRole = 'admin';
+                } else if (!invitationSnap.empty) {
+                    const invitationDoc = invitationSnap.docs[0];
+                    userRole = invitationDoc.data().role;
+                }
+
+                const newUserDoc = {
+                    id: firebaseUser.uid,
+                    email: firebaseUser.email,
+                    role: userRole,
+                    lastSignInTime: new Date().toISOString(),
+                };
+                
+                const batch = writeBatch(firestore);
+                batch.set(userDocRef, newUserDoc);
+                
+                // Mark invitation as completed
+                if (!invitationSnap.empty) {
+                    const invitationDocRef = invitationSnap.docs[0].ref;
+                    batch.update(invitationDocRef, { status: 'completed' });
+                }
+
+                await batch.commit();
+
+             } catch (error) {
+                console.error("Error creating user profile:", error);
+             }
+        }
+    };
+
+    manageUserProfile();
+
     const unsubscribeProfile = onSnapshot(
       userDocRef,
       (docSnap) => {
         if (docSnap.exists()) {
           setUserAuthState(prevState => ({ ...prevState, userProfile: docSnap.data() as UserProfile }));
         } else {
-          // Handle case where user is authenticated but profile doc doesn't exist yet
+          // This might happen briefly before the profile is created.
           setUserAuthState(prevState => ({ ...prevState, userProfile: null }));
         }
       },
