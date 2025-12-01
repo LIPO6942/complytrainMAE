@@ -10,6 +10,7 @@ import {
   ChartLegend,
   ChartLegendContent
 } from '@/components/ui/chart';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const chartConfig = {
   value: {
@@ -19,11 +20,11 @@ const chartConfig = {
     label: 'Marketing',
     color: 'hsl(var(--chart-1))',
   },
-  Sales: {
+  Ventes: {
     label: 'Ventes',
     color: 'hsl(var(--chart-2))',
   },
-  Engineering: {
+  Ingénierie: {
     label: 'Ingénierie',
     color: 'hsl(var(--chart-3))',
   },
@@ -39,9 +40,19 @@ const chartConfig = {
 
 type SuccessChartProps = {
   data: { name: string; value: number; fill: string }[];
+  isLoading: boolean;
 };
 
-export function SuccessChart({ data }: SuccessChartProps) {
+export function SuccessChart({ data, isLoading }: SuccessChartProps) {
+  if (isLoading) {
+    return <div className="h-72 flex items-center justify-center"><Skeleton className="h-48 w-48 rounded-full" /></div>
+  }
+  
+  if (!data || data.length === 0) {
+    return <div className="h-72 flex items-center justify-center text-muted-foreground">Aucun département trouvé.</div>
+  }
+
+
   return (
     <ChartContainer
       config={chartConfig}
@@ -50,7 +61,7 @@ export function SuccessChart({ data }: SuccessChartProps) {
       <PieChart>
         <ChartTooltip
           cursor={false}
-          content={<ChartTooltipContent hideLabel formatter={(value, name) => `${value}%`}/>}
+          content={<ChartTooltipContent hideLabel formatter={(value, name) => `${value}%`} />}
         />
         <Pie
           data={data}
