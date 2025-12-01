@@ -1,4 +1,3 @@
-
 import { 
     BadgeAmlExpert, 
     BadgeKycCertified,
@@ -7,13 +6,6 @@ import {
     BadgeSanctionsSpecialist,
     BadgeInsuranceExpert
 } from "@/components/icons";
-
-export const user = {
-  name: 'Alex Dupont',
-  email: 'alex.dupont@example.com',
-  avatarUrl: 'https://picsum.photos/seed/user/100/100',
-  riskProfile: 'Formation LAB/FT et KYC terminée avec des scores de 85% et 90% respectivement. A eu un incident mineur de non-déclaration d\'une transaction suspecte en temps opportun le trimestre dernier. Nouveau dans le secteur de l\'assurance.',
-};
 
 export const learningPath = [
   {
@@ -71,14 +63,6 @@ export const reportingData = {
     { name: 'Ingénierie', value: 95, fill: 'var(--color-chart-3)' },
     { name: 'Support', value: 88, fill: 'var(--color-chart-4)' },
     { name: 'Finance', value: 98, fill: 'var(--color-chart-5)' },
-  ],
-  heatmapData: [
-    { user: 'Alice', 'LAB/FT': 95, 'KYC': 90, 'Fraude': 88, 'RGPD': 92, 'Sanctions': 85 },
-    { user: 'Bob', 'LAB/FT': 75, 'KYC': 82, 'Fraude': 80, 'RGPD': 88, 'Sanctions': 70 },
-    { user: 'Charlie', 'LAB/FT': 100, 'KYC': 98, 'Fraude': 95, 'RGPD': 99, 'Sanctions': 96 },
-    { user: 'David', 'LAB/FT': 81, 'KYC': 78, 'Fraude': 65, 'RGPD': 70, 'Sanctions': 68 },
-    { user: 'Eve', 'LAB/FT': 92, 'KYC': 91, 'Fraude': 89, 'RGPD': 94, 'Sanctions': 90 },
-    { user: 'Frank', 'LAB/FT': 68, 'KYC': 72, 'Fraude': 75, 'RGPD': 80, 'Sanctions': 60 },
   ],
 };
 

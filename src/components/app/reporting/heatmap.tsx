@@ -9,9 +9,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type HeatmapProps = {
   data: { user: string; [key: string]: string | number }[];
+  isLoading: boolean;
 };
 
 const getColorForScore = (score: number) => {
@@ -22,9 +24,30 @@ const getColorForScore = (score: number) => {
   return 'bg-red-200/50 dark:bg-red-900/50 text-red-900 dark:text-red-200';
 };
 
-export function Heatmap({ data }: HeatmapProps) {
+export function Heatmap({ data, isLoading }: HeatmapProps) {
+  if (isLoading) {
+    return (
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead><Skeleton className="h-5 w-20" /></TableHead>
+                    {Array.from({length: 5}).map((_, i) => <TableHead key={i}><Skeleton className="h-5 w-24" /></TableHead>)}
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {Array.from({length: 3}).map((_, i) => (
+                    <TableRow key={i}>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        {Array.from({length: 5}).map((_, j) => <TableCell key={j}><Skeleton className="h-8 w-full" /></TableCell>)}
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    )
+  }
+  
   if (!data || data.length === 0) {
-    return <p>No data available.</p>;
+    return <p className="text-center text-muted-foreground p-4">Aucune donnée utilisateur à afficher.</p>;
   }
   const headers = Object.keys(data[0]).filter((key) => key !== 'user');
 
@@ -33,7 +56,7 @@ export function Heatmap({ data }: HeatmapProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="font-bold">User</TableHead>
+            <TableHead className="font-bold">Utilisateur</TableHead>
             {headers.map((header) => (
               <TableHead key={header} className="text-center font-bold">{header}</TableHead>
             ))}

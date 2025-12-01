@@ -1,7 +1,4 @@
-
-
-
-
+'use client';
 
 import {
   Card,
@@ -11,16 +8,20 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { learningPath, user } from '@/lib/data';
+import { learningPath } from '@/lib/data';
 import { personalizedRiskRecommendations } from '@/ai/flows/personalized-risk-recommendations';
 import { BookMarked, Target, AlertTriangle } from 'lucide-react';
 import { AITutor } from './ai-tutor';
 import { EarnedBadges } from './earned-badges';
+import { useUser } from '@/firebase';
 
 async function PersonalizedRecommendations() {
+  const { userProfile } = useUser();
+  const riskProfile = userProfile?.departmentId || 'Profil de risque non disponible.'; // Fallback
+
   try {
     const recommendations = await personalizedRiskRecommendations({
-      riskProfile: user.riskProfile,
+      riskProfile: riskProfile,
     });
 
     const recommendationItems = recommendations.recommendations
@@ -77,11 +78,14 @@ async function PersonalizedRecommendations() {
 }
 
 export default function DashboardPage() {
+  const { userProfile } = useUser();
+  const displayName = userProfile?.firstName || 'Utilisateur';
+  
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
       <Card className="lg:col-span-4">
         <CardHeader>
-          <CardTitle>Bonjour, {user.name.split(' ')[0]} !</CardTitle>
+          <CardTitle>Bonjour, {displayName} !</CardTitle>
           <CardDescription>
             Voici un résumé de votre progression en formation de conformité.
           </CardDescription>
