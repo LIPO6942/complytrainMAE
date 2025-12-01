@@ -123,42 +123,51 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     
     const firebaseUser = userAuthState.user;
     const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-    let newUserDoc: UserProfile | null = null;
     
     const manageUserProfile = async () => {
+        // This variable needs to be accessible in the catch block.
+        let newUserDoc: UserProfile | null = null;
         try {
             const docSnap = await getDoc(userDocRef);
 
-            if (!docSnap.exists() && firebaseUser.email) {
-                const invitationsRef = collection(firestore, 'invitations');
-                const q = query(invitationsRef, where('email', '==', firebaseUser.email), where('status', '==', 'pending'));
-                const invitationSnap = await getDocs(q);
-
-                let userRole: 'admin' | 'user' = 'user';
-                if (firebaseUser.email === 'admin@example.com') {
-                    userRole = 'admin';
-                } else if (!invitationSnap.empty) {
-                    const invitationDoc = invitationSnap.docs[0];
-                    userRole = invitationDoc.data().role;
-                }
-
-                newUserDoc = {
-                    id: firebaseUser.uid,
-                    email: firebaseUser.email,
-                    role: userRole,
-                    lastSignInTime: new Date().toISOString(),
-                };
-                
-                const batch = writeBatch(firestore);
-                batch.set(userDocRef, newUserDoc);
-                
-                if (!invitationSnap.empty) {
-                    const invitationDocRef = invitationSnap.docs[0].ref;
-                    batch.update(invitationDocRef, { status: 'completed' });
-                }
-
-                await batch.commit();
+            if (docSnap.exists()) {
+                // Document already exists, no need to create it.
+                // The onSnapshot listener below will handle updates.
+                return;
             }
+            
+            // Document does not exist, so we create it.
+            if (!firebaseUser.email) return; // Should not happen if signup requires email
+
+            const invitationsRef = collection(firestore, 'invitations');
+            const q = query(invitationsRef, where('email', '==', firebaseUser.email), where('status', '==', 'pending'));
+            const invitationSnap = await getDocs(q);
+
+            let userRole: 'admin' | 'user' = 'user';
+            if (firebaseUser.email === 'admin@example.com') {
+                userRole = 'admin';
+            } else if (!invitationSnap.empty) {
+                const invitationDoc = invitationSnap.docs[0];
+                userRole = invitationDoc.data().role;
+            }
+
+            newUserDoc = {
+                id: firebaseUser.uid,
+                email: firebaseUser.email,
+                role: userRole,
+                lastSignInTime: new Date().toISOString(),
+            };
+            
+            const batch = writeBatch(firestore);
+            batch.set(userDocRef, newUserDoc);
+            
+            if (!invitationSnap.empty) {
+                const invitationDocRef = invitationSnap.docs[0].ref;
+                batch.update(invitationDocRef, { status: 'completed' });
+            }
+
+            await batch.commit();
+
         } catch (error) {
              if (error instanceof Error && (error.name === 'FirebaseError' || error.message.includes('permission'))) {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({

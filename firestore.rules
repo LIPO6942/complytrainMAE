@@ -47,17 +47,10 @@ service cloud.firestore {
      * field in their own user document.
      */
     function isAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // Use exists() to avoid errors on new user creation when their doc doesn't exist yet.
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    /**
-     * Combines an ownership check with an existence check.
-     * CRITICAL: Ensures that update/delete operations target existing documents.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-    
     /**
      * On update, ensures the internal 'id' and 'email' fields are immutable.
      * This prevents re-assigning ownership of the document.
@@ -86,10 +79,11 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
+      // A user can create their own document.
       allow create: if isOwner(userId);
       // Users can update their own doc if they don't change immutable fields.
       // Admins have full update rights.
-      allow update: if (isExistingOwner(userId) && userDocumentIsImmutable()) || isAdmin();
+      allow update: if (isOwner(userId) && userDocumentIsImmutable()) || isAdmin();
       allow delete: if false;
     }
 
