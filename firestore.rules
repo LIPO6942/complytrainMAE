@@ -51,37 +51,18 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    /**
-     * On update, ensures the internal 'id' and 'email' fields are immutable.
-     * This prevents re-assigning ownership of the document.
-     */
-    function userDocumentIsImmutable() {
-      return request.resource.data.id == resource.data.id &&
-             request.resource.data.email == resource.data.email;
-    }
-
     // ----------------------------------------------------------------------
     // Collection Rules
     // ----------------------------------------------------------------------
 
     /**
-     * @description Users can create their own profile, and read/update their own data.
+     * @description Users can create, read, and write their own profile document.
      * Admins can read any profile for oversight and manage roles.
      * @path        /users/{userId}
-     * @allow       (create) A new user 'user123' creates their own doc at /users/user123.
-     * @allow       (get) An admin user gets the doc at /users/user456.
-     * @allow       (list) Admins can list all users.
-     * @allow       (update) A user can update their own non-critical fields (like name or badges).
-     * @allow       (update) An admin can update any user's role.
-     * @deny        (get) A user 'user123' is denied from reading /users/user456.
-     * @principle   Restricts access to a user's own data tree and provides read-only admin oversight.
      */
     match /users/{userId} {
-      allow create: if isOwner(userId);
-      allow get: if isOwner(userId) || isAdmin();
+      allow read, write: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow update: if (isOwner(userId) && userDocumentIsImmutable()) || isAdmin();
-      allow delete: if false;
     }
 
     /**
