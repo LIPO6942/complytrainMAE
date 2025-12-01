@@ -13,13 +13,19 @@ import { useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function PersonalizedRecommendations() {
-  const { userProfile } = useUser();
+  const { userProfile, isUserLoading } = useUser();
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchRecommendations() {
+      // Don't fetch until user profile is loaded
+      if (isUserLoading) {
+        return;
+      }
+      
+      // Once loading is done, if there's still no profile, we can stop.
       if (!userProfile) {
         setIsLoading(false);
         return;
@@ -27,18 +33,24 @@ export function PersonalizedRecommendations() {
 
       setIsLoading(true);
       setError(null);
-      const riskProfile = userProfile?.departmentId || 'Profil de risque non disponible.';
+      
+      // Use departmentId if available, otherwise a generic fallback.
+      const riskProfile = userProfile?.departmentId || 'Profil de risque général. Pas de département assigné.';
 
       try {
         const result = await personalizedRiskRecommendations({
           riskProfile: riskProfile,
         });
 
-        const recommendationItems = result.recommendations
-          .split('\n')
-          .map((item) => item.replace(/^\d+\.\s/, ''))
-          .filter(Boolean);
-        setRecommendations(recommendationItems);
+        if (result && result.recommendations) {
+            const recommendationItems = result.recommendations
+            .split('\n')
+            .map((item) => item.replace(/^\d+\.\s/, ''))
+            .filter(Boolean);
+            setRecommendations(recommendationItems);
+        } else {
+            setRecommendations([]);
+        }
       } catch (e) {
         console.error("Failed to fetch personalized recommendations:", e);
         setError("Les recommandations n'ont pas pu être chargées pour le moment.");
@@ -48,7 +60,7 @@ export function PersonalizedRecommendations() {
     }
 
     fetchRecommendations();
-  }, [userProfile]);
+  }, [userProfile, isUserLoading]);
 
   return (
     <Card>
