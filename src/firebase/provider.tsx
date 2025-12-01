@@ -125,19 +125,16 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     
     // This function runs the logic to create or update the user profile
     const manageUserProfile = async () => {
-        let newUserDoc: UserProfile | null = null; // Hoist to be accessible in catch block
+        let newUserDoc: UserProfile | null = null;
         try {
             const docSnap = await getDoc(userDocRef);
 
             if (!docSnap.exists() && firebaseUser.email) {
-                // Profile doesn't exist, so this is a new user sign-up
-                
-                // Check for pending invitation
                 const invitationsRef = collection(firestore, 'invitations');
                 const q = query(invitationsRef, where('email', '==', firebaseUser.email), where('status', '==', 'pending'));
                 const invitationSnap = await getDocs(q);
 
-                let userRole: 'admin' | 'user' = 'user'; // Default role
+                let userRole: 'admin' | 'user' = 'user';
                 if (firebaseUser.email === 'admin@example.com') {
                     userRole = 'admin';
                 } else if (!invitationSnap.empty) {
@@ -155,7 +152,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
                 const batch = writeBatch(firestore);
                 batch.set(userDocRef, newUserDoc);
                 
-                // Mark invitation as completed
                 if (!invitationSnap.empty) {
                     const invitationDocRef = invitationSnap.docs[0].ref;
                     batch.update(invitationDocRef, { status: 'completed' });
@@ -164,10 +160,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
                 await batch.commit();
             }
         } catch (error) {
-             // This catches getDoc, getDocs, or batch commit errors.
              if (error instanceof Error && (error.name === 'FirebaseError' || error.message.includes('permission'))) {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({
-                    path: userDocRef.path, // or invitations path if relevant
+                    path: userDocRef.path,
                     operation: 'write', 
                     requestResourceData: newUserDoc || {note: "Could not retrieve profile data for error report."}
                 }));
@@ -185,7 +180,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         if (docSnap.exists()) {
           setUserAuthState(prevState => ({ ...prevState, userProfile: docSnap.data() as UserProfile }));
         } else {
-          // This might happen briefly before the profile is created.
           setUserAuthState(prevState => ({ ...prevState, userProfile: null }));
         }
       },
