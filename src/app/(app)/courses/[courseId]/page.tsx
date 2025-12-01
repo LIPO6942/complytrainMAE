@@ -193,7 +193,7 @@ export default function CourseDetailPage() {
                     id="content-reviewed" 
                     checked={isContentReviewed} 
                     onCheckedChange={(checked) => setIsContentReviewed(checked as boolean)}
-                    disabled={isAdmin}
+                    disabled={isAdmin && isContentReviewed}
                   />
                   <Label htmlFor="content-reviewed" className="font-medium cursor-pointer">
                     Je confirme avoir lu et compris le contenu ci-dessus.

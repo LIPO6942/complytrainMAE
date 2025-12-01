@@ -174,6 +174,29 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     );
   }
   
+  if (isLocked) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Quiz Verrouillé</CardTitle>
+                 <CardDescription>Testez vos connaissances sur ce module.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="relative flex flex-col items-center justify-center p-8 text-center bg-muted/30 rounded-lg">
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 rounded-lg"></div>
+                    <div className="relative z-20 flex flex-col items-center">
+                        <Lock className="w-12 h-12 text-primary mb-4" />
+                        <h3 className="text-xl font-semibold">Quiz Verrouillé</h3>
+                        <p className="text-muted-foreground mt-2 max-w-xs">
+                            Veuillez cocher la case de confirmation après avoir étudié le contenu du cours pour déverrouiller ce quiz.
+                        </p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+  }
+
   if (!quiz && isAdmin && !isStatic) {
     return (
         <Card className="text-center">
@@ -271,29 +294,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
         <CardDescription>Testez vos connaissances sur ce module. Plusieurs réponses peuvent être correctes.</CardDescription>
       </CardHeader>
       
-      {isLocked ? (
-        <>
-            <CardContent>
-                <div className="relative flex flex-col items-center justify-center p-8 text-center bg-muted/30 rounded-lg aspect-video">
-                    <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10"></div>
-                    <div className="relative z-20 flex flex-col items-center">
-                        <Lock className="w-12 h-12 text-primary mb-4" />
-                        <h3 className="text-xl font-semibold">Quiz Verrouillé</h3>
-                        <p className="text-muted-foreground mt-2">
-                            Terminez la lecture du cours pour déverrouiller ce quiz.
-                        </p>
-                    </div>
-                </div>
-            </CardContent>
-            <CardFooter>
-                <Button disabled className="w-full">
-                    <Lock className="mr-2 h-4 w-4" />
-                    Quiz verrouillé
-                </Button>
-            </CardFooter>
-        </>
-      ) : (
-        <>
+      <>
           <CardContent className="space-y-4">
             {quiz.questions.map((question, qIndex) => (
               <Accordion key={qIndex} type="single" collapsible>
@@ -348,7 +349,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             )}
           </CardFooter>
         </>
-      )}
     </Card>
   );
 }
