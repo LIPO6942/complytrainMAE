@@ -66,31 +66,38 @@ export default function UsersPage() {
     const { data: invitations, isLoading: isLoadingInvitations } = useCollection<Invitation>(invitationsQuery);
     
     const allUsersAndInvites = useMemo(() => {
-        const registeredUsers = (users || []).map(user => ({
-            id: user.id,
-            email: user.email,
-            role: user.role,
-            status: 'registered' as 'registered' | 'pending',
-            lastSignInTime: user.lastSignInTime,
-            isRegistered: true,
-        }));
-    
-        const registeredEmails = new Set(registeredUsers.map(u => u.email));
-    
-        const pendingInvites = (invitations || [])
-            .filter(invite => invite.status === 'pending' && !registeredEmails.has(invite.email))
-            .map(invite => ({
-                id: invite.id,
-                email: invite.email,
-                role: invite.role,
-                status: 'pending' as 'registered' | 'pending',
-                lastSignInTime: undefined,
-                isRegistered: false,
-            }));
-    
-        return [...registeredUsers, ...pendingInvites];
+        const combined = new Map<string, any>();
+
+        // Add registered users first, they have priority
+        (users || []).forEach(user => {
+            combined.set(user.email, {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                status: 'registered',
+                lastSignInTime: user.lastSignInTime,
+                isRegistered: true,
+            });
+        });
+
+        // Add pending invitations only if the email is not already in the map
+        (invitations || []).forEach(invite => {
+            if (invite.status === 'pending' && !combined.has(invite.email)) {
+                combined.set(invite.email, {
+                    id: invite.id,
+                    email: invite.email,
+                    role: invite.role,
+                    status: 'pending',
+                    lastSignInTime: undefined,
+                    isRegistered: false,
+                });
+            }
+        });
+
+        return Array.from(combined.values());
 
     }, [users, invitations]);
+
 
     const isLoading = isLoadingUsers || isLoadingInvitations;
 

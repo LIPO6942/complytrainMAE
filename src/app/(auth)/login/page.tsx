@@ -74,7 +74,6 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 const querySnapshot = await getDocs(q);
 
                 let userRole = 'user'; // Default role
-                let userProfileData: any = {};
 
                 if (!querySnapshot.empty) {
                     const invitationDoc = querySnapshot.docs[0];
@@ -82,17 +81,13 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                     
                     // Mark invitation as completed
                     batch.update(invitationDoc.ref, { status: "completed" });
-                    
-                    // Pre-fill profile data from invitation if needed in the future
-                    // userProfileData = { ...invitationDoc.data() }; 
                 }
 
                 // 2. Create the user profile document
                 const userRef = doc(db, "users", user.uid);
                 batch.set(userRef, {
-                    ...userProfileData, // any data from invitation
                     id: user.uid,
-                    email: user.email,
+                    email: user.email, // Ensure email is always set
                     role: userRole,
                     createdAt: new Date().toISOString()
                 });
@@ -104,7 +99,11 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 const userRef = doc(db, 'users', user.uid);
-                await setDoc(userRef, { lastSignInTime: new Date().toISOString() }, { merge: true });
+                // On sign-in, ensure email is present and update last sign in time
+                await setDoc(userRef, { 
+                    email: user.email, // Ensure email is present
+                    lastSignInTime: new Date().toISOString() 
+                }, { merge: true });
             }
         } catch (error: any) {
             switch (error.code) {
