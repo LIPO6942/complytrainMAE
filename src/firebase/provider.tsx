@@ -4,7 +4,9 @@ import React, { DependencyList, createContext, useContext, ReactNode, useMemo, u
 import { FirebaseApp } from 'firebase/app';
 import { Firestore, doc, onSnapshot, getDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { errorEmitter } from './error-emitter';
+import { FirestorePermissionError } from './errors';
 
 // Define a type for the user profile data from Firestore
 interface UserProfile {
@@ -124,43 +126,47 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     const manageUserProfile = async () => {
         const docSnap = await getDoc(userDocRef);
 
-        if (!docSnap.exists()) {
+        if (!docSnap.exists() && firebaseUser.email) {
              // Profile doesn't exist, so this is a new user sign-up
-             try {
-                // Check for pending invitation
-                const invitationsRef = collection(firestore, 'invitations');
-                const q = query(invitationsRef, where('email', '==', firebaseUser.email), where('status', '==', 'pending'));
-                const invitationSnap = await getDocs(q);
+            // Check for pending invitation
+            const invitationsRef = collection(firestore, 'invitations');
+            const q = query(invitationsRef, where('email', '==', firebaseUser.email), where('status', '==', 'pending'));
+            const invitationSnap = await getDocs(q);
 
-                let userRole = 'user'; // Default role
-                if (firebaseUser.email === 'admin@example.com') {
-                    userRole = 'admin';
-                } else if (!invitationSnap.empty) {
-                    const invitationDoc = invitationSnap.docs[0];
-                    userRole = invitationDoc.data().role;
-                }
+            let userRole = 'user'; // Default role
+            if (firebaseUser.email === 'admin@example.com') {
+                userRole = 'admin';
+            } else if (!invitationSnap.empty) {
+                const invitationDoc = invitationSnap.docs[0];
+                userRole = invitationDoc.data().role;
+            }
 
-                const newUserDoc = {
-                    id: firebaseUser.uid,
-                    email: firebaseUser.email,
-                    role: userRole,
-                    lastSignInTime: new Date().toISOString(),
-                };
-                
-                const batch = writeBatch(firestore);
-                batch.set(userDocRef, newUserDoc);
-                
-                // Mark invitation as completed
-                if (!invitationSnap.empty) {
-                    const invitationDocRef = invitationSnap.docs[0].ref;
-                    batch.update(invitationDocRef, { status: 'completed' });
-                }
+            const newUserDoc = {
+                id: firebaseUser.uid,
+                email: firebaseUser.email,
+                role: userRole,
+                lastSignInTime: new Date().toISOString(),
+            };
+            
+            const batch = writeBatch(firestore);
+            batch.set(userDocRef, newUserDoc);
+            
+            // Mark invitation as completed
+            if (!invitationSnap.empty) {
+                const invitationDocRef = invitationSnap.docs[0].ref;
+                batch.update(invitationDocRef, { status: 'completed' });
+            }
 
-                await batch.commit();
-
-             } catch (error) {
-                console.error("Error creating user profile:", error);
-             }
+            batch.commit().catch(error => {
+                // The batch write failed, likely due to security rules.
+                // We emit a detailed, contextual error for debugging.
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: userDocRef.path, // We report the primary path of failure
+                    operation: 'write', // A batch is a write operation
+                    // We provide the data that we *attempted* to write
+                    requestResourceData: newUserDoc
+                }));
+            });
         }
     };
 
