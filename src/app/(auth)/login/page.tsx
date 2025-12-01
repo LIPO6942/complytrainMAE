@@ -10,10 +10,10 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth, useUser, initiateAnonymousSignIn } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { redirect } from 'next/navigation';
-import { setDoc, doc, getFirestore } from 'firebase/firestore';
+import { setDoc, doc, getFirestore, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 
 
 function AuthButton({ isSignUp }: { isSignUp: boolean }) {
@@ -34,7 +34,8 @@ function AnonymousLoginButton() {
     const handleAnonymousSignIn = async () => {
         if (!auth) return;
         try {
-            initiateAnonymousSignIn(auth);
+            // This needs to be implemented in a non-blocking way if we re-introduce it
+            await signInWithEmailAndPassword(auth, 'anonymous@example.com', 'password');
         } catch (error) {
             console.error("Anonymous sign in failed", error);
         }
@@ -65,20 +66,44 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 
-                // Create the user profile document immediately after sign-up
+                const batch = writeBatch(db);
+
+                // 1. Check for a pending invitation
+                const invitationsRef = collection(db, 'invitations');
+                const q = query(invitationsRef, where("email", "==", email), where("status", "==", "pending"));
+                const querySnapshot = await getDocs(q);
+
+                let userRole = 'user'; // Default role
+                let userProfileData: any = {};
+
+                if (!querySnapshot.empty) {
+                    const invitationDoc = querySnapshot.docs[0];
+                    userRole = invitationDoc.data().role;
+                    
+                    // Mark invitation as completed
+                    batch.update(invitationDoc.ref, { status: "completed" });
+                    
+                    // Pre-fill profile data from invitation if needed in the future
+                    // userProfileData = { ...invitationDoc.data() }; 
+                }
+
+                // 2. Create the user profile document
                 const userRef = doc(db, "users", user.uid);
-                await setDoc(userRef, {
+                batch.set(userRef, {
+                    ...userProfileData, // any data from invitation
                     id: user.uid,
                     email: user.email,
-                    role: user.email === 'admin@example.com' ? 'admin' : 'user', // Default role
+                    role: userRole,
                     createdAt: new Date().toISOString()
                 });
 
-            } else {
+                // 3. Commit the batch
+                await batch.commit();
+
+            } else { // Sign in
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 const userRef = doc(db, 'users', user.uid);
-                // This is a non-blocking update for an existing user.
                 await setDoc(userRef, { lastSignInTime: new Date().toISOString() }, { merge: true });
             }
         } catch (error: any) {
