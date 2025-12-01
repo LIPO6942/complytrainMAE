@@ -124,7 +124,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     const userDocRef = doc(firestore, 'users', firebaseUser.uid);
     
     const manageUserProfile = async () => {
-        // This variable needs to be accessible in the catch block.
+        // This variable needs to be declared outside the try block to be accessible in the catch block.
         let newUserDoc: UserProfile | null = null;
         try {
             const docSnap = await getDoc(userDocRef);
@@ -274,13 +274,3 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
   
   return memoized;
 }
-
-/**
- * Hook specifically for accessing the authenticated user's state.
- * This provides the User object, loading status, and any auth errors.
- * @returns {UserHookResult} Object with user, userProfile, isUserLoading, userError.
- */
-export const useUser = (): UserHookResult => {
-  const { user, userProfile, isUserLoading, userError } = useFirebase();
-  return { user, userProfile, isUserLoading, userError };
-};
