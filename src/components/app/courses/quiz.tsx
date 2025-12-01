@@ -264,96 +264,91 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     return question.correctAnswers.map(i => `"${question.options[i]}"`).join(', ');
   }
 
-  if (isLocked) {
-    return (
-        <>
-            <Card>
-                <CardHeader>
-                    <CardTitle>{quiz.title}</CardTitle>
-                    <CardDescription>Testez vos connaissances sur ce module. Plusieurs réponses peuvent être correctes.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="relative flex flex-col items-center justify-center p-8 text-center bg-muted/30 rounded-lg aspect-video">
-                        <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10"></div>
-                        <div className="relative z-20 flex flex-col items-center">
-                            <Lock className="w-12 h-12 text-primary mb-4" />
-                            <h3 className="text-xl font-semibold">Quiz Verrouillé</h3>
-                            <p className="text-muted-foreground mt-2">
-                                Terminez la lecture du cours pour déverrouiller ce quiz.
-                            </p>
-                        </div>
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <Button disabled className="w-full">
-                        <Lock className="mr-2 h-4 w-4" />
-                        Quiz verrouillé
-                    </Button>
-                </CardFooter>
-            </Card>
-        </>
-    );
-  }
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>{quiz.title}</CardTitle>
         <CardDescription>Testez vos connaissances sur ce module. Plusieurs réponses peuvent être correctes.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {quiz.questions.map((question, qIndex) => (
-        <Accordion key={qIndex} type="single" collapsible>
-            <AccordionItem value={`item-${qIndex}`}>
-            <AccordionTrigger>Question {qIndex + 1}</AccordionTrigger>
-            <AccordionContent>
-                <div className="space-y-4">
-                <p className="font-medium">{question.text}</p>
-                <div className='space-y-2'>
-                    {question.options.map((option, oIndex) => (
-                    <div key={oIndex} className="flex items-center space-x-2">
-                        <Checkbox 
-                            id={`q${qIndex}o${oIndex}`}
-                            onCheckedChange={(checked) => handleAnswerChange(qIndex, oIndex, checked as boolean)}
-                            disabled={showResults}
-                        />
-                        <Label htmlFor={`q${qIndex}o${oIndex}`}>{option}</Label>
+      
+      {isLocked ? (
+        <>
+            <CardContent>
+                <div className="relative flex flex-col items-center justify-center p-8 text-center bg-muted/30 rounded-lg aspect-video">
+                    <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10"></div>
+                    <div className="relative z-20 flex flex-col items-center">
+                        <Lock className="w-12 h-12 text-primary mb-4" />
+                        <h3 className="text-xl font-semibold">Quiz Verrouillé</h3>
+                        <p className="text-muted-foreground mt-2">
+                            Terminez la lecture du cours pour déverrouiller ce quiz.
+                        </p>
                     </div>
-                    ))}
                 </div>
-                {showResults && (
-                    <div className={cn("mt-2 text-sm font-semibold", isCorrect(qIndex) ? 'text-green-600' : 'text-red-600')}>
-                        {isCorrect(qIndex) ? 'Correct !' : `Incorrect. La ou les bonne(s) réponse(s) était(ent) : ${getCorrectAnswersText(question)}`}
-                    </div>
-                )}
-                </div>
-            </AccordionContent>
-            </AccordionItem>
-        </Accordion>
-        ))}
-
-        {isAdmin && !isStatic && (
-            showAddQuestion ? (
-                <AddQuestionForm courseId={courseId} quizId={quizId} onAdd={() => setShowAddQuestion(false)} />
-            ) : (
-                <Button variant="outline" className="w-full mt-4" onClick={() => setShowAddQuestion(true)}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Ajouter une question
+            </CardContent>
+            <CardFooter>
+                <Button disabled className="w-full">
+                    <Lock className="mr-2 h-4 w-4" />
+                    Quiz verrouillé
                 </Button>
-            )
-        )}
-      </CardContent>
-      <CardFooter className="flex-col gap-4">
-        <Button onClick={handleSubmit} className="w-full" disabled={showResults}>
-            Soumettre le quiz
-        </Button>
-        
-        {showResults && (
-            <div className="text-center font-bold text-lg">
-                Votre score : {getScore()}%
-            </div>
-        )}
-      </CardFooter>
+            </CardFooter>
+        </>
+      ) : (
+        <>
+          <CardContent className="space-y-4">
+            {quiz.questions.map((question, qIndex) => (
+              <Accordion key={qIndex} type="single" collapsible>
+                <AccordionItem value={`item-${qIndex}`}>
+                  <AccordionTrigger>Question {qIndex + 1}</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      <p className="font-medium">{question.text}</p>
+                      <div className='space-y-2'>
+                        {question.options.map((option, oIndex) => (
+                          <div key={oIndex} className="flex items-center space-x-2">
+                            <Checkbox 
+                                id={`q${qIndex}o${oIndex}`}
+                                onCheckedChange={(checked) => handleAnswerChange(qIndex, oIndex, checked as boolean)}
+                                disabled={showResults}
+                            />
+                            <Label htmlFor={`q${qIndex}o${oIndex}`}>{option}</Label>
+                          </div>
+                        ))}
+                      </div>
+                      {showResults && (
+                        <div className={cn("mt-2 text-sm font-semibold", isCorrect(qIndex) ? 'text-green-600' : 'text-red-600')}>
+                            {isCorrect(qIndex) ? 'Correct !' : `Incorrect. La ou les bonne(s) réponse(s) était(ent) : ${getCorrectAnswersText(question)}`}
+                        </div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            ))}
+
+            {isAdmin && !isStatic && (
+                showAddQuestion ? (
+                    <AddQuestionForm courseId={courseId} quizId={quizId} onAdd={() => setShowAddQuestion(false)} />
+                ) : (
+                    <Button variant="outline" className="w-full mt-4" onClick={() => setShowAddQuestion(true)}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Ajouter une question
+                    </Button>
+                )
+            )}
+          </CardContent>
+          <CardFooter className="flex-col gap-4">
+            <Button onClick={handleSubmit} className="w-full" disabled={showResults}>
+                Soumettre le quiz
+            </Button>
+            
+            {showResults && (
+                <div className="text-center font-bold text-lg">
+                    Votre score : {getScore()}%
+                </div>
+            )}
+          </CardFooter>
+        </>
+      )}
     </Card>
   );
 }
