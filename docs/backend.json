@@ -32,6 +32,10 @@
           "type": "string",
           "description": "Reference to Department. (Relationship: Department 1:N User)"
         },
+        "agencyCode": {
+            "type": "string",
+            "description": "User's agency code within a department."
+        },
         "lastSignInTime": {
           "type": "string",
           "format": "date-time",

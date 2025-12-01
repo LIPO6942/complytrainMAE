@@ -38,6 +38,7 @@ type UserProfile = {
     role: 'admin' | 'user';
     lastSignInTime?: string;
     departmentId?: string;
+    agencyCode?: string;
 }
 
 type Invitation = {
@@ -80,6 +81,7 @@ export default function UsersPage() {
                   email: user.email,
                   role: user.role,
                   departmentId: user.departmentId,
+                  agencyCode: user.agencyCode,
                   status: 'registered',
                   lastSignInTime: user.lastSignInTime,
                   isRegistered: true,
@@ -96,6 +98,7 @@ export default function UsersPage() {
                     email: invite.email,
                     role: invite.role,
                     departmentId: invite.departmentId,
+                    agencyCode: 'N/A',
                     status: 'pending',
                     lastSignInTime: undefined,
                     isRegistered: false,
@@ -110,7 +113,7 @@ export default function UsersPage() {
 
     const isLoading = isLoadingUsers || isLoadingInvitations;
 
-    const handleFieldChange = (userId: string, field: 'role' | 'departmentId', value: string) => {
+    const handleFieldChange = (userId: string, field: 'role' | 'departmentId' | 'agencyCode', value: string) => {
         if (!firestore) return;
         const userRef = doc(firestore, 'users', userId);
         setDocumentNonBlocking(userRef, { [field]: value }, { merge: true });
@@ -154,6 +157,7 @@ export default function UsersPage() {
                         <TableHead>Statut</TableHead>
                         <TableHead>Dernière connexion</TableHead>
                         <TableHead>Département</TableHead>
+                        <TableHead>Code Agence</TableHead>
                         <TableHead className="text-right">Rôle</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -164,6 +168,7 @@ export default function UsersPage() {
                                 <TableCell><Skeleton className="h-6 w-[100px]" /></TableCell>
                                 <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                                 <TableCell><Skeleton className="h-8 w-[180px]" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
                                 <TableCell className="text-right"><Skeleton className="h-8 w-[120px] ml-auto" /></TableCell>
                             </TableRow>
                         ))}
@@ -201,6 +206,9 @@ export default function UsersPage() {
                                             ))}
                                         </SelectContent>
                                     </Select>
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">
+                                    {user.agencyCode || '—'}
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <Select 

@@ -17,6 +17,7 @@ interface UserProfile {
   firstName?: string;
   lastName?: string;
   departmentId?: string;
+  agencyCode?: string;
   badges?: string[];
   lastSignInTime?: string;
 }

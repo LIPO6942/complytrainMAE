@@ -14,6 +14,8 @@ import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { redirect } from 'next/navigation';
 import { setDoc, doc, getFirestore, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { staticDepartments } from '@/lib/data';
 
 
 function AuthButton({ isSignUp }: { isSignUp: boolean }) {
@@ -59,6 +61,8 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
         const formData = new FormData(event.currentTarget);
         const email = formData.get('email') as string;
         const password = formData.get('password') as string;
+        const departmentId = formData.get('departmentId') as string;
+        const agencyCode = formData.get('agencyCode') as string;
         const db = getFirestore(auth.app);
 
         try {
@@ -74,12 +78,13 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 const querySnapshot = await getDocs(q);
 
                 let userRole = 'user'; // Default role
-                let userDepartmentId = undefined;
+                let userDepartmentId = departmentId;
 
                 if (!querySnapshot.empty) {
                     const invitationDoc = querySnapshot.docs[0];
                     userRole = invitationDoc.data().role;
-                    userDepartmentId = invitationDoc.data().departmentId;
+                    // Invitation department takes precedence if it exists
+                    userDepartmentId = invitationDoc.data().departmentId || departmentId;
                     
                     // Mark invitation as completed
                     batch.update(invitationDoc.ref, { status: "completed" });
@@ -92,6 +97,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                     email: user.email, // Ensure email is always set
                     role: userRole,
                     departmentId: userDepartmentId,
+                    agencyCode: agencyCode,
                     createdAt: new Date().toISOString()
                 });
 
@@ -159,6 +165,32 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                         defaultValue="password"
                     />
                 </div>
+                {isSignUp && (
+                    <>
+                        <div className="space-y-2">
+                            <Label htmlFor="departmentId">Département</Label>
+                            <Select name="departmentId">
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Sélectionner un département" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {staticDepartments.map(dept => (
+                                        <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="agencyCode">Code Agence</Label>
+                            <Input
+                                id="agencyCode"
+                                type="text"
+                                name="agencyCode"
+                                placeholder="ex: 1234"
+                            />
+                        </div>
+                    </>
+                )}
                 {errorMessage && (
                     <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
