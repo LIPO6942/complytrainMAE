@@ -67,22 +67,26 @@ export default function UsersPage() {
     
     const allUsersAndInvites = useMemo(() => {
         const combined = new Map<string, any>();
+        const registeredEmails = new Set<string>();
 
         // Add registered users first, they have priority
         (users || []).forEach(user => {
-            combined.set(user.email, {
-                id: user.id,
-                email: user.email,
-                role: user.role,
-                status: 'registered',
-                lastSignInTime: user.lastSignInTime,
-                isRegistered: true,
-            });
+            if (user.email) {
+              combined.set(user.email, {
+                  id: user.id,
+                  email: user.email,
+                  role: user.role,
+                  status: 'registered',
+                  lastSignInTime: user.lastSignInTime,
+                  isRegistered: true,
+              });
+              registeredEmails.add(user.email);
+            }
         });
 
-        // Add pending invitations only if the email is not already in the map
+        // Add pending invitations only if the email is not already registered
         (invitations || []).forEach(invite => {
-            if (invite.status === 'pending' && !combined.has(invite.email)) {
+            if (invite.status === 'pending' && !registeredEmails.has(invite.email)) {
                 combined.set(invite.email, {
                     id: invite.id,
                     email: invite.email,
