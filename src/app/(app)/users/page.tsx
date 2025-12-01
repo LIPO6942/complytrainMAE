@@ -70,7 +70,7 @@ export default function UsersPage() {
         
         // Add existing users
         (users || []).forEach(user => {
-            combined.set(user.email, {
+            combined.set(user.id, {
                 id: user.id,
                 email: user.email,
                 role: user.role,
@@ -81,8 +81,9 @@ export default function UsersPage() {
 
         // Add pending invitations for users that are not already registered
         (invitations || []).forEach(invite => {
-            if (invite.status === 'pending' && !combined.has(invite.email)) {
-                 combined.set(invite.email, {
+            const existingUser = (users || []).find(u => u.email === invite.email);
+            if (invite.status === 'pending' && !existingUser) {
+                 combined.set(invite.id, {
                     id: invite.id,
                     email: invite.email,
                     role: invite.role,
