@@ -9,73 +9,10 @@ import {
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { learningPath } from '@/lib/data';
-import { personalizedRiskRecommendations } from '@/ai/flows/personalized-risk-recommendations';
-import { BookMarked, Target, AlertTriangle } from 'lucide-react';
 import { AITutor } from './ai-tutor';
 import { EarnedBadges } from './earned-badges';
 import { useUser } from '@/firebase';
-
-async function PersonalizedRecommendations() {
-  const { userProfile } = useUser();
-  const riskProfile = userProfile?.departmentId || 'Profil de risque non disponible.'; // Fallback
-
-  try {
-    const recommendations = await personalizedRiskRecommendations({
-      riskProfile: riskProfile,
-    });
-
-    const recommendationItems = recommendations.recommendations
-      .split('\n')
-      .map((item) => item.replace(/^\d+\.\s/, ''))
-      .filter(Boolean);
-
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="text-primary" />
-            <span>Recommandations Personnalisées</span>
-          </CardTitle>
-          <CardDescription>
-            En fonction de votre profil de risque, nous vous suggérons de vous concentrer sur ces domaines.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-sm">
-            {recommendationItems.map((item, index) => (
-              <li key={index} className="flex items-start gap-2">
-                <BookMarked className="h-4 w-4 mt-1 shrink-0 text-accent" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-    );
-  } catch (error) {
-    console.error("Failed to fetch personalized recommendations:", error);
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="text-primary" />
-            <span>Recommandations Personnalisées</span>
-          </CardTitle>
-          <CardDescription>
-            En fonction de votre profil de risque, nous vous suggérons de vous concentrer sur ces domaines.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center text-center text-muted-foreground bg-muted/50 p-4 rounded-lg">
-            <AlertTriangle className="h-8 w-8 mb-2 text-destructive" />
-            <p className="font-semibold text-foreground">Erreur de chargement</p>
-            <p className="text-sm">Les recommandations n'ont pas pu être chargées pour le moment.</p>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-}
+import { PersonalizedRecommendations } from './personalized-recommendations';
 
 export default function DashboardPage() {
   const { userProfile } = useUser();
