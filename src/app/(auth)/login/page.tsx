@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth, useUser, setDocumentNonBlocking, initiateAnonymousSignIn } from '@/firebase';
+import { useAuth, useUser, initiateAnonymousSignIn } from '@/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { redirect } from 'next/navigation';
 import { setDoc, doc, getFirestore } from 'firebase/firestore';
@@ -58,19 +58,28 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
         const formData = new FormData(event.currentTarget);
         const email = formData.get('email') as string;
         const password = formData.get('password') as string;
+        const db = getFirestore(auth.app);
 
         try {
             if (isSignUp) {
-                // Just create the user. The profile document will be created by the FirebaseProvider
-                // once the onAuthStateChanged listener fires.
-                await createUserWithEmailAndPassword(auth, email, password);
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // Create the user profile document immediately after sign-up
+                const userRef = doc(db, "users", user.uid);
+                await setDoc(userRef, {
+                    id: user.uid,
+                    email: user.email,
+                    role: user.email === 'admin@example.com' ? 'admin' : 'user', // Default role
+                    createdAt: new Date().toISOString()
+                });
+
             } else {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
-                const db = getFirestore(auth.app);
                 const userRef = doc(db, 'users', user.uid);
                 // This is a non-blocking update for an existing user.
-                setDoc(userRef, { lastSignInTime: new Date().toISOString() }, { merge: true });
+                await setDoc(userRef, { lastSignInTime: new Date().toISOString() }, { merge: true });
             }
         } catch (error: any) {
             switch (error.code) {

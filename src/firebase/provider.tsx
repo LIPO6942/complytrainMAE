@@ -124,71 +124,20 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     const firebaseUser = userAuthState.user;
     const userDocRef = doc(firestore, 'users', firebaseUser.uid);
     
-    const manageUserProfile = async () => {
-        let newUserDoc: UserProfile | null = null;
-        try {
-            const docSnap = await getDoc(userDocRef);
-
-            if (docSnap.exists()) {
-                return;
-            }
-            
-            if (!firebaseUser.email) return;
-
-            const invitationsRef = collection(firestore, 'invitations');
-            const q = query(invitationsRef, where('email', '==', firebaseUser.email), where('status', '==', 'pending'));
-            const invitationSnap = await getDocs(q);
-
-            let userRole: 'admin' | 'user' = 'user';
-            if (firebaseUser.email === 'admin@example.com') {
-                userRole = 'admin';
-            } else if (!invitationSnap.empty) {
-                const invitationDoc = invitationSnap.docs[0];
-                userRole = invitationDoc.data().role;
-            }
-
-            newUserDoc = {
-                id: firebaseUser.uid,
-                email: firebaseUser.email,
-                role: userRole,
-                lastSignInTime: new Date().toISOString(),
-            };
-            
-            const batch = writeBatch(firestore);
-            batch.set(userDocRef, newUserDoc);
-            
-            if (!invitationSnap.empty) {
-                const invitationDocRef = invitationSnap.docs[0].ref;
-                batch.update(invitationDocRef, { status: 'completed' });
-            }
-
-            await batch.commit();
-
-        } catch (error) {
-             if (error instanceof Error && (error.name === 'FirebaseError' || error.message.includes('permission'))) {
-                errorEmitter.emit('permission-error', new FirestorePermissionError({
-                    path: userDocRef.path,
-                    operation: 'write', 
-                    requestResourceData: newUserDoc || {note: "Could not retrieve profile data for error report."}
-                }));
-            } else {
-                 console.error("FirebaseProvider: Error managing user profile:", error);
-            }
-        }
-    };
-
-    manageUserProfile();
-
+    // This effect now only LISTENS for profile changes. Creation is handled at sign-up.
     const unsubscribeProfile = onSnapshot(
       userDocRef,
       (docSnap) => {
         if (docSnap.exists()) {
           setUserAuthState(prevState => ({ ...prevState, userProfile: docSnap.data() as UserProfile }));
         } else {
+          // This case might happen briefly between user creation and doc creation,
+          // or if the document is deleted.
           setUserAuthState(prevState => ({ ...prevState, userProfile: null }));
         }
       },
       (error) => {
+        // If we can't read the profile, emit a permission error
         errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: userDocRef.path,
             operation: 'get'

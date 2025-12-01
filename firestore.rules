@@ -56,13 +56,19 @@ service cloud.firestore {
     // ----------------------------------------------------------------------
 
     /**
-     * @description Users can create, read, and write to their own profile. Admins can read any profile.
+     * @description Users can create their own profile. They can read and update it if they are the owner or an admin.
      * @path        /users/{userId}
      */
     match /users/{userId} {
-      allow create, write, update: if request.auth != null && request.auth.uid == userId;
-      allow read: if isOwner(userId) || isAdmin();
+      // Allow a user to create their own document.
+      allow create: if isOwner(userId);
+      // Allow a user to read their own document, or an admin to read any.
+      allow get: if isOwner(userId) || isAdmin();
+      // Allow a user to update their own document if it exists.
+      allow update: if (isOwner(userId) || isAdmin()) && exists(/databases/$(database)/documents/users/$(userId));
+      // Only admins can list all users.
       allow list: if isAdmin();
+      // Deleting user documents from the client is not allowed.
       allow delete: if false;
     }
 
