@@ -150,7 +150,7 @@ export default function UsersPage() {
                                 <TableCell className="text-right"><Skeleton className="h-8 w-[120px] ml-auto" /></TableCell>
                             </TableRow>
                         ))}
-                        {allUsersAndInvites?.map((user) => (
+                        {!isLoading && allUsersAndInvites?.map((user) => (
                             <TableRow key={user.id}>
                                 <TableCell className="font-medium">{user.email}</TableCell>
                                 <TableCell>
