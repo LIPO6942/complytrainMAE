@@ -124,7 +124,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     const userDocRef = doc(firestore, 'users', firebaseUser.uid);
     
     const manageUserProfile = async () => {
-        // This variable is declared outside the try block to be accessible in the catch block.
         let newUserDoc: UserProfile | null = null;
         try {
             const docSnap = await getDoc(userDocRef);
