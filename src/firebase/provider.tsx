@@ -123,7 +123,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     const firebaseUser = userAuthState.user;
     const userDocRef = doc(firestore, 'users', firebaseUser.uid);
     
-    // This function runs the logic to create or update the user profile
     const manageUserProfile = async () => {
         let newUserDoc: UserProfile | null = null;
         try {
