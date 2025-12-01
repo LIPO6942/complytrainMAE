@@ -17,6 +17,7 @@ interface UserProfile {
   lastName?: string;
   departmentId?: string;
   badges?: string[];
+  lastSignInTime?: string;
 }
 
 interface FirebaseProviderProps {
@@ -124,54 +125,66 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     
     // This function runs the logic to create or update the user profile
     const manageUserProfile = async () => {
-        let newUserDoc: UserProfile | null = null;
         try {
             const docSnap = await getDoc(userDocRef);
 
             if (!docSnap.exists() && firebaseUser.email) {
                 // Profile doesn't exist, so this is a new user sign-up
-                // Check for pending invitation
-                const invitationsRef = collection(firestore, 'invitations');
-                const q = query(invitationsRef, where('email', '==', firebaseUser.email), where('status', '==', 'pending'));
-                const invitationSnap = await getDocs(q);
+                let newUserDoc: UserProfile | null = null;
+                try {
+                    // Check for pending invitation
+                    const invitationsRef = collection(firestore, 'invitations');
+                    const q = query(invitationsRef, where('email', '==', firebaseUser.email), where('status', '==', 'pending'));
+                    const invitationSnap = await getDocs(q);
 
-                let userRole: 'admin' | 'user' = 'user'; // Default role
-                if (firebaseUser.email === 'admin@example.com') {
-                    userRole = 'admin';
-                } else if (!invitationSnap.empty) {
-                    const invitationDoc = invitationSnap.docs[0];
-                    userRole = invitationDoc.data().role;
+                    let userRole: 'admin' | 'user' = 'user'; // Default role
+                    if (firebaseUser.email === 'admin@example.com') {
+                        userRole = 'admin';
+                    } else if (!invitationSnap.empty) {
+                        const invitationDoc = invitationSnap.docs[0];
+                        userRole = invitationDoc.data().role;
+                    }
+
+                    newUserDoc = {
+                        id: firebaseUser.uid,
+                        email: firebaseUser.email,
+                        role: userRole,
+                        lastSignInTime: new Date().toISOString(),
+                    };
+                    
+                    const batch = writeBatch(firestore);
+                    batch.set(userDocRef, newUserDoc);
+                    
+                    // Mark invitation as completed
+                    if (!invitationSnap.empty) {
+                        const invitationDocRef = invitationSnap.docs[0].ref;
+                        batch.update(invitationDocRef, { status: 'completed' });
+                    }
+
+                    await batch.commit();
+
+                } catch (batchError) {
+                    // This specifically catches errors from the batch commit (likely permissions)
+                    if (batchError instanceof Error && (batchError.name === 'FirebaseError' || batchError.message.includes('permission'))) {
+                        errorEmitter.emit('permission-error', new FirestorePermissionError({
+                            path: userDocRef.path,
+                            operation: 'write', 
+                            requestResourceData: newUserDoc || 'Could not determine profile data for batch write.'
+                        }));
+                    } else {
+                         console.error("FirebaseProvider: Error during batch commit for new user:", batchError);
+                    }
                 }
-
-                newUserDoc = {
-                    id: firebaseUser.uid,
-                    email: firebaseUser.email,
-                    role: userRole,
-                    lastSignInTime: new Date().toISOString(),
-                };
-                
-                const batch = writeBatch(firestore);
-                batch.set(userDocRef, newUserDoc);
-                
-                // Mark invitation as completed
-                if (!invitationSnap.empty) {
-                    const invitationDocRef = invitationSnap.docs[0].ref;
-                    batch.update(invitationDocRef, { status: 'completed' });
-                }
-
-                await batch.commit();
             }
         } catch (error) {
-             // Catch errors on getDoc, getDocs, or the batch commit
-             // The most likely error is a permissions error.
-            if (error instanceof Error && (error.name === 'FirebaseError' || error.message.includes('permission'))) {
+             // This catches initial getDoc or getDocs errors
+             if (error instanceof Error && (error.name === 'FirebaseError' || error.message.includes('permission'))) {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({
-                    path: userDocRef.path,
-                    operation: 'write', 
-                    requestResourceData: newUserDoc || 'Could not determine profile data for batch write.'
+                    path: userDocRef.path, // or invitations path if relevant
+                    operation: 'get', 
                 }));
             } else {
-                 console.error("FirebaseProvider: Error managing user profile:", error);
+                 console.error("FirebaseProvider: Error checking user profile:", error);
             }
         }
     };
