@@ -1,4 +1,5 @@
 
+
 export type Question = {
     text: string;
     options: string[];
@@ -33,6 +34,7 @@ export const staticCourses: Course[] = [
         description: "Un quiz sur les fondements institutionnels et législatifs de la LBA/FT en Tunisie, y compris le rôle de la CTAF et du CGA.",
         image: "course-sanctions",
         isStatic: true,
+        markdownContent: "Veuillez examiner les objectifs de ce quiz avant de commencer. Ce quiz porte sur les fondements institutionnels et législatifs de la LBA/FT en Tunisie, y compris le rôle de la Commission Tunisienne des Analyses Financières (CTAF) et du Comité Général des Assurances (CGA).",
         quiz: {
             id: 'quiz-fondements-q',
             title: "Fondements Institutionnels et Législatifs",
@@ -77,6 +79,7 @@ export const staticCourses: Course[] = [
         description: "Testez vos connaissances sur l'approche basée sur les risques (ABR), le KYC (Know Your Customer) et l'identification des bénéficiaires effectifs.",
         image: "course-kyc",
         isStatic: true,
+        markdownContent: "Veuillez examiner les objectifs de ce quiz avant de commencer. Ce quiz teste vos connaissances sur l'approche basée sur les risques (ABR), le KYC (Know Your Customer) et l'identification des bénéficiaires effectifs.",
         quiz: {
             id: 'quiz-abr-kyc-q',
             title: "ABR et KYC",
@@ -111,6 +114,7 @@ export const staticCourses: Course[] = [
         description: "Un quiz sur les obligations de déclaration de soupçon (DS), la gestion des sanctions et la vigilance requise par les assujettis.",
         image: "course-fraud",
         isStatic: true,
+        markdownContent: "Veuillez examiner les objectifs de ce quiz avant de commencer. Ce quiz porte sur les obligations de déclaration de soupçon (DS), la gestion des sanctions et la vigilance requise par les assujettis.",
         quiz: {
             id: 'quiz-declarations-sanctions-q',
             title: "Déclarations, Sanctions et Vigilance",
@@ -155,6 +159,7 @@ export const staticCourses: Course[] = [
         description: "Ce quiz porte sur les spécificités des assurances Takaful et le rôle des intermédiaires en assurance selon le Code des Assurances tunisien.",
         image: "course-insurance",
         isStatic: true,
+        markdownContent: "Veuillez examiner les objectifs de ce quiz avant de commencer. Ce quiz porte sur les spécificités des assurances Takaful et le rôle des intermédiaires en assurance selon le Code des Assurances tunisien.",
         quiz: {
             id: 'quiz-assurances-specifiques-q',
             title: "Assurances Spécifiques et Contrats",
@@ -199,6 +204,7 @@ export const staticCourses: Course[] = [
         description: "Un quiz sur les définitions clés et le cadre légal de la LBA/FT en Tunisie.",
         image: "course-aml",
         isStatic: true,
+        markdownContent: "Veuillez examiner les objectifs de ce quiz avant de commencer. Ce quiz porte sur les définitions clés et le cadre légal de la LBA/FT en Tunisie.",
         quiz: {
             id: 'quiz-definitions-q',
             title: "Définitions et Cadre Légal",
@@ -243,6 +249,7 @@ export const staticCourses: Course[] = [
         description: "Ce quiz teste vos connaissances sur les trois phases distinctes du processus de blanchiment d'argent.",
         image: "course-fraud",
         isStatic: true,
+        markdownContent: "Veuillez examiner les objectifs de ce quiz avant de commencer. Ce quiz teste vos connaissances sur les trois phases distinctes du processus de blanchiment d'argent.",
         quiz: {
             id: 'quiz-phases-blanchiment-q',
             title: "Les Phases du Blanchiment d'Argent",
@@ -287,6 +294,7 @@ export const staticCourses: Course[] = [
         description: "Évaluez votre compréhension des mesures de vigilance (KYC) et des diligences renforcées.",
         image: "course-kyc",
         isStatic: true,
+        markdownContent: "Veuillez examiner les objectifs de ce quiz avant de commencer. Ce quiz évalue votre compréhension des mesures de vigilance (KYC) et des diligences renforcées.",
         quiz: {
             id: 'quiz-obligations-vigilance-q',
             title: "Obligations de Vigilance (KYC) et Diligences",
@@ -331,6 +339,7 @@ export const staticCourses: Course[] = [
         description: "Un quiz sur l'identification des Bénéficiaires Effectifs (BE) et des Personnes Politiquement Exposées (PPE).",
         image: "course-sanctions",
         isStatic: true,
+        markdownContent: "Veuillez examiner les objectifs de ce quiz avant de commencer. Ce quiz porte sur l'identification des Bénéficiaires Effectifs (BE) et des Personnes Politiquement Exposées (PPE).",
         quiz: {
             id: 'quiz-beneficiaire-effectif-ppe-q',
             title: "Bénéficiaire Effectif (BE) et PPE",
@@ -375,6 +384,7 @@ export const staticCourses: Course[] = [
         description: "Ce quiz couvre les listes de sanctions, le gel des avoirs et les rôles des différentes institutions de régulation.",
         image: "course-aml",
         isStatic: true,
+        markdownContent: "Veuillez examiner les objectifs de ce quiz avant de commencer. Ce quiz couvre les listes de sanctions, le gel des avoirs et les rôles des différentes institutions de régulation.",
         quiz: {
             id: 'quiz-listes-sanctions-roles-q',
             title: "Listes de Sanctions et Rôles Institutionnels",
