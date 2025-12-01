@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth, useUser, setDocumentNonBlocking, initiateAnonymousSignIn } from '@/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { redirect } from 'next/navigation';
-import { setDoc, doc, getFirestore, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { setDoc, doc, getFirestore } from 'firebase/firestore';
 
 
 function AuthButton({ isSignUp }: { isSignUp: boolean }) {
@@ -70,7 +70,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 const db = getFirestore(auth.app);
                 const userRef = doc(db, 'users', user.uid);
                 // This is a non-blocking update for an existing user.
-                setDocumentNonBlocking(userRef, { lastSignInTime: new Date().toISOString() }, { merge: true });
+                setDoc(userRef, { lastSignInTime: new Date().toISOString() }, { merge: true });
             }
         } catch (error: any) {
             switch (error.code) {
