@@ -13,8 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { useFirestore, setDocumentNonBlocking, type WithId } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useFirestore, type WithId } from '@/firebase';
+import { doc, writeBatch, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import {
   Select,
@@ -24,24 +24,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-
-type Course = {
-  title: string;
-  description: string;
-  videoUrl?: string;
-  markdownContent?: string;
-  image: string;
-  pdfUrl?: string;
-};
+import type { Course, QuizData } from '@/lib/quiz-data';
+import { useRouter } from 'next/navigation';
 
 interface EditCourseFormProps {
   course: WithId<Course>;
+  quiz: WithId<QuizData> | null;
+  isStatic: boolean;
   onFinished: () => void;
 }
 
-export function EditCourseForm({ course, onFinished }: EditCourseFormProps) {
+export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCourseFormProps) {
   const firestore = useFirestore();
   const { toast } = useToast();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     title: course.title,
     description: course.description,
@@ -62,20 +58,58 @@ export function EditCourseForm({ course, onFinished }: EditCourseFormProps) {
     setFormData((prev) => ({ ...prev, image: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firestore) return;
 
-    const courseRef = doc(firestore, 'courses', course.id);
-    
-    setDocumentNonBlocking(courseRef, formData, { merge: true });
-    
-    toast({
-      title: 'Cours mis à jour',
-      description: 'Les modifications ont été enregistrées.',
-    });
+    try {
+        const batch = writeBatch(firestore);
 
-    onFinished();
+        const courseRef = doc(firestore, 'courses', course.id);
+        
+        const coursePayload = {
+            ...course, // spread existing fields
+            ...formData, // overwrite with form data
+            id: course.id,
+            isStatic: false // No longer static
+        };
+
+        batch.set(courseRef, coursePayload, { merge: true });
+
+        // If it was a static course, we might need to copy its quiz over too
+        if (isStatic && quiz) {
+            const quizId = course.quizId || quiz.id;
+            const quizRef = doc(firestore, 'courses', course.id, 'quizzes', quizId);
+            const quizPayload = {
+                ...quiz,
+                id: quizId
+            };
+            batch.set(quizRef, quizPayload, { merge: true });
+        }
+        
+        await batch.commit();
+
+        toast({
+        title: 'Cours mis à jour',
+        description: 'Les modifications ont été enregistrées.',
+        });
+
+        onFinished();
+
+        if (isStatic) {
+            // refresh to reflect new dynamic state
+            router.refresh(); 
+        }
+
+    } catch (error) {
+        console.error("Error updating course:", error);
+        toast({
+            title: 'Erreur',
+            description: "Une erreur s'est produite lors de la mise à jour.",
+            variant: "destructive"
+        });
+    }
+
   };
 
   return (

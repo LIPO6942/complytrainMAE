@@ -51,35 +51,41 @@ export default function CourseDetailPage() {
   const [currentQuiz, setCurrentQuiz] = useState<QuizData | null>(null);
 
   const courseRef = useMemoFirebase(() => {
-    if (!firestore || !courseId || isStatic) return null;
+    if (!firestore || !courseId) return null;
+    // We always check firestore first
     return doc(firestore, 'courses', courseId);
-  }, [firestore, courseId, isStatic]);
+  }, [firestore, courseId]);
 
   const { data: courseFromDb, isLoading: isCourseLoading } = useDoc(courseRef);
-  const quizId = courseFromDb?.quizId;
+  const quizId = courseFromDb?.quizId || currentCourse?.quizId;
 
   const quizRef = useMemoFirebase(() => {
-    if (!firestore || !courseId || !quizId || isStatic) return null;
+    if (!firestore || !courseId || !quizId || !courseFromDb) return null;
     return doc(collection(firestore, 'courses', courseId, 'quizzes'), quizId);
-  }, [firestore, courseId, quizId, isStatic]);
+  }, [firestore, courseId, quizId, courseFromDb]);
   
   const { data: quizFromDb, isLoading: isQuizLoading } = useDoc(quizRef);
   
   useEffect(() => {
-    const staticCourse = staticCourses.find(c => c.id === courseId);
-    if (staticCourse) {
-        setCurrentCourse(staticCourse);
-        setCurrentQuiz(staticCourse.quiz);
-        setIsStatic(true);
-    } else if (courseFromDb) {
+    // If we get a course from DB, it takes precedence
+    if (courseFromDb) {
         setCurrentCourse(courseFromDb as Course);
+        setIsStatic(false);
         if(quizFromDb) {
           setCurrentQuiz(quizFromDb);
+        }
+    } else {
+        // Otherwise, check static courses
+        const staticCourse = staticCourses.find(c => c.id === courseId);
+        if (staticCourse) {
+            setCurrentCourse(staticCourse);
+            setCurrentQuiz(staticCourse.quiz || null);
+            setIsStatic(true);
         }
     }
   }, [courseId, courseFromDb, quizFromDb]);
   
-  const isLoading = isCourseLoading || isQuizLoading;
+  const isLoading = isCourseLoading;
 
   const getImage = (id: string) => {
     return PlaceHolderImages.find((img) => img.id === id);
@@ -90,7 +96,7 @@ export default function CourseDetailPage() {
 
   const isQuizLocked = hasContent && !isContentReviewed && !isAdmin;
 
-  if (isLoading && !isStatic) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-10 w-2/3" />
@@ -113,8 +119,13 @@ export default function CourseDetailPage() {
     return <div>Cours non trouvé. Il a peut-être été supprimé.</div>;
   }
   
-  if (isEditing && currentCourse && !isStatic) {
-    return <EditCourseForm course={currentCourse} onFinished={() => setIsEditing(false)} />
+  if (isEditing && currentCourse) {
+    return <EditCourseForm 
+                course={currentCourse} 
+                quiz={currentQuiz}
+                isStatic={isStatic}
+                onFinished={() => setIsEditing(false)} 
+            />
   }
 
   return (
@@ -126,12 +137,10 @@ export default function CourseDetailPage() {
         </div>
         {isAdmin && (
             <div className="flex gap-2">
-                {!isStatic && (
-                    <Button onClick={() => setIsEditing(true)} variant="outline">
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Modifier le cours
-                    </Button>
-                )}
+                <Button onClick={() => setIsEditing(true)} variant="outline">
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Modifier le cours
+                </Button>
                 <DeleteCourseDialog courseId={currentCourse.id} isStatic={isStatic} />
             </div>
         )}
@@ -196,7 +205,7 @@ export default function CourseDetailPage() {
         <div>
            <Quiz 
               quiz={currentQuiz} 
-              isQuizLoading={isLoading && !isStatic}
+              isQuizLoading={isLoading}
               courseId={courseId} 
               quizId={quizId as string}
               isLocked={isQuizLocked}
