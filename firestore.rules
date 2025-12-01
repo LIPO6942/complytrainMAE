@@ -70,7 +70,8 @@ service cloud.firestore {
      * re-assigning ownership of the document.
      */
     function userDocumentIsImmutable() {
-      return request.resource.data.id == resource.data.id;
+      return request.resource.data.id == resource.data.id &&
+             request.resource.data.email == resource.data.email;
     }
 
     // ----------------------------------------------------------------------
@@ -78,11 +79,13 @@ service cloud.firestore {
     // ----------------------------------------------------------------------
 
     /**
-     * @description Users can create, read, and update their own profile. Admins can read any profile for oversight and manage roles.
+     * @description Users can create their own profile, and read/update their own data.
+     * Admins can read any profile for oversight and manage roles.
      * @path        /users/{userId}
      * @allow       (create) A new user 'user123' creates their own doc at /users/user123.
      * @allow       (get) An admin user gets the doc at /users/user456.
      * @allow       (list) Admins can list all users.
+     * @allow       (update) A user can update their own non-critical fields (like name or badges).
      * @allow       (update) An admin can update any user's role.
      * @deny        (get) A user 'user123' is denied from reading /users/user456.
      * @principle   Restricts access to a user's own data tree and provides read-only admin oversight.
@@ -91,6 +94,8 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isCreatingOwnUserDoc(userId);
+      // Users can update their own doc if they don't change immutable fields.
+      // Admins have full update rights.
       allow update: if (isExistingOwner(userId) && userDocumentIsImmutable()) || isAdmin();
       allow delete: if false;
     }

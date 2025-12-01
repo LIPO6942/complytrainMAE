@@ -1,3 +1,11 @@
+import type { BadgeAmlExpert, BadgeKycCertified } from "@/components/icons";
+import { 
+    BadgeFraudDetector, 
+    BadgeGdprPro, 
+    BadgeSanctionsSpecialist,
+    BadgeInsuranceExpert
+} from "@/components/icons";
+
 export const user = {
   name: 'Alex Dupont',
   email: 'alex.dupont@example.com',
@@ -10,7 +18,7 @@ export const learningPath = [
     title: 'Intégration Conformité',
     completion: 100,
     modules: [
-      { title: 'Bases de la lutte contre le blanchiment d\'argent (LAB)', status: 'terminé' },
+      { title: 'Bases de la lutte contre le blanchiment d\'argent (LAB/FT)', status: 'terminé' },
       { title: 'Essentiels de la connaissance du client (KYC)', status: 'terminé' },
     ],
   },
@@ -33,9 +41,17 @@ export const learningPath = [
   },
 ];
 
-export const earnedBadges = [
-  { id: 'aml-expert', name: 'Expert LAB', description: 'Maîtrise des principes de la lutte contre le blanchiment d\'argent.' },
-  { id: 'kyc-certified', name: 'Certifié KYC', description: 'A terminé tous les modules KYC avec succès.' },
+
+export const allBadges = [
+  { id: 'lab-ft-fondements', name: 'Fondements LAB/FT', description: 'Quiz sur les bases institutionelles et législatives.', icon: BadgeAmlExpert, quizId: 'quiz-fondements-q' },
+  { id: 'abr-kyc-maitrise', name: 'Maîtrise ABR & KYC', description: 'Quiz sur l\'approche basée sur les risques et KYC.', icon: BadgeKycCertified, quizId: 'quiz-abr-kyc-q'},
+  { id: 'declarations-vigilance', name: 'Vigilance & Sanctions', description: 'Quiz sur les déclarations et sanctions.', icon: BadgeFraudDetector, quizId: 'quiz-declarations-sanctions-q'},
+  { id: 'assurance-specifique', name: 'Expert Takaful', description: 'Quiz sur les assurances spécifiques.', icon: BadgeInsuranceExpert, quizId: 'quiz-assurances-specifiques-q' },
+  { id: 'definitions-legales', name: 'Cadre Légal', description: 'Quiz sur les définitions et le cadre légal.', icon: BadgeGdprPro, quizId: 'quiz-definitions-q' },
+  { id: 'phases-blanchiment', name: 'Phases du Blanchiment', description: 'Quiz sur les phases du blanchiment d\'argent.', icon: BadgeSanctionsSpecialist, quizId: 'quiz-phases-blanchiment-q'},
+  { id: 'obligations-vigilance', name: 'Vigilance KYC', description: 'Quiz sur les obligations de vigilance.', icon: BadgeKycCertified, quizId: 'quiz-obligations-vigilance-q'},
+  { id: 'beneficiaire-effectif', name: 'Expert BE & PPE', description: 'Quiz sur les Bénéficiaires Effectifs et PPE.', icon: BadgeAmlExpert, quizId: 'quiz-beneficiaire-effectif-ppe-q'},
+  { id: 'listes-sanctions', name: 'Expert Sanctions', description: 'Quiz sur les listes de sanctions.', icon: BadgeSanctionsSpecialist, quizId: 'quiz-listes-sanctions-roles-q'},
 ];
 
 export const reportingData = {
@@ -55,12 +71,12 @@ export const reportingData = {
     { name: 'Finance', value: 98, fill: 'var(--color-chart-5)' },
   ],
   heatmapData: [
-    { user: 'Alice', 'LAB': 95, 'KYC': 90, 'Fraude': 88, 'RGPD': 92, 'Sanctions': 85 },
-    { user: 'Bob', 'LAB': 75, 'KYC': 82, 'Fraude': 80, 'RGPD': 88, 'Sanctions': 70 },
-    { user: 'Charlie', 'LAB': 100, 'KYC': 98, 'Fraude': 95, 'RGPD': 99, 'Sanctions': 96 },
-    { user: 'David', 'LAB': 81, 'KYC': 78, 'Fraude': 65, 'RGPD': 70, 'Sanctions': 68 },
-    { user: 'Eve', 'LAB': 92, 'KYC': 91, 'Fraude': 89, 'RGPD': 94, 'Sanctions': 90 },
-    { user: 'Frank', 'LAB': 68, 'KYC': 72, 'Fraude': 75, 'RGPD': 80, 'Sanctions': 60 },
+    { user: 'Alice', 'LAB/FT': 95, 'KYC': 90, 'Fraude': 88, 'RGPD': 92, 'Sanctions': 85 },
+    { user: 'Bob', 'LAB/FT': 75, 'KYC': 82, 'Fraude': 80, 'RGPD': 88, 'Sanctions': 70 },
+    { user: 'Charlie', 'LAB/FT': 100, 'KYC': 98, 'Fraude': 95, 'RGPD': 99, 'Sanctions': 96 },
+    { user: 'David', 'LAB/FT': 81, 'KYC': 78, 'Fraude': 65, 'RGPD': 70, 'Sanctions': 68 },
+    { user: 'Eve', 'LAB/FT': 92, 'KYC': 91, 'Fraude': 89, 'RGPD': 94, 'Sanctions': 90 },
+    { user: 'Frank', 'LAB/FT': 68, 'KYC': 72, 'Fraude': 75, 'RGPD': 80, 'Sanctions': 60 },
   ],
 };
 

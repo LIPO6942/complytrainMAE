@@ -1,6 +1,7 @@
 
 
 
+
 import {
   Card,
   CardContent,
@@ -10,16 +11,11 @@ import {
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { learningPath, user, earnedBadges } from '@/lib/data';
+import { learningPath, user, allBadges } from '@/lib/data';
 import { personalizedRiskRecommendations } from '@/ai/flows/personalized-risk-recommendations';
 import { Award, Target, BookMarked, AlertTriangle } from 'lucide-react';
-import { BadgeAmlExpert, BadgeKycCertified } from '@/components/icons';
 import { AITutor } from './ai-tutor';
-
-const badgeIcons: { [key: string]: React.ElementType } = {
-  'aml-expert': BadgeAmlExpert,
-  'kyc-certified': BadgeKycCertified,
-};
+import { useUser } from '@/firebase';
 
 async function PersonalizedRecommendations() {
   try {
@@ -80,6 +76,48 @@ async function PersonalizedRecommendations() {
   }
 }
 
+function EarnedBadges() {
+    const { userProfile } = useUser();
+    const earnedBadgeIds = userProfile?.badges || [];
+    const earnedBadges = allBadges.filter(badge => earnedBadgeIds.includes(badge.id));
+
+    return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="text-primary" />
+              <span>Badges Obtenus</span>
+            </CardTitle>
+            <CardDescription>
+              Votre collection de jalons de conformité terminés.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-4">
+            {earnedBadges.length > 0 ? (
+                earnedBadges.map((badge) => {
+                    const Icon = badge.icon;
+                    return (
+                        <div key={badge.id} className="flex flex-col items-center gap-2 text-center w-24">
+                        {Icon ? (
+                            <Icon className="w-16 h-16 text-accent" />
+                        ) : (
+                            <Award className="w-16 h-16 text-muted-foreground" />
+                        )}
+                        <div className="space-y-1">
+                            <p className="font-semibold text-sm leading-tight">{badge.name}</p>
+                            <p className="text-xs text-muted-foreground">{badge.description}</p>
+                        </div>
+                        </div>
+                    );
+                })
+            ) : (
+                <p className="text-sm text-muted-foreground">Aucun badge obtenu pour le moment. Terminez des quiz pour en gagner !</p>
+            )}
+          </CardContent>
+        </Card>
+    )
+}
+
 export default function DashboardPage() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -106,35 +144,7 @@ export default function DashboardPage() {
       </Card>
       <div className="lg:col-span-3 space-y-4">
         <PersonalizedRecommendations />
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="text-primary" />
-              <span>Badges Obtenus</span>
-            </CardTitle>
-            <CardDescription>
-              Votre collection de jalons de conformité terminés.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-4">
-            {earnedBadges.map((badge) => {
-              const Icon = badgeIcons[badge.id];
-              return (
-                <div key={badge.id} className="flex flex-col items-center gap-2 text-center">
-                  {Icon ? (
-                    <Icon className="w-16 h-16 text-accent" />
-                  ) : (
-                    <Award className="w-16 h-16 text-muted-foreground" />
-                  )}
-                  <div className="space-y-1">
-                    <p className="font-semibold text-sm">{badge.name}</p>
-                    <p className="text-xs text-muted-foreground">{badge.description}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
+        <EarnedBadges />
       </div>
        <AITutor />
     </div>

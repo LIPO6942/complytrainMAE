@@ -20,11 +20,11 @@ import { Button } from '@/components/ui/button';
 import { useUser, useFirestore, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, arrayUnion } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Lock } from 'lucide-react';
+import { PlusCircle, Lock, Award } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { QuizData, Question } from '@/lib/quiz-data';
-
+import { allBadges } from '@/lib/data';
 
 interface QuizProps {
     quiz: QuizData | null;
@@ -133,8 +133,9 @@ function AddQuestionForm({ courseId, quizId, onAdd }: { courseId: string; quizId
 
 
 export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic }: QuizProps) {
-  const { userProfile } = useUser();
+  const { user, userProfile } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
   const isAdmin = userProfile?.role === 'admin';
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number[]>>({});
   const [showResults, setShowResults] = useState(false);
@@ -149,7 +150,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
       title: 'Quiz : Blanchiment d\'argent',
       questions: [
         {
-          text: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LAB) ?',
+          text: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LAB/FT) ?',
           options: ['Marketing sur les réseaux sociaux', 'Intégration des employés', 'Déclaration de transaction suspecte (DTS)'],
           correctAnswers: [2]
         }
@@ -213,9 +214,38 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
         }
     });
   };
+  
+  const getScore = () => {
+      if (!quiz || quiz.questions.length === 0) return 0;
+      let correctCount = 0;
+      quiz.questions.forEach((_, index) => {
+          if (isCorrect(index)) {
+              correctCount++;
+          }
+      });
+      return Math.round((correctCount / quiz.questions.length) * 100);
+  }
 
   const handleSubmit = () => {
     setShowResults(true);
+    const score = getScore();
+
+    // Badge awarding logic
+    const badgeToAward = allBadges.find(b => b.quizId === quiz.id);
+    if (score === 100 && badgeToAward && user && firestore) {
+        const userHasBadge = userProfile?.badges?.includes(badgeToAward.id);
+        if (!userHasBadge) {
+            const userRef = doc(firestore, 'users', user.uid);
+            setDocumentNonBlocking(userRef, {
+                badges: arrayUnion(badgeToAward.id)
+            }, { merge: true });
+
+            toast({
+                title: "Badge débloqué !",
+                description: `Félicitations, vous avez gagné le badge "${badgeToAward.name}" !`,
+            });
+        }
+    }
   };
   
   const isCorrect = (questionIndex: number) => {
@@ -228,17 +258,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     }
     
     return userAnswers.every((val, index) => val === correctAnswers[index]);
-  }
-
-  const getScore = () => {
-      if (!quiz || quiz.questions.length === 0) return '0';
-      let correctCount = 0;
-      quiz.questions.forEach((_, index) => {
-          if (isCorrect(index)) {
-              correctCount++;
-          }
-      });
-      return ((correctCount / quiz.questions.length) * 100).toFixed(0);
   }
 
   const getCorrectAnswersText = (question: Question) => {

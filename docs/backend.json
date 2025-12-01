@@ -36,6 +36,13 @@
           "type": "string",
           "format": "date-time",
           "description": "The last time the user signed in."
+        },
+        "badges": {
+            "type": "array",
+            "description": "An array of badge IDs that the user has earned.",
+            "items": {
+                "type": "string"
+            }
         }
       },
       "required": ["id", "email", "role"]
@@ -261,5 +268,3 @@
     "reasoning": "The Firestore structure is designed to support ComplyTrain's online training platform, focusing on compliance and regulation. It incorporates role-based access control (admin and user) and ensures authorization independence through denormalization. The structure segregates user data (profiles, departments) to simplify security rules and enhance scalability. Quizzes are stored as a sub-collection of courses to maintain a clear hierarchical relationship and enable efficient data retrieval for a given course. Authorization Independence is achieved by storing role information directly within the `users` document. This avoids costly and limiting `get()` operations in security rules, particularly crucial for atomic operations. The `departmentId` field in the user document is also denormalized, as is standard practice in these designs. QAPs (Rules are not Filters) are supported through structural segregation and membership models. User profiles are stored under `/users/{userId}`, allowing for secure `list` operations based on user ID. Admin roles are managed using a `role` field in the user's document. The structure employs path-based ownership for user-related data, simplifying security rules. The `invitations` collection is added to allow admins to invite new users with a specific role."
   }
 }
-
-    
