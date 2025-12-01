@@ -12,7 +12,7 @@ import { reportingData } from '@/lib/data';
 import { CompletionChart } from '@/components/app/reporting/completion-chart';
 import { SuccessChart } from '@/components/app/reporting/success-chart';
 import { Heatmap } from '@/components/app/reporting/heatmap';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { useMemo } from 'react';
 
@@ -25,29 +25,41 @@ type UserProfile = {
 
 export default function ReportingPage() {
   const firestore = useFirestore();
+  const { userProfile } = useUser();
+  const isAdmin = userProfile?.role === 'admin';
+
   const usersQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    // Only admins can fetch all users
+    if (!firestore || !isAdmin) return null;
     return collection(firestore, 'users');
-  }, [firestore]);
+  }, [firestore, isAdmin]);
 
   const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
 
   const heatmapData = useMemo(() => {
-    if (!users) return [];
-    
-    // This part is for demonstration. In a real app, you'd fetch real scores.
     const topics = ['LAB/FT', 'KYC', 'Fraude', 'RGPD', 'Sanctions'];
-    return users.map(user => {
-      const userScores: { user: string; [key: string]: string | number } = {
-        user: user.firstName || user.email,
-      };
-      topics.forEach(topic => {
-        // Generating random scores for demonstration
-        userScores[topic] = Math.floor(Math.random() * (100 - 60 + 1) + 60);
-      });
-      return userScores;
-    });
-  }, [users]);
+
+    const generateScoresForUser = (user: UserProfile) => {
+        const userScores: { user: string; [key: string]: string | number } = {
+          user: user.firstName || user.email,
+        };
+        topics.forEach(topic => {
+          userScores[topic] = Math.floor(Math.random() * (100 - 60 + 1) + 60);
+        });
+        return userScores;
+    };
+
+    if (isAdmin) {
+        if (!users) return [];
+        return users.map(generateScoresForUser);
+    } 
+    
+    if (userProfile) {
+        return [generateScoresForUser(userProfile as UserProfile)];
+    }
+
+    return [];
+  }, [users, isAdmin, userProfile]);
 
 
   return (

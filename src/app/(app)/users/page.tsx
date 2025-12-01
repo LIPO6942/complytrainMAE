@@ -41,11 +41,12 @@ export default function UsersPage() {
     const { userProfile } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
+    const isAdmin = userProfile?.role === 'admin';
 
     const usersQuery = useMemoFirebase(() => {
-        if (!firestore || userProfile?.role !== 'admin') return null;
+        if (!firestore || !isAdmin) return null;
         return collection(firestore, 'users');
-    }, [firestore, userProfile]);
+    }, [firestore, isAdmin]);
 
     const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
 
@@ -59,7 +60,7 @@ export default function UsersPage() {
         });
     };
 
-    if (userProfile?.role !== 'admin') {
+    if (!isAdmin) {
         return (
             <div className="flex items-center justify-center h-full">
                 <Card className="w-full max-w-md">
