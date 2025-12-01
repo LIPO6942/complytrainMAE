@@ -16,7 +16,7 @@ import { Quiz } from '@/components/app/courses/quiz';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Pencil } from 'lucide-react';
+import { Pencil, BookOpenCheck } from 'lucide-react';
 import { EditCourseForm } from '@/components/app/courses/edit-course-form';
 import { DeleteCourseDialog } from '@/components/app/courses/delete-course-dialog';
 import { GoogleDrivePdfViewer } from '@/components/app/courses/google-drive-pdf-viewer';
@@ -95,6 +95,7 @@ export default function CourseDetailPage() {
   const hasContent = currentCourse && (currentCourse.videoUrl || currentCourse.pdfUrl || currentCourse.markdownContent);
 
   const isQuizLocked = hasContent && !isContentReviewed && !isAdmin;
+  const isContentLockedForUser = isContentReviewed && !isAdmin;
 
   if (isLoading) {
     return (
@@ -142,41 +143,57 @@ export default function CourseDetailPage() {
         )}
       </div>
 
-      <div className="space-y-8">
-        <Card>
-            {currentCourse.videoUrl && currentCourse.videoUrl.trim() !== '' ? (
-                <div className="p-6">
-                    <VideoPlayer url={currentCourse.videoUrl} />
-                </div>
-            ) : image && (
-                <Image
-                    src={image.imageUrl}
-                    alt={currentCourse.title}
-                    width={800}
-                    height={400}
-                    className="rounded-t-lg object-cover w-full aspect-video"
-                    data-ai-hint={image.imageHint}
-                />
-            )}
-            <CardHeader>
-                <CardTitle>Description du cours</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-muted-foreground">{currentCourse.description}</p>
-            </CardContent>
-        </Card>
+        {!isContentLockedForUser ? (
+            <div className="space-y-8">
+                <Card>
+                    {currentCourse.videoUrl && currentCourse.videoUrl.trim() !== '' ? (
+                        <div className="p-6">
+                            <VideoPlayer url={currentCourse.videoUrl} />
+                        </div>
+                    ) : image && (
+                        <Image
+                            src={image.imageUrl}
+                            alt={currentCourse.title}
+                            width={800}
+                            height={400}
+                            className="rounded-t-lg object-cover w-full aspect-video"
+                            data-ai-hint={image.imageHint}
+                        />
+                    )}
+                    <CardHeader>
+                        <CardTitle>Description du cours</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">{currentCourse.description}</p>
+                    </CardContent>
+                </Card>
 
-        {currentCourse.pdfUrl && currentCourse.pdfUrl.trim() !== '' && (
-            <GoogleDrivePdfViewer url={currentCourse.pdfUrl} />
-        )}
+                {currentCourse.pdfUrl && currentCourse.pdfUrl.trim() !== '' && (
+                    <GoogleDrivePdfViewer url={currentCourse.pdfUrl} />
+                )}
 
-        {currentCourse.markdownContent && currentCourse.markdownContent.trim() !== '' && (
-            <Card>
+                {currentCourse.markdownContent && currentCourse.markdownContent.trim() !== '' && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Contenu du cours</CardTitle>
+                        </CardHeader>
+                        <CardContent className="prose dark:prose-invert max-w-none">
+                            <div dangerouslySetInnerHTML={{ __html: currentCourse.markdownContent.replace(/\n/g, '<br />') }} />
+                        </CardContent>
+                    </Card>
+                )}
+            </div>
+        ) : (
+             <Card>
                 <CardHeader>
-                    <CardTitle>Contenu du cours</CardTitle>
+                    <CardTitle>Contenu examiné</CardTitle>
                 </CardHeader>
-                <CardContent className="prose dark:prose-invert max-w-none">
-                    <div dangerouslySetInnerHTML={{ __html: currentCourse.markdownContent.replace(/\n/g, '<br />') }} />
+                <CardContent className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground bg-muted/30 rounded-lg">
+                    <BookOpenCheck className="w-12 h-12 text-primary mb-4" />
+                    <h3 className="text-xl font-semibold text-foreground">Vous avez terminé votre lecture.</h3>
+                    <p className="mt-2 max-w-xs">
+                        Il est maintenant temps de tester vos connaissances. Veuillez répondre au quiz ci-dessous.
+                    </p>
                 </CardContent>
             </Card>
         )}
@@ -188,7 +205,7 @@ export default function CourseDetailPage() {
                 id="content-reviewed" 
                 checked={isContentReviewed} 
                 onCheckedChange={(checked) => setIsContentReviewed(checked as boolean)}
-                disabled={!isAdmin && isContentReviewed}
+                disabled={isContentReviewed && !isAdmin}
                 />
                 <Label htmlFor="content-reviewed" className="font-medium cursor-pointer">
                 Je confirme avoir lu et compris le contenu ci-dessus.
@@ -196,7 +213,6 @@ export default function CourseDetailPage() {
             </CardContent>
             </Card>
         )}
-      </div>
       
       <div>
         <Quiz 
