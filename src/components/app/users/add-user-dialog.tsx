@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { PlusCircle } from 'lucide-react';
+import { staticDepartments } from '@/lib/data';
 
 export function AddUserDialog() {
   const { toast } = useToast();
@@ -31,6 +32,7 @@ export function AddUserDialog() {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'user' | 'admin'>('user');
+  const [departmentId, setDepartmentId] = useState<string | undefined>(undefined);
 
   const handleInvite = () => {
     if (!firestore || !email) {
@@ -46,6 +48,7 @@ export function AddUserDialog() {
     addDocumentNonBlocking(invitationsCollection, {
       email,
       role,
+      departmentId,
       status: 'pending',
     });
 
@@ -57,6 +60,7 @@ export function AddUserDialog() {
     // Reset form and close dialog
     setEmail('');
     setRole('user');
+    setDepartmentId(undefined);
     setOpen(false);
   };
 
@@ -100,6 +104,21 @@ export function AddUserDialog() {
               <SelectContent>
                 <SelectItem value="user">Utilisateur</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="department" className="text-right">
+              Département
+            </Label>
+            <Select onValueChange={(value: string) => setDepartmentId(value)} value={departmentId}>
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Sélectionner un département" />
+              </SelectTrigger>
+              <SelectContent>
+                {staticDepartments.map(dept => (
+                    <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

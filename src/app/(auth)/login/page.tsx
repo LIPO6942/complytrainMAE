@@ -74,10 +74,12 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 const querySnapshot = await getDocs(q);
 
                 let userRole = 'user'; // Default role
+                let userDepartmentId = undefined;
 
                 if (!querySnapshot.empty) {
                     const invitationDoc = querySnapshot.docs[0];
                     userRole = invitationDoc.data().role;
+                    userDepartmentId = invitationDoc.data().departmentId;
                     
                     // Mark invitation as completed
                     batch.update(invitationDoc.ref, { status: "completed" });
@@ -89,6 +91,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                     id: user.uid,
                     email: user.email, // Ensure email is always set
                     role: userRole,
+                    departmentId: userDepartmentId,
                     createdAt: new Date().toISOString()
                 });
 

@@ -30,12 +30,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { AddUserDialog } from '@/components/app/users/add-user-dialog';
 import { useMemo } from 'react';
+import { staticDepartments } from '@/lib/data';
 
 type UserProfile = {
     id: string;
     email: string;
     role: 'admin' | 'user';
     lastSignInTime?: string;
+    departmentId?: string;
 }
 
 type Invitation = {
@@ -43,6 +45,7 @@ type Invitation = {
     email: string;
     role: 'admin' | 'user';
     status: 'pending' | 'completed';
+    departmentId?: string;
 }
 
 export default function UsersPage() {
@@ -76,6 +79,7 @@ export default function UsersPage() {
                   id: user.id,
                   email: user.email,
                   role: user.role,
+                  departmentId: user.departmentId,
                   status: 'registered',
                   lastSignInTime: user.lastSignInTime,
                   isRegistered: true,
@@ -91,6 +95,7 @@ export default function UsersPage() {
                     id: invite.id,
                     email: invite.email,
                     role: invite.role,
+                    departmentId: invite.departmentId,
                     status: 'pending',
                     lastSignInTime: undefined,
                     isRegistered: false,
@@ -105,14 +110,13 @@ export default function UsersPage() {
 
     const isLoading = isLoadingUsers || isLoadingInvitations;
 
-
-    const handleRoleChange = (userId: string, newRole: 'admin' | 'user') => {
+    const handleFieldChange = (userId: string, field: 'role' | 'departmentId', value: string) => {
         if (!firestore) return;
         const userRef = doc(firestore, 'users', userId);
-        setDocumentNonBlocking(userRef, { role: newRole }, { merge: true });
+        setDocumentNonBlocking(userRef, { [field]: value }, { merge: true });
         toast({
-            title: "Rôle mis à jour",
-            description: `Le rôle de l'utilisateur a été défini sur ${newRole}.`
+            title: "Utilisateur mis à jour",
+            description: `Le profil de l'utilisateur a été mis à jour.`
         });
     };
 
@@ -137,7 +141,7 @@ export default function UsersPage() {
                 <div>
                     <CardTitle>Gestion des utilisateurs</CardTitle>
                     <CardDescription>
-                        Inviter des utilisateurs et gérer leurs rôles.
+                        Inviter des utilisateurs et gérer leurs rôles et départements.
                     </CardDescription>
                 </div>
                 <AddUserDialog />
@@ -149,6 +153,7 @@ export default function UsersPage() {
                         <TableHead>Email</TableHead>
                         <TableHead>Statut</TableHead>
                         <TableHead>Dernière connexion</TableHead>
+                        <TableHead>Département</TableHead>
                         <TableHead className="text-right">Rôle</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -158,6 +163,7 @@ export default function UsersPage() {
                                 <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
                                 <TableCell><Skeleton className="h-6 w-[100px]" /></TableCell>
                                 <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                                <TableCell><Skeleton className="h-8 w-[180px]" /></TableCell>
                                 <TableCell className="text-right"><Skeleton className="h-8 w-[120px] ml-auto" /></TableCell>
                             </TableRow>
                         ))}
@@ -180,10 +186,26 @@ export default function UsersPage() {
                                         ? formatDistanceToNow(new Date(user.lastSignInTime), { addSuffix: true, locale: fr }) 
                                         : '—'}
                                 </TableCell>
+                                <TableCell>
+                                     <Select 
+                                        value={user.departmentId} 
+                                        onValueChange={(newDeptId: string) => handleFieldChange(user.id, 'departmentId', newDeptId)}
+                                        disabled={!user.isRegistered}
+                                    >
+                                        <SelectTrigger className="w-[180px]">
+                                            <SelectValue placeholder="Non assigné" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {staticDepartments.map(dept => (
+                                                <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </TableCell>
                                 <TableCell className="text-right">
                                     <Select 
                                         defaultValue={user.role} 
-                                        onValueChange={(newRole: 'admin' | 'user') => handleRoleChange(user.id, newRole)}
+                                        onValueChange={(newRole: 'admin' | 'user') => handleFieldChange(user.id, 'role', newRole)}
                                         disabled={!user.isRegistered || user.id === userProfile?.id}
                                     >
                                         <SelectTrigger className="w-[120px] ml-auto">

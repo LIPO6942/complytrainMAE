@@ -48,6 +48,13 @@ export const allBadges = [
   { id: 'listes-sanctions', name: 'Expert Sanctions', description: 'Quiz sur les listes de sanctions.', icon: BadgeSanctionsSpecialist, quizId: 'quiz-listes-sanctions-roles-q'},
 ];
 
+export const staticDepartments = [
+    { id: 'tunis-nord', name: 'Délégation Tunis Nord' },
+    { id: 'tunis-sud', name: 'Délégation Tunis Sud' },
+    { id: 'tunis-centre', name: 'Délégation Tunis Centre' },
+    { id: 'cap-bon', name: 'Délégation Cap bon' },
+];
+
 export const reportingData = {
   completionRate: [
     { month: 'Janvier', desktop: 186, mobile: 80 },
@@ -72,5 +79,5 @@ export const auditLogs = [
   { id: '3', user: 'Alex Dupont', action: 'Module terminé: Essentiels KYC', timestamp: '2024-07-30T15:45:12Z', details: 'Score: 92%' },
   { id: '4', user: 'Carla', action: 'Rapport généré: Conformité trimestrielle', timestamp: '2024-07-30T11:20:05Z', details: 'Exporté en PDF.' },
   { id: '5', user: 'Alex Dupont', action: 'Échec au quiz: Détection avancée de la fraude', timestamp: '2024-07-29T14:00:00Z', details: 'Score: 55%' },
-  { id: '6', user: 'Admin', action: 'Nouvel utilisateur ajouté: Ben', timestamp: '2024-07-29T09:05:00Z', details: 'Rôle: Apprenant, Département: Ventes' },
+  { id: '6', user: 'Admin', action: 'Nouvel utilisateur ajouté: Ben', timestamp: '204-07-29T09:05:00Z', details: 'Rôle: Apprenant, Département: Ventes' },
 ];
