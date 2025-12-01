@@ -58,8 +58,8 @@ service cloud.firestore {
     }
     
     /**
-     * On update, ensures the internal 'id' field is immutable. This prevents
-     * re-assigning ownership of the document.
+     * On update, ensures the internal 'id' and 'email' fields are immutable.
+     * This prevents re-assigning ownership of the document.
      */
     function userDocumentIsImmutable() {
       return request.resource.data.id == resource.data.id &&
