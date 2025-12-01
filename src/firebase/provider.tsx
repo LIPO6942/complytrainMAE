@@ -124,6 +124,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     const userDocRef = doc(firestore, 'users', firebaseUser.uid);
     
     const manageUserProfile = async () => {
+        // This variable needs to be accessible in the catch block.
         let newUserDoc: UserProfile | null = null;
         try {
             const docSnap = await getDoc(userDocRef);
@@ -141,6 +142,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
                     userRole = invitationDoc.data().role;
                 }
 
+                // Assign to the outer scope variable
                 newUserDoc = {
                     id: firebaseUser.uid,
                     email: firebaseUser.email,
@@ -156,6 +158,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
                     batch.update(invitationDocRef, { status: 'completed' });
                 }
 
+                // This is the operation that can fail due to permissions.
                 await batch.commit();
             }
         } catch (error) {
