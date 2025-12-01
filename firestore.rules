@@ -56,13 +56,15 @@ service cloud.firestore {
     // ----------------------------------------------------------------------
 
     /**
-     * @description Users can create, read, and write their own profile document.
-     * Admins can read any profile for oversight and manage roles.
+     * @description Users can create their own profile. Admins can read any profile.
+     * Users can read/update their own profile.
      * @path        /users/{userId}
      */
     match /users/{userId} {
-      allow read, write: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow read, update: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
+      allow delete: if false; // Prevent accidental deletion
     }
 
     /**
