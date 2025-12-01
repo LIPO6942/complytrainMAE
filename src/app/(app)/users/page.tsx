@@ -66,33 +66,29 @@ export default function UsersPage() {
     const { data: invitations, isLoading: isLoadingInvitations } = useCollection<Invitation>(invitationsQuery);
     
     const allUsersAndInvites = useMemo(() => {
-        const combined = new Map<string, any>();
-        
-        // Add existing users
-        (users || []).forEach(user => {
-            combined.set(user.id, {
-                id: user.id,
-                email: user.email,
-                role: user.role,
-                status: 'registered',
-                lastSignInTime: user.lastSignInTime
-            });
-        });
-
-        // Add pending invitations for users that are not already registered
-        (invitations || []).forEach(invite => {
-            const existingUser = (users || []).find(u => u.email === invite.email);
-            if (invite.status === 'pending' && !existingUser) {
-                 combined.set(invite.id, {
-                    id: invite.id,
-                    email: invite.email,
-                    role: invite.role,
-                    status: 'pending'
-                });
-            }
-        });
-        
-        return Array.from(combined.values());
+        const registeredUsers = (users || []).map(user => ({
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            status: 'registered' as 'registered' | 'pending',
+            lastSignInTime: user.lastSignInTime,
+            isRegistered: true,
+        }));
+    
+        const registeredEmails = new Set(registeredUsers.map(u => u.email));
+    
+        const pendingInvites = (invitations || [])
+            .filter(invite => invite.status === 'pending' && !registeredEmails.has(invite.email))
+            .map(invite => ({
+                id: invite.id,
+                email: invite.email,
+                role: invite.role,
+                status: 'pending' as 'registered' | 'pending',
+                lastSignInTime: undefined,
+                isRegistered: false,
+            }));
+    
+        return [...registeredUsers, ...pendingInvites];
 
     }, [users, invitations]);
 
@@ -158,9 +154,9 @@ export default function UsersPage() {
                             <TableRow key={user.id}>
                                 <TableCell className="font-medium">{user.email}</TableCell>
                                 <TableCell>
-                                    {user.status === 'registered' ? (
+                                    {user.isRegistered ? (
                                         <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                                            {user.role}
+                                            Inscrit
                                         </Badge>
                                     ) : (
                                          <Badge variant="outline">
@@ -169,7 +165,7 @@ export default function UsersPage() {
                                     )}
                                 </TableCell>
                                 <TableCell className="text-muted-foreground">
-                                    {user.status === 'registered' && user.lastSignInTime 
+                                    {user.isRegistered && user.lastSignInTime 
                                         ? formatDistanceToNow(new Date(user.lastSignInTime), { addSuffix: true, locale: fr }) 
                                         : '—'}
                                 </TableCell>
@@ -177,7 +173,7 @@ export default function UsersPage() {
                                     <Select 
                                         defaultValue={user.role} 
                                         onValueChange={(newRole: 'admin' | 'user') => handleRoleChange(user.id, newRole)}
-                                        disabled={user.status === 'pending' || user.id === userProfile?.id}
+                                        disabled={!user.isRegistered || user.id === userProfile?.id}
                                     >
                                         <SelectTrigger className="w-[120px] ml-auto">
                                             <SelectValue placeholder="Changer de rôle" />
