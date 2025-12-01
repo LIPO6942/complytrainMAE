@@ -29,12 +29,20 @@ import { fr } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { AddUserDialog } from '@/components/app/users/add-user-dialog';
+import { useMemo } from 'react';
 
 type UserProfile = {
     id: string;
     email: string;
     role: 'admin' | 'user';
     lastSignInTime?: string;
+}
+
+type Invitation = {
+    id: string;
+    email: string;
+    role: 'admin' | 'user';
+    status: 'pending' | 'completed';
 }
 
 export default function UsersPage() {
@@ -48,7 +56,47 @@ export default function UsersPage() {
         return collection(firestore, 'users');
     }, [firestore, isAdmin]);
 
-    const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
+    const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
+
+    const invitationsQuery = useMemoFirebase(() => {
+        if (!firestore || !isAdmin) return null;
+        return collection(firestore, 'invitations');
+    }, [firestore, isAdmin]);
+
+    const { data: invitations, isLoading: isLoadingInvitations } = useCollection<Invitation>(invitationsQuery);
+    
+    const allUsersAndInvites = useMemo(() => {
+        const combined = new Map<string, any>();
+        
+        // Add existing users
+        (users || []).forEach(user => {
+            combined.set(user.email, {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                status: 'registered',
+                lastSignInTime: user.lastSignInTime
+            });
+        });
+
+        // Add pending invitations for users that are not already registered
+        (invitations || []).forEach(invite => {
+            if (invite.status === 'pending' && !combined.has(invite.email)) {
+                 combined.set(invite.email, {
+                    id: invite.id,
+                    email: invite.email,
+                    role: invite.role,
+                    status: 'pending'
+                });
+            }
+        });
+        
+        return Array.from(combined.values());
+
+    }, [users, invitations]);
+
+    const isLoading = isLoadingUsers || isLoadingInvitations;
+
 
     const handleRoleChange = (userId: string, newRole: 'admin' | 'user') => {
         if (!firestore) return;
@@ -91,9 +139,9 @@ export default function UsersPage() {
                     <TableHeader>
                         <TableRow>
                         <TableHead>Email</TableHead>
-                        <TableHead>Rôle</TableHead>
+                        <TableHead>Statut</TableHead>
                         <TableHead>Dernière connexion</TableHead>
-                        <TableHead className="text-right">Changer de rôle</TableHead>
+                        <TableHead className="text-right">Rôle</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -105,22 +153,30 @@ export default function UsersPage() {
                                 <TableCell className="text-right"><Skeleton className="h-8 w-[120px] ml-auto" /></TableCell>
                             </TableRow>
                         ))}
-                        {users?.map((user) => (
+                        {allUsersAndInvites?.map((user) => (
                             <TableRow key={user.id}>
                                 <TableCell className="font-medium">{user.email}</TableCell>
                                 <TableCell>
-                                    <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                                        {user.role}
-                                    </Badge>
+                                    {user.status === 'registered' ? (
+                                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                                            {user.role}
+                                        </Badge>
+                                    ) : (
+                                         <Badge variant="outline">
+                                            En attente
+                                        </Badge>
+                                    )}
                                 </TableCell>
                                 <TableCell className="text-muted-foreground">
-                                    {user.lastSignInTime ? formatDistanceToNow(new Date(user.lastSignInTime), { addSuffix: true, locale: fr }) : 'Jamais'}
+                                    {user.status === 'registered' && user.lastSignInTime 
+                                        ? formatDistanceToNow(new Date(user.lastSignInTime), { addSuffix: true, locale: fr }) 
+                                        : '—'}
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <Select 
                                         defaultValue={user.role} 
                                         onValueChange={(newRole: 'admin' | 'user') => handleRoleChange(user.id, newRole)}
-                                        disabled={user.id === userProfile?.id}
+                                        disabled={user.status === 'pending' || user.id === userProfile?.id}
                                     >
                                         <SelectTrigger className="w-[120px] ml-auto">
                                             <SelectValue placeholder="Changer de rôle" />
