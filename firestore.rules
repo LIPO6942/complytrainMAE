@@ -133,15 +133,17 @@ service cloud.firestore {
     }
 
     /**
-     * @description Stores user invitations. Only admins can create/read them.
+     * @description Stores user invitations. Only admins can create/read them. Completed invitations can be updated.
      * @path /invitations/{invitationId}
      * @allow (read, create): if isAdmin();
-     * @allow (update, delete): if false;
-     * @principle Only admins can invite new users.
+     * @allow (update): if isAdmin(); 
+     * @allow (delete): if false;
+     * @principle Only admins can manage user invitations.
      */
     match /invitations/{invitationId} {
         allow read, create: if isAdmin();
-        allow write: if isAdmin();
+        allow update: if isAdmin();
+        allow delete: if false;
     }
   }
 }

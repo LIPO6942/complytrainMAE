@@ -123,9 +123,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     
     const firebaseUser = userAuthState.user;
     const userDocRef = doc(firestore, 'users', firebaseUser.uid);
+    let newUserDoc: UserProfile | null = null;
     
     const manageUserProfile = async () => {
-        let newUserDoc: UserProfile | null = null;
         try {
             const docSnap = await getDoc(userDocRef);
 
