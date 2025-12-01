@@ -1,5 +1,7 @@
-import type { BadgeAmlExpert, BadgeKycCertified } from "@/components/icons";
+
 import { 
+    BadgeAmlExpert, 
+    BadgeKycCertified,
     BadgeFraudDetector, 
     BadgeGdprPro, 
     BadgeSanctionsSpecialist,
@@ -10,7 +12,7 @@ export const user = {
   name: 'Alex Dupont',
   email: 'alex.dupont@example.com',
   avatarUrl: 'https://picsum.photos/seed/user/100/100',
-  riskProfile: 'Formation LAB-FT et KYC terminée avec des scores de 85% et 90% respectivement. A eu un incident mineur de non-déclaration d\'une transaction suspecte en temps opportun le trimestre dernier. Nouveau dans le secteur de l\'assurance.',
+  riskProfile: 'Formation LAB/FT et KYC terminée avec des scores de 85% et 90% respectivement. A eu un incident mineur de non-déclaration d\'une transaction suspecte en temps opportun le trimestre dernier. Nouveau dans le secteur de l\'assurance.',
 };
 
 export const learningPath = [
