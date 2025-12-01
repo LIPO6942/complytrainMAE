@@ -124,13 +124,15 @@ export default function CourseDetailPage() {
             <h1 className="text-3xl font-bold tracking-tight">{currentCourse.title}</h1>
             <Badge variant="secondary" className="mt-2">{currentCourse.category}</Badge>
         </div>
-        {isAdmin && !isStatic && (
+        {isAdmin && (
             <div className="flex gap-2">
-                <Button onClick={() => setIsEditing(true)} variant="outline">
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Modifier le cours
-                </Button>
-                <DeleteCourseDialog courseId={currentCourse.id} />
+                {!isStatic && (
+                    <Button onClick={() => setIsEditing(true)} variant="outline">
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Modifier le cours
+                    </Button>
+                )}
+                <DeleteCourseDialog courseId={currentCourse.id} isStatic={isStatic} />
             </div>
         )}
       </div>

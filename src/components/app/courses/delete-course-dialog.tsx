@@ -19,16 +19,32 @@ import { useRouter } from 'next/navigation';
 
 interface DeleteCourseDialogProps {
   courseId: string;
-  onDeleted?: () => void;
+  isStatic?: boolean;
+  onDeleted?: (courseId: string) => void;
   trigger?: React.ReactNode;
 }
 
-export function DeleteCourseDialog({ courseId, onDeleted, trigger }: DeleteCourseDialogProps) {
+export function DeleteCourseDialog({ courseId, isStatic, onDeleted, trigger }: DeleteCourseDialogProps) {
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
 
   const handleDelete = () => {
+    if (onDeleted) {
+      onDeleted(courseId);
+    }
+    
+    if (isStatic) {
+        toast({
+            title: 'Cours masqué',
+            description: 'Le cours statique a été masqué de la vue.',
+        });
+        if (!onDeleted) {
+             router.push('/courses');
+        }
+        return;
+    }
+
     if (!firestore) return;
 
     const courseRef = doc(firestore, 'courses', courseId);
@@ -39,9 +55,7 @@ export function DeleteCourseDialog({ courseId, onDeleted, trigger }: DeleteCours
       description: 'Le cours a été supprimé avec succès.',
     });
     
-    if (onDeleted) {
-        onDeleted();
-    } else {
+    if (!onDeleted) {
         router.push('/courses');
     }
   };
@@ -62,13 +76,16 @@ export function DeleteCourseDialog({ courseId, onDeleted, trigger }: DeleteCours
         <AlertDialogHeader>
           <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce cours ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette action est irréversible. Le cours sera définitivement supprimé de la base de données.
+            {isStatic 
+                ? "Cette action masquera ce cours statique de la liste. Il réapparaîtra au prochain rechargement de la page."
+                : "Cette action est irréversible. Le cours sera définitivement supprimé de la base de données."
+            }
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Annuler</AlertDialogCancel>
           <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-            Supprimer
+            {isStatic ? "Masquer" : "Supprimer"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

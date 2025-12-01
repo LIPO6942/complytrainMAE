@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -24,6 +25,8 @@ export default function CoursesPage() {
   const { userProfile } = useUser();
   const firestore = useFirestore();
 
+  const [hiddenStaticCourses, setHiddenStaticCourses] = useState<string[]>([]);
+
   const coursesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'courses');
@@ -31,7 +34,16 @@ export default function CoursesPage() {
   
   const { data: dynamicCourses, isLoading } = useCollection(coursesQuery);
 
-  const allCourses = [...staticCourses, ...(dynamicCourses || [])];
+  const visibleStaticCourses = staticCourses.filter(c => !hiddenStaticCourses.includes(c.id));
+  const allCourses = [...visibleStaticCourses, ...(dynamicCourses || [])];
+
+  const handleCourseDeleted = (courseId: string) => {
+    // This is for visually hiding static courses
+    const isStatic = staticCourses.some(c => c.id === courseId);
+    if (isStatic) {
+      setHiddenStaticCourses(prev => [...prev, courseId]);
+    }
+  };
 
   const getImage = (id: string) => {
     return PlaceHolderImages.find((img) => img.id === id);
@@ -74,10 +86,12 @@ export default function CoursesPage() {
                                 <p className="text-primary font-semibold text-sm">Voir les détails</p>
                             </CardFooter>
                           </Link>
-                          {isAdmin && !isStatic && (
+                          {isAdmin && (
                               <div className="absolute top-2 right-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
                                   <DeleteCourseDialog 
                                       courseId={course.id}
+                                      isStatic={isStatic}
+                                      onDeleted={handleCourseDeleted}
                                       trigger={
                                           <Button variant="destructive" size="icon" className="h-8 w-8">
                                               <Trash2 className="h-4 w-4" />
