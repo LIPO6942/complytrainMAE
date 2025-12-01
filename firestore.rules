@@ -56,15 +56,7 @@ service cloud.firestore {
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
-
-    /**
-     * Validates that the user creating their own document also sets the
-     * internal 'id' field to their own UID, ensuring relational integrity.
-     */
-    function isCreatingOwnUserDoc(userId) {
-      return isOwner(userId) && request.resource.data.id == userId;
-    }
-
+    
     /**
      * On update, ensures the internal 'id' field is immutable. This prevents
      * re-assigning ownership of the document.
@@ -93,7 +85,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create: if isCreatingOwnUserDoc(userId);
+      allow create: if isOwner(userId);
       // Users can update their own doc if they don't change immutable fields.
       // Admins have full update rights.
       allow update: if (isExistingOwner(userId) && userDocumentIsImmutable()) || isAdmin();

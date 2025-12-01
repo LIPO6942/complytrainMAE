@@ -124,6 +124,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     
     // This function runs the logic to create or update the user profile
     const manageUserProfile = async () => {
+        let newUserDoc: UserProfile | null = null;
         try {
             const docSnap = await getDoc(userDocRef);
 
@@ -134,7 +135,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
                 const q = query(invitationsRef, where('email', '==', firebaseUser.email), where('status', '==', 'pending'));
                 const invitationSnap = await getDocs(q);
 
-                let userRole = 'user'; // Default role
+                let userRole: 'admin' | 'user' = 'user'; // Default role
                 if (firebaseUser.email === 'admin@example.com') {
                     userRole = 'admin';
                 } else if (!invitationSnap.empty) {
@@ -142,7 +143,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
                     userRole = invitationDoc.data().role;
                 }
 
-                const newUserDoc = {
+                newUserDoc = {
                     id: firebaseUser.uid,
                     email: firebaseUser.email,
                     role: userRole,
@@ -163,12 +164,11 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         } catch (error) {
              // Catch errors on getDoc, getDocs, or the batch commit
              // The most likely error is a permissions error.
-            if (error instanceof Error && error.message.includes('permission')) {
+            if (error instanceof Error && (error.name === 'FirebaseError' || error.message.includes('permission'))) {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({
                     path: userDocRef.path,
                     operation: 'write', 
-                    // Guessing it's a write op on batch commit
-                    requestResourceData: 'Could not determine profile data for batch write.'
+                    requestResourceData: newUserDoc || 'Could not determine profile data for batch write.'
                 }));
             } else {
                  console.error("FirebaseProvider: Error managing user profile:", error);
