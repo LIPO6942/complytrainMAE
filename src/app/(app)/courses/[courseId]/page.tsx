@@ -101,15 +101,11 @@ export default function CourseDetailPage() {
       <div className="space-y-6">
         <Skeleton className="h-10 w-2/3" />
         <Skeleton className="h-6 w-1/3" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-4">
-             <Skeleton className="h-64 w-full" />
-             <Skeleton className="h-4 w-full" />
-             <Skeleton className="h-4 w-3/4" />
-          </div>
-          <div className="space-y-4">
-             <Skeleton className="h-48 w-full" />
-          </div>
+        <div className="space-y-4">
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-48 w-full" />
         </div>
       </div>
     )
@@ -129,7 +125,7 @@ export default function CourseDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
        <div className="flex justify-between items-start">
         <div>
             <h1 className="text-3xl font-bold tracking-tight">{currentCourse.title}</h1>
@@ -146,72 +142,71 @@ export default function CourseDetailPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="space-y-8">
+        <Card>
+            {currentCourse.videoUrl && currentCourse.videoUrl.trim() !== '' ? (
+                <div className="p-6">
+                    <VideoPlayer url={currentCourse.videoUrl} />
+                </div>
+            ) : image && (
+                <Image
+                    src={image.imageUrl}
+                    alt={currentCourse.title}
+                    width={800}
+                    height={400}
+                    className="rounded-t-lg object-cover w-full aspect-video"
+                    data-ai-hint={image.imageHint}
+                />
+            )}
+            <CardHeader>
+                <CardTitle>Description du cours</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-muted-foreground">{currentCourse.description}</p>
+            </CardContent>
+        </Card>
+
+        {currentCourse.pdfUrl && currentCourse.pdfUrl.trim() !== '' && (
+            <GoogleDrivePdfViewer url={currentCourse.pdfUrl} />
+        )}
+
+        {currentCourse.markdownContent && currentCourse.markdownContent.trim() !== '' && (
             <Card>
-                 {currentCourse.videoUrl && currentCourse.videoUrl.trim() !== '' ? (
-                    <div className="p-6">
-                        <VideoPlayer url={currentCourse.videoUrl} />
-                    </div>
-                ) : image && (
-                    <Image
-                        src={image.imageUrl}
-                        alt={currentCourse.title}
-                        width={800}
-                        height={400}
-                        className="rounded-t-lg object-cover w-full aspect-video"
-                        data-ai-hint={image.imageHint}
-                    />
-                )}
                 <CardHeader>
-                    <CardTitle>Description du cours</CardTitle>
+                    <CardTitle>Contenu du cours</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground">{currentCourse.description}</p>
+                <CardContent className="prose dark:prose-invert max-w-none">
+                    <div dangerouslySetInnerHTML={{ __html: currentCourse.markdownContent.replace(/\n/g, '<br />') }} />
                 </CardContent>
             </Card>
+        )}
 
-            {currentCourse.pdfUrl && currentCourse.pdfUrl.trim() !== '' && (
-                <GoogleDrivePdfViewer url={currentCourse.pdfUrl} />
-            )}
-
-            {currentCourse.markdownContent && currentCourse.markdownContent.trim() !== '' && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Contenu du cours</CardTitle>
-                    </CardHeader>
-                    <CardContent className="prose dark:prose-invert max-w-none">
-                        <div dangerouslySetInnerHTML={{ __html: currentCourse.markdownContent.replace(/\n/g, '<br />') }} />
-                    </CardContent>
-                </Card>
-            )}
-
-            {hasContent && (
-              <Card>
-                <CardContent className="p-6 flex items-center space-x-2">
-                  <Checkbox 
-                    id="content-reviewed" 
-                    checked={isContentReviewed} 
-                    onCheckedChange={(checked) => setIsContentReviewed(checked as boolean)}
-                    disabled={isAdmin && isContentReviewed}
-                  />
-                  <Label htmlFor="content-reviewed" className="font-medium cursor-pointer">
-                    Je confirme avoir lu et compris le contenu ci-dessus.
-                  </Label>
-                </CardContent>
-              </Card>
-            )}
-        </div>
-        <div>
-           <Quiz 
-              quiz={currentQuiz} 
-              isQuizLoading={isLoading}
-              courseId={courseId} 
-              quizId={quizId as string}
-              isLocked={isQuizLocked}
-              isStatic={isStatic}
-            />
-        </div>
+        {hasContent && (
+            <Card>
+            <CardContent className="p-6 flex items-center space-x-2">
+                <Checkbox 
+                id="content-reviewed" 
+                checked={isContentReviewed} 
+                onCheckedChange={(checked) => setIsContentReviewed(checked as boolean)}
+                disabled={isAdmin && isContentReviewed}
+                />
+                <Label htmlFor="content-reviewed" className="font-medium cursor-pointer">
+                Je confirme avoir lu et compris le contenu ci-dessus.
+                </Label>
+            </CardContent>
+            </Card>
+        )}
+      </div>
+      
+      <div>
+        <Quiz 
+            quiz={currentQuiz} 
+            isQuizLoading={isLoading}
+            courseId={courseId} 
+            quizId={quizId as string}
+            isLocked={isQuizLocked}
+            isStatic={isStatic}
+        />
       </div>
     </div>
   );
