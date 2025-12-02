@@ -72,10 +72,10 @@ export default function CourseDetailPage() {
   }, [dynamicCourses, isLoadingCourses]);
   // --- End of fetching all courses ---
 
-  useEffect(() => {
+useEffect(() => {
     startTimeRef.current = Date.now();
 
-    const handleBeforeUnload = () => {
+    const handleUnload = () => {
         if (startTimeRef.current && user && firestore) {
             const endTime = Date.now();
             const timeDiffInSeconds = Math.round((endTime - startTimeRef.current) / 1000);
@@ -89,13 +89,14 @@ export default function CourseDetailPage() {
         }
     };
     
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    // This is a backup for page unloads, but less reliable.
+    window.addEventListener('beforeunload', handleUnload);
 
     return () => {
-        handleBeforeUnload(); // Save time when component unmounts (e.g., navigation)
-        window.removeEventListener('beforeunload', handleBeforeUnload);
+        handleUnload(); // Call on component unmount (navigation)
+        window.removeEventListener('beforeunload', handleUnload);
     };
-  }, [user, firestore]);
+  }, [user, firestore, courseId]); // Re-trigger on courseId change
 
   const courseRef = useMemoFirebase(() => {
     if (!firestore || !courseId) return null;
@@ -103,7 +104,7 @@ export default function CourseDetailPage() {
     return doc(firestore, 'courses', courseId);
   }, [firestore, courseId]);
 
-  const { data: courseFromDb, isLoading: isCourseLoading } = useDoc(courseRef);
+  const { data: courseFromDb, isLoading: isCourseLoading } = useDoc<Course>(courseRef);
   
   // Consolidate quizId logic
   const quizId = useMemo(() => {
@@ -125,17 +126,21 @@ export default function CourseDetailPage() {
     return doc(collection(firestore, 'courses', courseId, 'quizzes'), quizId);
   }, [firestore, courseId, quizId, courseFromDb]);
   
-  const { data: quizFromDb, isLoading: isQuizLoadingFromDb } = useDoc(quizRef);
+  const { data: quizFromDb, isLoading: isQuizLoadingFromDb } = useDoc<QuizData>(quizRef);
   
   useEffect(() => {
     // If we get a course from DB, it takes precedence
     if (courseFromDb) {
-        setCurrentCourse(courseFromDb as Course);
+        setCurrentCourse(courseFromDb);
         setIsStatic(false);
         if(quizFromDb) {
           setCurrentQuiz(quizFromDb);
+        } else if (!isQuizLoadingFromDb) {
+            // Course from DB but no quiz from DB, check static
+             const staticMatch = staticCourses.find(sc => sc.id === courseId);
+             setCurrentQuiz(staticMatch?.quiz || null);
         }
-    } else {
+    } else if (!isCourseLoading) {
         // Otherwise, check static courses
         const staticCourse = staticCourses.find(c => c.id === courseId);
         if (staticCourse) {
@@ -144,7 +149,7 @@ export default function CourseDetailPage() {
             setIsStatic(true);
         }
     }
-  }, [courseId, courseFromDb, quizFromDb]);
+  }, [courseId, courseFromDb, isCourseLoading, quizFromDb, isQuizLoadingFromDb]);
 
   const hasPassedQuiz = userProfile?.completedQuizzes?.includes(quizId as string);
 
