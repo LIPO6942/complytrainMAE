@@ -5,6 +5,7 @@ import {
   BookOpen,
   FileText,
   Home,
+  LayoutDashboard,
   Settings,
   ShieldCheck,
   Users,
@@ -32,6 +33,7 @@ const menuItems = [
 
 const adminMenuItems = [
     { href: '/users', label: 'Utilisateurs', icon: Users },
+    { href: '/admin-dashboard', label: 'Dashboard Admin', icon: LayoutDashboard },
 ]
 
 const bottomMenuItems = [
