@@ -19,6 +19,13 @@ import type { Course, QuizData, Question } from '@/lib/quiz-data';
 import { useRouter } from 'next/navigation';
 import { Trash2, PlusCircle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface EditCourseFormProps {
   course: WithId<Course>;
@@ -26,6 +33,17 @@ interface EditCourseFormProps {
   isStatic: boolean;
   onFinished: () => void;
 }
+
+const courseCategories = [
+    "LAB/FT",
+    "KYC",
+    "Fraude",
+    "RGPD",
+    "Sanctions Internationales",
+    "Conformité Assurance",
+    "Quiz Thématique",
+    "QCM (réponse multiple)"
+];
 
 export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCourseFormProps) {
   const firestore = useFirestore();
@@ -35,6 +53,7 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
   const [formData, setFormData] = useState({
     title: course.title,
     description: course.description,
+    category: course.category,
     videoUrl: course.videoUrl || '',
     markdownContent: course.markdownContent || '',
     image: course.image || '',
@@ -50,6 +69,10 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+  
+  const handleSelectChange = (name: string, value: string) => {
+      setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleQuizTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,6 +207,21 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
           <div className="space-y-2">
             <Label htmlFor="title">Titre du cours</Label>
             <Input id="title" name="title" value={formData.title} onChange={handleCourseChange} />
+          </div>
+           <div className="space-y-2">
+            <Label htmlFor="category">Catégorie</Label>
+            <Select value={formData.category} onValueChange={(value) => handleSelectChange('category', value)}>
+                <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                    {courseCategories.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                            {cat}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="image">URL de l'image</Label>

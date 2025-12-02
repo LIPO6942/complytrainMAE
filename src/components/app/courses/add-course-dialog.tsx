@@ -28,7 +28,7 @@ import { PlusCircle } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const courseCategories = [
-    "LAB / FT",
+    "LAB/FT",
     "KYC",
     "Fraude",
     "RGPD",
