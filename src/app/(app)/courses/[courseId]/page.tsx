@@ -57,7 +57,10 @@ export default function CourseDetailPage() {
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
   const saveTimeSpent = (isFinal: boolean = false) => {
-    if (!user || !firestore) return;
+    // Critical check: Ensure user and firestore objects are available.
+    if (!user || !firestore) {
+      return;
+    }
 
     const now = Date.now();
     const timeDiffInSeconds = Math.round((now - lastSaveTimeRef.current) / 1000);
@@ -334,3 +337,5 @@ export default function CourseDetailPage() {
     </div>
   );
 }
+
+    
