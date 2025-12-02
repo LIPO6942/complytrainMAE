@@ -13,8 +13,9 @@ import { CompletionChart } from '@/components/app/reporting/completion-chart';
 import { SuccessChart } from '@/components/app/reporting/success-chart';
 import { Heatmap } from '@/components/app/reporting/heatmap';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, doc, getDocs } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { useMemo }from 'react';
+import type { Course } from '@/lib/quiz-data';
 
 type UserProfile = {
     id: string;
@@ -23,6 +24,8 @@ type UserProfile = {
     lastName?: string;
     badges?: string[];
     departmentId?: string;
+    scores?: Record<string, number>;
+    role?: string;
 }
 
 type Department = {
@@ -36,20 +39,30 @@ export default function ReportingPage() {
   const { userProfile } = useUser();
   const isAdmin = userProfile?.role === 'admin';
 
+  // --- Firestore Data Hooks ---
   const usersQuery = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
+    if (!firestore) return null; // Wait for firestore
     return collection(firestore, 'users');
-  }, [firestore, isAdmin]);
-
-  const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
+  }, [firestore]);
   
+  const { data: allUsers, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
+
   const departmentsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'departments');
   }, [firestore]);
-
   const { data: departments, isLoading: isLoadingDepartments } = useCollection<Department>(departmentsQuery);
+  
+  const coursesQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'courses');
+  }, [firestore]);
+  const { data: courses, isLoading: isLoadingCourses } = useCollection<Course>(coursesQuery);
 
+  // Filter out admin users
+  const users = useMemo(() => allUsers?.filter(u => u.role !== 'admin') || [], [allUsers]);
+
+  // --- Memoized Data Calculations ---
 
   const completionData = useMemo(() => {
     if (!users || !allBadges) return [];
@@ -68,45 +81,85 @@ export default function ReportingPage() {
   }, [users]);
   
   const successData = useMemo(() => {
-    if (!departments) return [];
+    if (!users || !departments) return [];
+
+    const deptScores: Record<string, { totalScore: number; count: number }> = {};
     
+    users.forEach(user => {
+        if (user.departmentId && user.scores) {
+            if (!deptScores[user.departmentId]) {
+                deptScores[user.departmentId] = { totalScore: 0, count: 0 };
+            }
+            Object.values(user.scores).forEach(score => {
+                deptScores[user.departmentId].totalScore += score;
+                deptScores[user.departmentId].count++;
+            });
+        }
+    });
+
     const chartColors = ['chart-1', 'chart-2', 'chart-3', 'chart-4', 'chart-5'];
+    
+    return departments
+        .filter(dept => deptScores[dept.id] && deptScores[dept.id].count > 0)
+        .map((dept, index) => {
+            const avgScore = Math.round(deptScores[dept.id].totalScore / deptScores[dept.id].count);
+            return {
+                name: dept.name,
+                value: avgScore,
+                fill: `var(--color-${chartColors[index % chartColors.length]})`,
+            };
+        });
 
-    return departments.map((dept, index) => ({
-      name: dept.name,
-      value: Math.floor(Math.random() * (98 - 75 + 1)) + 75, // Simulate success rate between 75-98%
-      fill: `var(--color-${chartColors[index % chartColors.length]})`,
-    }));
-
-  }, [departments]);
+  }, [users, departments]);
 
 
   const heatmapData = useMemo(() => {
-    const topics = ['LAB/FT', 'KYC', 'Fraude', 'RGPD', 'Sanctions'];
+    const topics = ['LAB/FT', 'KYC', 'Fraude', 'RGPD', 'Sanctions Internationales'];
+    if (!users || !courses) return [];
 
-    const generateScoresForUser = (user: UserProfile) => {
-        const userScores: { user: string; [key: string]: string | number } = {
-          user: user.firstName || user.email,
+    const quizIdToCategory: Record<string, string> = {};
+    courses.forEach(course => {
+        if(course.quizId && course.category) {
+            quizIdToCategory[course.quizId] = course.category;
+        }
+    });
+
+    const getUserScoresByCategory = (user: UserProfile) => {
+        const scoresByCategory: Record<string, { total: number; count: number }> = {};
+        topics.forEach(topic => scoresByCategory[topic] = { total: 0, count: 0 });
+
+        if (user.scores) {
+            Object.entries(user.scores).forEach(([quizId, score]) => {
+                const category = quizIdToCategory[quizId];
+                if (category && topics.includes(category)) {
+                    scoresByCategory[category].total += score;
+                    scoresByCategory[category].count++;
+                }
+            });
+        }
+
+        const userHeatmapRow: { user: string; [key: string]: string | number } = {
+            user: user.firstName || user.email,
         };
+
         topics.forEach(topic => {
-          userScores[topic] = Math.floor(Math.random() * (100 - 60 + 1) + 60);
+            const categoryData = scoresByCategory[topic];
+            if (categoryData.count > 0) {
+                userHeatmapRow[topic] = Math.round(categoryData.total / categoryData.count);
+            } else {
+                userHeatmapRow[topic] = "N/A";
+            }
         });
-        return userScores;
+        return userHeatmapRow;
     };
-
-    if (isAdmin) {
-        if (!users) return [];
-        return users.map(generateScoresForUser);
-    } 
     
-    if (userProfile) {
-        return [generateScoresForUser(userProfile as UserProfile)];
-    }
+    const targetUsers = isAdmin ? users : (userProfile ? [userProfile as UserProfile] : []);
+    
+    return targetUsers.map(getUserScoresByCategory);
 
-    return [];
-  }, [users, isAdmin, userProfile]);
+  }, [users, courses, isAdmin, userProfile]);
   
-  const isLoading = isLoadingUsers || isLoadingDepartments;
+  const isLoading = isLoadingUsers || isLoadingDepartments || isLoadingCourses;
 
 
   return (
@@ -141,8 +194,8 @@ export default function ReportingPage() {
         </Card>
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Taux de réussite simulé par département</CardTitle>
-            <CardDescription>Taux de réussite moyen aux quiz pour chaque unité commerciale (données simulées).</CardDescription>
+            <CardTitle>Taux de réussite moyen par département</CardTitle>
+            <CardDescription>Taux de réussite moyen aux quiz pour chaque unité commerciale.</CardDescription>
           </CardHeader>
           <CardContent>
             <SuccessChart data={successData} isLoading={isLoading} />
@@ -155,7 +208,7 @@ export default function ReportingPage() {
           <CardDescription>Scores par utilisateur et par sujet réglementaire. Les scores les plus bas indiquent un risque plus élevé.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Heatmap data={heatmapData} isLoading={isLoadingUsers} />
+          <Heatmap data={heatmapData} isLoading={isLoading} />
         </CardContent>
       </Card>
     </div>

@@ -16,7 +16,8 @@ type HeatmapProps = {
   isLoading: boolean;
 };
 
-const getColorForScore = (score: number) => {
+const getColorForScore = (score: number | string) => {
+  if (typeof score !== 'number') return 'bg-muted/30 text-muted-foreground';
   if (score >= 95) return 'bg-green-200/50 dark:bg-green-800/50 text-green-900 dark:text-green-200';
   if (score >= 85) return 'bg-emerald-100/50 dark:bg-emerald-900/50 text-emerald-900 dark:text-emerald-200';
   if (score >= 75) return 'bg-yellow-100/50 dark:bg-yellow-900/50 text-yellow-900 dark:text-yellow-200';
@@ -66,18 +67,21 @@ export function Heatmap({ data, isLoading }: HeatmapProps) {
           {data.map((row) => (
             <TableRow key={row.user}>
               <TableCell className="font-medium">{row.user}</TableCell>
-              {headers.map((header) => (
-                <TableCell key={header} className="text-center">
-                  <div
-                    className={cn(
-                      'rounded-md px-2 py-1 text-sm font-semibold',
-                      getColorForScore(row[header] as number)
-                    )}
-                  >
-                    {row[header]}%
-                  </div>
-                </TableCell>
-              ))}
+              {headers.map((header) => {
+                const score = row[header];
+                return (
+                 <TableCell key={header} className="text-center">
+                    <div
+                        className={cn(
+                        'rounded-md px-2 py-1 text-sm font-semibold',
+                        getColorForScore(score)
+                        )}
+                    >
+                        {typeof score === 'number' ? `${score}%` : score}
+                    </div>
+                 </TableCell>
+                )
+              })}
             </TableRow>
           ))}
         </TableBody>
