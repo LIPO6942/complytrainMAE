@@ -53,7 +53,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     // If the user has already passed, immediately show the results/completed state.
     if (hasAlreadyPassed) {
       setShowResults(true);
-      setFinalScore(null); // We don't store individual scores, so don't show a stale one.
+      setFinalScore(100); // Assume 100 as we don't store individual scores
     } else {
         // Reset state if quiz changes and hasn't been passed
         setShowResults(false);
@@ -200,6 +200,16 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   }
 
   const handleSubmit = async () => {
+    // Critical check to prevent undefined value in arrayUnion
+    if (!quizId) {
+        toast({
+            title: "Erreur",
+            description: "ID de quiz non défini. Impossible de sauvegarder le score.",
+            variant: "destructive"
+        });
+        return;
+    }
+
     const score = getScore();
     setFinalScore(score);
     setShowResults(true);
