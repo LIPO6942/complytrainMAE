@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -7,26 +8,53 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { personalizedRiskRecommendations } from '@/ai/flows/personalized-risk-recommendations';
-import { BookMarked, Target, AlertTriangle } from 'lucide-react';
-import { useUser } from '@/firebase';
+import { personalizedRiskRecommendations, type PersonalizedRiskRecommendationsOutput } from '@/ai/flows/personalized-risk-recommendations';
+import { BookMarked, Target, AlertTriangle, ArrowRight } from 'lucide-react';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
+import { collection } from 'firebase/firestore';
+import { staticCourses, type Course } from '@/lib/quiz-data';
+import { Button } from '@/components/ui/button';
+
+type Recommendation = PersonalizedRiskRecommendationsOutput['recommendations'][0];
 
 export function PersonalizedRecommendations() {
   const { userProfile, isUserLoading } = useUser();
-  const [recommendations, setRecommendations] = useState<string[]>([]);
+  const firestore = useFirestore();
+
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch dynamic courses
+  const coursesQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'courses');
+  }, [firestore]);
+  const { data: dynamicCourses, isLoading: isLoadingCourses } = useCollection<Course>(coursesQuery);
+
+  // Combine static and dynamic courses
+  const allCourses = useMemo(() => {
+    const courses = [...staticCourses];
+    if (dynamicCourses) {
+      // Ensure we don't have duplicates if a static course was made dynamic
+      const staticIds = new Set(staticCourses.map(c => c.id));
+      const filteredDynamic = dynamicCourses.filter(c => !staticIds.has(c.id));
+      courses.push(...filteredDynamic);
+    }
+    return courses.map(c => ({ id: c.id, title: c.title, description: c.description }));
+  }, [dynamicCourses]);
+
+
   useEffect(() => {
     async function fetchRecommendations() {
-      // Don't fetch until user profile is loaded
-      if (isUserLoading) {
+      // Wait for both user and courses to be loaded
+      if (isUserLoading || isLoadingCourses) {
         return;
       }
       
-      // Once loading is done, if there's still no profile, we can stop.
-      if (!userProfile) {
+      // If no profile or no courses, stop.
+      if (!userProfile || allCourses.length === 0) {
         setIsLoading(false);
         return;
       }
@@ -43,15 +71,12 @@ export function PersonalizedRecommendations() {
 
       try {
         const result = await personalizedRiskRecommendations({
-          riskProfile: riskProfile,
+          riskProfile,
+          courses: allCourses,
         });
 
         if (result && result.recommendations) {
-            const recommendationItems = result.recommendations
-            .split('\n')
-            .map((item) => item.replace(/^\s*-\s*/, '')) // Remove leading dash and spaces
-            .filter(Boolean);
-            setRecommendations(recommendationItems);
+            setRecommendations(result.recommendations);
         } else {
             setRecommendations([]);
         }
@@ -64,7 +89,9 @@ export function PersonalizedRecommendations() {
     }
 
     fetchRecommendations();
-  }, [userProfile, isUserLoading]);
+  }, [userProfile, isUserLoading, allCourses, isLoadingCourses]);
+
+  const showSkeleton = isLoading || isUserLoading || isLoadingCourses;
 
   return (
     <Card>
@@ -74,36 +101,41 @@ export function PersonalizedRecommendations() {
           <span>Recommandations Personnalisées</span>
         </CardTitle>
         <CardDescription>
-          En fonction de votre profil de risque, nous vous suggérons de vous concentrer sur ces domaines.
+          En fonction de votre profil, nous vous suggérons de vous concentrer sur ces domaines.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {isLoading && (
-            <div className="space-y-2">
-                <Skeleton className="h-4 w-5/6" />
-                <Skeleton className="h-4 w-4/6" />
-                <Skeleton className="h-4 w-5/6" />
+        {showSkeleton && (
+            <div className="space-y-3">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
             </div>
         )}
-        {!isLoading && error && (
+        {!showSkeleton && error && (
           <div className="flex flex-col items-center justify-center text-center text-muted-foreground bg-muted/50 p-4 rounded-lg">
             <AlertTriangle className="h-8 w-8 mb-2 text-destructive" />
             <p className="font-semibold text-foreground">Erreur de chargement</p>
             <p className="text-sm">{error}</p>
           </div>
         )}
-        {!isLoading && !error && recommendations.length > 0 && (
-          <ul className="space-y-2 text-sm">
-            {recommendations.map((item, index) => (
-              <li key={index} className="flex items-start gap-2">
-                <BookMarked className="h-4 w-4 mt-1 shrink-0 text-accent" />
-                <span>{item}</span>
-              </li>
+        {!showSkeleton && !error && recommendations.length > 0 && (
+          <div className="space-y-3">
+            {recommendations.map((rec) => (
+              <Button asChild variant="outline" className="w-full justify-start h-auto" key={rec.courseId}>
+                <Link href={`/courses/${rec.courseId}`}>
+                  <div className="flex items-center gap-4 p-2">
+                    <BookMarked className="h-6 w-6 text-accent shrink-0" />
+                    <span className="text-sm font-medium whitespace-normal text-left">{rec.title}</span>
+                    <ArrowRight className="h-4 w-4 ml-auto" />
+                  </div>
+                </Link>
+              </Button>
             ))}
-          </ul>
+          </div>
         )}
-        {!isLoading && !error && recommendations.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center">Aucune recommandation pour le moment.</p>
+        {!showSkeleton && !error && recommendations.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center p-4">Aucune recommandation pour le moment.</p>
         )}
       </CardContent>
     </Card>

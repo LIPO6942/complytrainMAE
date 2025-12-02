@@ -11,12 +11,22 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+const RecommendationSchema = z.object({
+  courseId: z.string().describe("L'ID unique du cours recommandé."),
+  title: z.string().describe('Le titre du cours recommandé.'),
+});
+
 const PersonalizedRiskRecommendationsInputSchema = z.object({
   riskProfile: z
     .string()
     .describe(
-      'A description of the user risk profile. Include previous training, quiz results, and any compliance incidents.'
+      "Une description du profil de risque de l'utilisateur. Inclure les formations précédentes, les résultats aux quiz et tout incident de conformité."
     ),
+  courses: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    description: z.string(),
+  })).describe('Une liste des cours disponibles parmi lesquels choisir les recommandations.')
 });
 export type PersonalizedRiskRecommendationsInput = z.infer<
   typeof PersonalizedRiskRecommendationsInputSchema
@@ -24,9 +34,9 @@ export type PersonalizedRiskRecommendationsInput = z.infer<
 
 const PersonalizedRiskRecommendationsOutputSchema = z.object({
   recommendations: z
-    .string()
+    .array(RecommendationSchema)
     .describe(
-      'A list of personalized compliance recommendations based on the user risk profile.'
+      'Une liste de recommandations de cours personnalisées basées sur le profil de risque de l-utilisateur.'
     ),
 });
 export type PersonalizedRiskRecommendationsOutput = z.infer<
@@ -43,17 +53,20 @@ const prompt = ai.definePrompt({
   name: 'personalizedRiskRecommendationsPrompt',
   input: {schema: PersonalizedRiskRecommendationsInputSchema},
   output: {schema: PersonalizedRiskRecommendationsOutputSchema},
-  prompt: `Vous êtes un tuteur IA en conformité. Un apprenant a le profil de risque suivant (en français) :
+  prompt: `Vous êtes un tuteur IA en conformité. Votre rôle est de fournir des recommandations de cours personnalisées pour combler les faiblesses spécifiques d'un apprenant.
 
-  {{riskProfile}}
+Profil de risque de l'apprenant (en français) :
+{{riskProfile}}
 
-  Fournissez des recommandations de conformité personnalisées pour combler leurs faiblesses spécifiques.
-  Formatez les recommandations sous forme de liste à puces (utilisez un tiret '-' pour chaque élément).
-  N'incluez pas de remarques introductives ou de conclusion ; fournissez uniquement la liste.
-  Soyez bref, en ne listant que les titres des cours ou des modules à réviser ; ne soyez pas conversationnel.
-  Concentrez-vous spécifiquement sur les exigences de conformité et réglementaires.
-  Assurez-vous que les titres de cours que vous recommandez couvrent les sujets mentionnés dans le profil de risque.
-  La réponse doit être en français.
+Catalogue de cours disponibles :
+{{#each courses}}
+- ID: {{id}}, Titre: {{title}}, Description: {{description}}
+{{/each}}
+
+En vous basant **uniquement** sur le catalogue de cours fourni, sélectionnez jusqu'à 3 cours qui répondent le mieux aux besoins de l'apprenant identifiés dans son profil de risque.
+
+Retournez une liste d'objets, où chaque objet contient 'courseId' et 'title' pour chaque cours recommandé. Assurez-vous que le 'courseId' et le 'title' correspondent exactement à ceux du catalogue.
+La réponse doit être en français.
 `,
 });
 
@@ -64,6 +77,10 @@ const personalizedRiskRecommendationsFlow = ai.defineFlow(
     outputSchema: PersonalizedRiskRecommendationsOutputSchema,
   },
   async input => {
+    // Return empty recommendations if no courses are available
+    if (!input.courses || input.courses.length === 0) {
+      return { recommendations: [] };
+    }
     const {output} = await prompt(input);
     return output!;
   }
