@@ -43,6 +43,14 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   const { toast } = useToast();
   const router = useRouter();
 
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number[]>>({});
+  const [showResults, setShowResults] = useState(false);
+  const [finalScore, setFinalScore] = useState<number | null>(null);
+  const [newBadgeEarned, setNewBadgeEarned] = useState(false);
+  
+  const hasAlreadyPassed = userProfile?.completedQuizzes?.includes(quizId);
+  const savedScore = userProfile?.scores?.[quizId];
+  
   const handleNextCourse = () => {
     const currentIndex = allCourses.findIndex(c => c.id === courseId);
     if (currentIndex > -1 && currentIndex < allCourses.length - 1) {
@@ -52,26 +60,21 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
       toast({ title: 'Félicitations !', description: 'Vous avez terminé tous les cours disponibles.' });
     }
   };
-
-  const isAdmin = userProfile?.role === 'admin';
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number[]>>({});
-  const [showResults, setShowResults] = useState(false);
-  const [finalScore, setFinalScore] = useState<number | null>(null);
-  const [newBadgeEarned, setNewBadgeEarned] = useState(false);
-
-  const hasAlreadyPassed = userProfile?.completedQuizzes?.includes(quizId);
-  const savedScore = userProfile?.scores?.[quizId];
   
    useEffect(() => {
-    if (hasAlreadyPassed && savedScore !== undefined) {
-      setShowResults(true);
-      setFinalScore(savedScore);
-    } else {
-        setShowResults(false);
-        setFinalScore(null);
-        setSelectedAnswers({});
+    // Only update state from props if we are not already showing results from a recent submission.
+    if (!showResults) {
+        if (hasAlreadyPassed && savedScore !== undefined) {
+            setShowResults(true);
+            setFinalScore(savedScore);
+        } else {
+            // This is the initial state or a reset is needed (e.g. navigating to a new quiz)
+            setShowResults(false);
+            setFinalScore(null);
+            setSelectedAnswers({});
+        }
     }
-  }, [hasAlreadyPassed, savedScore, quizId]);
+  }, [hasAlreadyPassed, savedScore, quizId, showResults]);
 
   if (isQuizLoading) {
     return (
@@ -145,8 +148,8 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   const renderResult = (score: number, newBadgeEarned: boolean) => {
     if (score >= 80) {
       return {
-        title: "Test réussi !",
-        icon: <Award className="w-16 h-16 text-yellow-500 mb-4" />,
+        title: newBadgeEarned ? "Test réussi avec badge !" : "Test réussi !",
+        icon: newBadgeEarned ? <Award className="w-16 h-16 text-yellow-500 mb-4" /> : <CheckCircle2 className="w-16 h-16 text-green-600 mb-4" />,
         description: `Félicitations ! Votre score est de ${score}%. ${newBadgeEarned ? 'Vous avez obtenu un nouveau badge !' : ''}`,
         cardClass: "bg-green-100/50 dark:bg-green-900/30",
         titleClass: "text-green-800 dark:text-green-300"
@@ -176,7 +179,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
         <Card>
             <CardHeader>
                 <CardTitle>{quiz.title}</CardTitle>
-                <CardDescription>Résultats de votre tentative.</CardDescription>
+                <CardDescription>Voici les résultats de votre tentative.</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className={cn("flex flex-col items-center justify-center p-8 text-center rounded-lg", result.cardClass)}>
