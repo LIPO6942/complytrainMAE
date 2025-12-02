@@ -54,14 +54,15 @@ const formatTimeInHours = (seconds: number): string => {
   };
 
 export default function AdminDashboardPage() {
-  const { userProfile } = useUser();
+  const { userProfile, isUserLoading: isAuthLoading } = useUser();
   const firestore = useFirestore();
   const isAdmin = userProfile?.role === 'admin';
 
   const usersQuery = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
+    // Wait until we confirm the user is an admin
+    if (!firestore || isAuthLoading || !isAdmin) return null;
     return collection(firestore, 'users');
-  }, [firestore, isAdmin]);
+  }, [firestore, isAdmin, isAuthLoading]);
 
   const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
 
@@ -134,20 +135,7 @@ export default function AdminDashboardPage() {
     };
   }, [nonAdminUsers]);
 
-  const isLoading = isLoadingUsers;
-
-  if (!isAdmin) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Accès refusé</CardTitle>
-          <CardDescription>
-            Cette page est réservée aux administrateurs.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
+  const isLoading = isLoadingUsers || isAuthLoading;
 
   if (isLoading) {
     return (
@@ -164,6 +152,20 @@ export default function AdminDashboardPage() {
         </div>
     )
   }
+
+  if (!isAdmin) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Accès refusé</CardTitle>
+          <CardDescription>
+            Cette page est réservée aux administrateurs.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
 
   return (
     <div className="space-y-6">
@@ -245,7 +247,8 @@ export default function AdminDashboardPage() {
                 <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={departmentStats}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} fontSize={12} />
+                        <XAxis dataKey="name" angle={
+-45} textAnchor="end" height={80} interval={0} fontSize={12} />
                         <YAxis unit="h" />
                         <Tooltip formatter={(value: number) => `${value.toFixed(1)}h`} />
                         <Legend />
