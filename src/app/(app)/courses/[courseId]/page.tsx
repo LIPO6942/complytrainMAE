@@ -53,7 +53,6 @@ export default function CourseDetailPage() {
   const [allCourses, setAllCourses] = useState<Course[]>([]);
 
   // Time tracking logic
-  const timeSpentRef = useRef<number>(0);
   const startTimeRef = useRef<number | null>(null);
 
   // --- Fetch all courses for "Next Course" navigation ---
@@ -83,8 +82,6 @@ export default function CourseDetailPage() {
             
             if (timeDiffInSeconds > 0) {
                 const userRef = doc(firestore, 'users', user.uid);
-                 // Note: This is a sync call, which might not complete on page unload.
-                 // For more robust tracking, a beacon or periodic update would be better.
                 setDocumentNonBlocking(userRef, {
                     totalTimeSpent: increment(timeDiffInSeconds)
                 }, { merge: true });
