@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { useUser, useFirestore, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, arrayUnion, runTransaction, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Lock, Award, ShieldQuestion } from 'lucide-react';
+import { PlusCircle, Lock, Award, ShieldQuestion, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { QuizData, Question } from '@/lib/quiz-data';
@@ -42,7 +42,20 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   const isAdmin = userProfile?.role === 'admin';
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number[]>>({});
   const [showResults, setShowResults] = useState(false);
+  const [finalScore, setFinalScore] = useState<number | null>(null);
+
+  const hasAlreadyPassed = userProfile?.completedQuizzes?.includes(quizId);
   
+   useEffect(() => {
+    if (hasAlreadyPassed) {
+      setShowResults(true);
+      // We don't have the user's past score, so we can't display it.
+      // We will just show that it's completed.
+      // Or, we could calculate it on the fly if answers were stored, but they aren't.
+    }
+  }, [hasAlreadyPassed]);
+
+
   const handleCreateQuiz = () => {
     if (!firestore || !courseId || !quizId) return;
 
@@ -129,6 +142,27 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     );
   }
 
+  if (hasAlreadyPassed && !isAdmin) {
+      return (
+        <Card>
+            <CardHeader>
+                <CardTitle>{quiz.title}</CardTitle>
+                <CardDescription>Vous avez déjà terminé ce quiz.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="flex flex-col items-center justify-center p-8 text-center bg-green-100/50 dark:bg-green-900/30 rounded-lg">
+                    <CheckCircle2 className="w-16 h-16 text-green-600 dark:text-green-500 mb-4" />
+                    <h3 className="text-xl font-semibold text-green-800 dark:text-green-300">Félicitations, quiz réussi !</h3>
+                    <p className="text-muted-foreground mt-2">
+                        Vous pouvez revoir les questions, mais vous ne pouvez pas le soumettre à nouveau.
+                    </p>
+                </div>
+            </CardContent>
+        </Card>
+      );
+  }
+
+
   const handleAnswerChange = (questionIndex: number, answerIndex: number, checked: boolean) => {
     setSelectedAnswers(prev => {
         const currentAnswers = prev[questionIndex] || [];
@@ -152,8 +186,9 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   }
 
   const handleSubmit = async () => {
-    setShowResults(true);
     const score = getScore();
+    setFinalScore(score);
+    setShowResults(true);
     
     if (!user || !firestore || !quiz) return;
     
@@ -191,6 +226,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
 
                 if (newPassedCount > 0 && newPassedCount % 3 === 0) {
                     const earnedBadges = userData.badges || [];
+                    // Find the next badge that is not yet earned
                     const nextBadge = allBadges.find(b => !earnedBadges.includes(b.id));
 
                     if (nextBadge) {
@@ -198,10 +234,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                             badges: arrayUnion(nextBadge.id)
                         });
 
-                        // We can't use the toast hook inside a transaction,
-                        // so we'll have to show it outside based on the result.
-                        // For simplicity, we toast optimistically here but in a real app
-                        // you might want a more robust solution.
                          setTimeout(() => {
                            toast({
                                 title: "Badge débloqué !",
@@ -282,9 +314,9 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                 Soumettre le quiz
             </Button>
             
-            {showResults && (
+            {showResults && finalScore !== null && (
                 <div className="text-center font-bold text-lg">
-                    Votre score : {getScore()}%
+                    Votre score : {finalScore}%
                 </div>
             )}
           </CardFooter>
