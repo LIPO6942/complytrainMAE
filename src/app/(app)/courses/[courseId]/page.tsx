@@ -72,30 +72,10 @@ export default function CourseDetailPage() {
   }, [dynamicCourses, isLoadingCourses]);
   // --- End of fetching all courses ---
 
-useEffect(() => {
+  useEffect(() => {
+    // Set the start time when the component mounts
     startTimeRef.current = Date.now();
-
-    const handleUnload = () => {
-        if (startTimeRef.current && user && firestore) {
-            const endTime = Date.now();
-            const timeDiffInSeconds = Math.round((endTime - startTimeRef.current) / 1000);
-            
-            if (timeDiffInSeconds > 0) {
-                const userRef = doc(firestore, 'users', user.uid);
-                setDocumentNonBlocking(userRef, {
-                    totalTimeSpent: increment(timeDiffInSeconds)
-                }, { merge: true });
-            }
-        }
-    };
-    
-    window.addEventListener('beforeunload', handleUnload);
-
-    return () => {
-        // handleUnload is no longer called on unmount to prevent auth errors on logout
-        window.removeEventListener('beforeunload', handleUnload);
-    };
-  }, [user, firestore, courseId]);
+  }, [courseId]); // Reset timer if the user navigates to a new course
 
   const courseRef = useMemoFirebase(() => {
     if (!firestore || !courseId) return null;

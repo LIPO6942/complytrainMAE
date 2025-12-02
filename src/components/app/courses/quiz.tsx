@@ -185,9 +185,8 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   };
 
   const isCorrect = (question: Question, userAnswers: number[] | undefined) => {
-    if (!question || !question.correctAnswers) return false;
-    const sortedUserAnswers = [...(userAnswers || [])].sort();
-    const sortedCorrectAnswers = [...question.correctAnswers].sort();
+    const sortedUserAnswers = [...(userAnswers || [])].sort((a, b) => a - b);
+    const sortedCorrectAnswers = [...(question.correctAnswers || [])].sort((a, b) => a - b);
   
     if (sortedUserAnswers.length !== sortedCorrectAnswers.length) {
       return false;
@@ -247,8 +246,11 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
                 averageScore: newAverage,
                 quizAttempts: increment(1),
                 [`scores.${quizId}`]: score,
-                totalTimeSpent: increment(timeDiffInSeconds),
             };
+
+            if (timeDiffInSeconds > 0) {
+              updates.totalTimeSpent = increment(timeDiffInSeconds);
+            }
 
             const quizPassed = score >= 60;
             const alreadyPassed = userData.completedQuizzes?.includes(quizId);
