@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
-import { MaeLogo } from '@/components/icons';
+import { Logo } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
@@ -228,7 +228,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="flex justify-center items-center gap-4 mb-4">
-            <MaeLogo className="h-16 w-16" />
+            <Logo className="h-10 w-10" />
           </div>
           <CardTitle className="text-2xl">ComplyTrain</CardTitle>
           <CardDescription>
