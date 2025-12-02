@@ -21,7 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useUser, useFirestore, setDocumentNonBlocking, useAuth } from '@/firebase';
+import { useUser, useFirestore, setDocumentNonBlocking, useAuth, updateDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { FormEvent, useState, useEffect, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -30,7 +30,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { updatePassword, deleteUser } from 'firebase/auth';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, Users } from 'lucide-react';
+import { AlertCircle, Users, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import { allDepartments } from '@/lib/data';
 
@@ -148,6 +148,33 @@ export default function SettingsPage() {
     }
   };
 
+  const handleResetProgress = () => {
+    if (!user || !firestore) {
+        toast({
+            title: "Erreur",
+            description: "Vous devez être connecté pour réinitialiser votre progression.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    const userRef = doc(firestore, 'users', user.uid);
+    updateDocumentNonBlocking(userRef, {
+        completedQuizzes: [],
+        scores: {},
+        quizzesPassed: 0,
+        quizAttempts: 0,
+        averageScore: 0,
+        badges: [],
+        totalTimeSpent: 0
+    });
+    
+    toast({
+        title: "Progression réinitialisée",
+        description: "Toutes vos réponses et votre progression ont été effacées.",
+    });
+  };
+
 
   return (
     <div className="space-y-6">
@@ -258,7 +285,30 @@ export default function SettingsPage() {
                         Ces actions sont permanentes et ne peuvent pas être annulées.
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex flex-col sm:flex-row gap-4">
+                     <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                           <Button variant="outline" className="border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive">
+                                <RotateCcw className="mr-2 h-4 w-4" />
+                                Réinitialiser ma progression
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Réinitialiser votre progression ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Cette action effacera tous vos scores de quiz, badges et temps de formation. Vous pourrez repasser tous les tests comme si c'était la première fois.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleResetProgress} className="bg-destructive hover:bg-destructive/90">
+                                    Oui, réinitialiser ma progression
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
                             <Button variant="destructive">Supprimer le compte</Button>
