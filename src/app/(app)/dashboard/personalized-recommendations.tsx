@@ -94,7 +94,7 @@ export function PersonalizedRecommendations() {
   const showSkeleton = isLoading || isUserLoading || isLoadingCourses;
 
   return (
-    <Card>
+    <Card className="bg-teal-100 dark:bg-teal-900/30">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="text-primary" />

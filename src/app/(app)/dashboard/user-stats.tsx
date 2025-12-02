@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { collection } from 'firebase/firestore';
 import { useMemo } from 'react';
 import { staticCourses, type Course } from '@/lib/quiz-data';
+import { cn } from '@/lib/utils';
 
 function formatTime(seconds: number): string {
     if (isNaN(seconds) || seconds < 0) {
@@ -59,25 +60,29 @@ export function UserStats() {
             title: "Taux de complétion",
             value: `${completionRate}%`,
             icon: <Target className="w-6 h-6 text-primary" />,
-            description: "Tests réussis / Tests total"
+            description: "Tests réussis / Tests total",
+            color: "bg-blue-100 dark:bg-blue-900/30"
         },
         {
             title: "Tests Tentés",
             value: `${quizzesPassed} / ${quizAttempts}`,
             icon: <CheckCircle className="w-6 h-6 text-green-500" />,
-            description: "Réussis / Total Tentatives"
+            description: "Réussis / Total Tentatives",
+            color: "bg-green-100 dark:bg-green-900/30"
         },
         {
             title: "Score Moyen",
             value: `${averageScore}%`,
             icon: <TrendingUp className="w-6 h-6 text-blue-500" />,
-            description: "Performance aux tests"
+            description: "Performance aux tests",
+            color: "bg-yellow-100 dark:bg-yellow-900/30"
         },
         {
             title: "Temps Passé",
             value: timeSpent,
             icon: <Clock className="w-6 h-6 text-orange-500" />,
-            description: "Formation totale"
+            description: "Formation totale",
+            color: "bg-orange-100 dark:bg-orange-900/30"
         }
     ];
 
@@ -103,7 +108,7 @@ export function UserStats() {
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {stats.map((stat, index) => (
-                 <Card key={index}>
+                 <Card key={index} className={cn(stat.color)}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
                         {stat.icon}

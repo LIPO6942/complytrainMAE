@@ -17,7 +17,7 @@ export function EarnedBadges() {
     const earnedBadges = allBadges.filter(badge => earnedBadgeIds.includes(badge.id));
 
     return (
-        <Card>
+        <Card className="bg-amber-100 dark:bg-amber-900/30">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="text-primary" />
