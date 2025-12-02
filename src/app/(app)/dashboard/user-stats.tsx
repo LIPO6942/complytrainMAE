@@ -7,10 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { allBadges } from '@/lib/data';
-import { Clock, Target, CheckCircle, TrendingUp } from 'lucide-react';
+import { Clock, Target, CheckCircle, TrendingUp, HelpCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { collection } from 'firebase/firestore';
+import { useMemo } from 'react';
+import { staticCourses, type Course } from '@/lib/quiz-data';
 
 function formatTime(seconds: number): string {
     if (isNaN(seconds) || seconds < 0) {
@@ -28,10 +31,26 @@ function formatTime(seconds: number): string {
 
 export function UserStats() {
     const { userProfile, isUserLoading } = useUser();
+    const firestore = useFirestore();
+
+    const coursesQuery = useMemoFirebase(() => {
+      if (!firestore) return null;
+      return collection(firestore, 'courses');
+    }, [firestore]);
+    const { data: dynamicCourses, isLoading: isLoadingCourses } = useCollection<Course>(coursesQuery);
+
+    const totalQuizzes = useMemo(() => {
+        const dynamicCourseIds = new Set(dynamicCourses?.map(c => c.id) || []);
+        const uniqueStaticCourses = staticCourses.filter(c => !dynamicCourseIds.has(c.id) && c.quiz);
+        const dynamicCoursesWithQuiz = dynamicCourses?.filter(c => c.quizId) || [];
+        return uniqueStaticCourses.length + dynamicCoursesWithQuiz.length;
+    }, [dynamicCourses]);
     
-    const badgesEarned = userProfile?.badges?.length || 0;
-    const totalBadges = allBadges.length;
-    const completionRate = totalBadges > 0 ? Math.round((badgesEarned / totalBadges) * 100) : 0;
+    const quizzesPassed = userProfile?.quizzesPassed || 0;
+    const quizAttempts = userProfile?.quizAttempts || 0;
+    const quizzesFailed = quizAttempts - quizzesPassed;
+    
+    const completionRate = totalQuizzes > 0 ? Math.round((quizzesPassed / totalQuizzes) * 100) : 0;
     
     const averageScore = userProfile?.averageScore ? Math.round(userProfile.averageScore) : 0;
     const timeSpent = userProfile?.totalTimeSpent ? formatTime(userProfile.totalTimeSpent) : "0m";
@@ -41,13 +60,13 @@ export function UserStats() {
             title: "Taux de complétion",
             value: `${completionRate}%`,
             icon: <Target className="w-6 h-6 text-primary" />,
-            description: "Progression globale"
+            description: "Quiz réussis / Quiz total"
         },
         {
-            title: "Quiz Réussis",
-            value: badgesEarned,
+            title: "Quiz Tentés",
+            value: `${quizzesPassed} / ${quizAttempts}`,
             icon: <CheckCircle className="w-6 h-6 text-green-500" />,
-            description: "Badges obtenus"
+            description: "Réussis / Total Tentatives"
         },
         {
             title: "Score Moyen",
@@ -63,7 +82,7 @@ export function UserStats() {
         }
     ];
 
-    if (isUserLoading) {
+    if (isUserLoading || isLoadingCourses) {
         return (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {Array.from({length: 4}).map((_, i) => (
