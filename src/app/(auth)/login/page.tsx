@@ -10,10 +10,10 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth, useUser } from '@/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { useAuth, useUser, errorEmitter, FirestorePermissionError, getSdks } from '@/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
 import { redirect } from 'next/navigation';
-import { setDoc, doc, getFirestore, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { setDoc, doc, getFirestore, collection, query, where, getDocs, writeBatch, runTransaction } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { staticDepartments } from '@/lib/data';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -81,41 +81,60 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
             if (isSignUp) {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
+
+                // We need to re-initialize auth inside the transaction to get the current user.
+                const { firestore: dbForTransaction } = getSdks(auth.app);
                 
-                const batch = writeBatch(db);
+                try {
+                   await runTransaction(dbForTransaction, async (transaction) => {
+                        const invitationsRef = collection(db, 'invitations');
+                        const q = query(invitationsRef, where("email", "==", email), where("status", "==", "pending"));
+                        
+                        // Execute the query to find a pending invitation.
+                        const querySnapshot = await getDocs(q);
 
-                // 1. Check for a pending invitation
-                const invitationsRef = collection(db, 'invitations');
-                const q = query(invitationsRef, where("email", "==", email), where("status", "==", "pending"));
-                const querySnapshot = await getDocs(q);
+                        let userRole = 'user'; // Default role
+                        let userDepartmentId = departmentId;
+                        let userAgencyCode = isSiege ? 'SIEGE' : agencyCode;
 
-                let userRole = 'user'; // Default role
-                let userDepartmentId = departmentId;
-                let userAgencyCode = isSiege ? 'SIEGE' : agencyCode;
+                        if (!querySnapshot.empty) {
+                            const invitationDoc = querySnapshot.docs[0];
+                            userRole = invitationDoc.data().role;
+                            userDepartmentId = invitationDoc.data().departmentId || departmentId;
+                            
+                            // Mark invitation as completed within the transaction
+                            transaction.update(invitationDoc.ref, { status: "completed" });
+                        }
 
-                if (!querySnapshot.empty) {
-                    const invitationDoc = querySnapshot.docs[0];
-                    userRole = invitationDoc.data().role;
-                    // Invitation department takes precedence if it exists
-                    userDepartmentId = invitationDoc.data().departmentId || departmentId;
-                    
-                    // Mark invitation as completed
-                    batch.update(invitationDoc.ref, { status: "completed" });
+                        const userRef = doc(db, "users", user.uid);
+                        const userProfileData = {
+                            id: user.uid,
+                            email: user.email,
+                            role: userRole,
+                            departmentId: userDepartmentId,
+                            agencyCode: userAgencyCode,
+                            createdAt: new Date().toISOString()
+                        };
+                        
+                        // Create the user profile document within the transaction
+                        transaction.set(userRef, userProfileData);
+                   });
+                } catch (transactionError: any) {
+                    // This is where we catch Firestore permission errors from the transaction
+                    if (transactionError.code === 'permission-denied') {
+                        const userRef = doc(db, "users", user.uid);
+                        const permissionError = new FirestorePermissionError({
+                            path: userRef.path, // We assume the error is on user creation
+                            operation: 'create',
+                            requestResourceData: { role: 'user' } // Simplified data for context
+                        });
+                        errorEmitter.emit('permission-error', permissionError);
+                        // We throw the original error to stop execution
+                        throw transactionError; 
+                    }
+                    // Re-throw other transaction errors
+                    throw transactionError;
                 }
-
-                // 2. Create the user profile document
-                const userRef = doc(db, "users", user.uid);
-                batch.set(userRef, {
-                    id: user.uid,
-                    email: user.email, // Ensure email is always set
-                    role: userRole,
-                    departmentId: userDepartmentId,
-                    agencyCode: userAgencyCode,
-                    createdAt: new Date().toISOString()
-                });
-
-                // 3. Commit the batch
-                await batch.commit();
 
             } else { // Sign in
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -147,8 +166,13 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 case 'auth/invalid-credential':
                      setErrorMessage('Les informations d\'identification sont invalides.');
                      break;
+                 case 'permission-denied':
+                    // This is for the case where the permission error was re-thrown
+                    // The actual error is handled by the listener, so we just give a generic message here
+                    setErrorMessage("Une erreur de permission s'est produite lors de la création de votre profil.");
+                    break;
                 default:
-                    console.error("Auth error:", error);
+                    console.error("Auth/Firestore error:", error);
                     setErrorMessage("Une erreur inattendue s'est produite.");
             }
         }
@@ -273,7 +297,7 @@ export default function LoginPage() {
             Accédez à votre tableau de bord de conformité.
           </CardDescription>
         </CardHeader>
-        <Tabs defaultValue="signin" className="w-full">
+        <Tabs defaultValue="signup" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Se connecter</TabsTrigger>
                 <TabsTrigger value="signup">S'inscrire</TabsTrigger>
