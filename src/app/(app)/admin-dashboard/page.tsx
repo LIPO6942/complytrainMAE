@@ -57,12 +57,14 @@ export default function AdminDashboardPage() {
   const { userProfile, isUserLoading: isAuthLoading } = useUser();
   const firestore = useFirestore();
   const isAdmin = userProfile?.role === 'admin';
+  const isProfileLoaded = !isAuthLoading && userProfile;
+
 
   const usersQuery = useMemoFirebase(() => {
-    // Wait until we confirm the user is an admin
-    if (!firestore || isAuthLoading || !isAdmin) return null;
+    // Wait until profile is loaded and user is confirmed as admin
+    if (!firestore || !isProfileLoaded || !isAdmin) return null;
     return collection(firestore, 'users');
-  }, [firestore, isAdmin, isAuthLoading]);
+  }, [firestore, isProfileLoaded, isAdmin]);
 
   const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
 
@@ -137,7 +139,7 @@ export default function AdminDashboardPage() {
 
   const isLoading = isLoadingUsers || isAuthLoading;
 
-  if (isLoading) {
+  if (isLoading || !isProfileLoaded) {
     return (
         <div className="space-y-6">
             <Skeleton className="h-8 w-1/3" />
