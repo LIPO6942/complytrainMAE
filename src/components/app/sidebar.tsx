@@ -17,7 +17,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/icons';
 import { usePathname } from 'next/navigation';
@@ -55,7 +54,6 @@ export function AppSidebar() {
           <div className="flex items-center gap-2">
             <Logo className="h-8 w-8 text-primary" />
             <span className="text-lg font-semibold">ComplyTrain</span>
-            <SidebarTrigger className="ml-auto" />
           </div>
         </SidebarHeader>
         <SidebarMenu className="p-2 flex-1">
