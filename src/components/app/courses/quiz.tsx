@@ -62,6 +62,8 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   };
   
    useEffect(() => {
+    // Reset state when the quiz changes (e.g., navigating to a new course)
+    // but not when results are shown
     if (!showResults) {
         setShowResults(false);
         setFinalScore(null);
@@ -72,9 +74,14 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   }, [quizId]);
 
    useEffect(() => {
+    // If the user has already passed this quiz, show their results immediately.
     if (hasAlreadyPassed && savedScore !== undefined && !showResults) {
         setShowResults(true);
         setFinalScore(savedScore);
+        // Since we don't store the user's specific answers, we can't show them.
+        // We'll just show the score and the result summary.
+        // Or, we could just block re-taking, which might be better.
+        // For now, showing results is fine.
     }
   }, [hasAlreadyPassed, savedScore, showResults]);
 
@@ -320,24 +327,48 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
                     </div>
                 </CardContent>
             )}
-            <CardContent className="space-y-4 pt-6">
-                <h4 className="font-semibold">Résumé des réponses</h4>
-                {questions.map((question, qIndex) => (
-                    <div key={qIndex} className="border-t pt-4">
-                        <p className="font-medium flex items-start gap-2 mb-2">
-                            {isCorrect(qIndex, submittedAnswers) 
-                                ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" /> 
-                                : <XCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-                            }
-                            <span>Question {qIndex + 1}: {question.text}</span>
-                        </p>
-                        {!isCorrect(qIndex, submittedAnswers) && (
-                            <div className="mt-2 p-3 rounded-md text-sm font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 ml-7">
-                                La ou les bonne(s) réponse(s) était(ent) : {getCorrectAnswersText(question)}
+            <CardContent className="space-y-6 pt-6">
+                <h4 className="font-semibold text-lg">Résumé de la correction</h4>
+                {questions.map((question, qIndex) => {
+                    const questionCorrect = isCorrect(qIndex, submittedAnswers);
+                    const userAnswersForQ = submittedAnswers[qIndex] || [];
+                    const correctAnswersForQ = question.correctAnswers || [];
+
+                    return (
+                        <div key={qIndex} className="border-t pt-4">
+                            <p className="font-medium flex items-start gap-2 mb-3">
+                                {questionCorrect 
+                                    ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" /> 
+                                    : <XCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                                }
+                                <span>Question {qIndex + 1}: {question.text}</span>
+                            </p>
+                            <div className='space-y-2 ml-7'>
+                                {question.options.map((option, oIndex) => {
+                                    const isSelected = userAnswersForQ.includes(oIndex);
+                                    const isCorrectOption = correctAnswersForQ.includes(oIndex);
+                                    
+                                    const optionStyle = isCorrectOption
+                                      ? 'bg-green-100/60 dark:bg-green-900/30 border-green-500/50' // Correct answer
+                                      : (isSelected ? 'bg-red-100/60 dark:bg-red-900/30 border-red-500/50' : 'border-transparent'); // Incorrectly selected
+
+                                    return (
+                                        <div key={oIndex} className={cn("flex items-center space-x-2 p-2 rounded-md border", optionStyle)}>
+                                            <Checkbox 
+                                                id={`result-q${qIndex}o${oIndex}`}
+                                                checked={isSelected}
+                                                disabled
+                                            />
+                                            <Label htmlFor={`result-q${qIndex}o${oIndex}`} className={cn("flex-1", isCorrectOption && "font-semibold")}>
+                                                {option}
+                                            </Label>
+                                        </div>
+                                    )
+                                })}
                             </div>
-                        )}
-                    </div>
-                ))}
+                        </div>
+                    )
+                })}
             </CardContent>
              <CardFooter>
                 <Button onClick={handleNextCourse} className="w-full">
