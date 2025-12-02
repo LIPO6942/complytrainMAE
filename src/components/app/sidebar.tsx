@@ -52,7 +52,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarHeader className="border-b">
           <div className="flex items-center gap-2">
-            <MaeLogo className="h-8 w-8" />
+            <MaeLogo className="h-10 w-10" />
             <span className="text-lg font-semibold">ComplyTrain</span>
           </div>
         </SidebarHeader>

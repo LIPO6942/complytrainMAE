@@ -228,7 +228,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="flex justify-center items-center gap-4 mb-4">
-            <MaeLogo className="h-12 w-12" />
+            <MaeLogo className="h-16 w-16" />
           </div>
           <CardTitle className="text-2xl">ComplyTrain</CardTitle>
           <CardDescription>
