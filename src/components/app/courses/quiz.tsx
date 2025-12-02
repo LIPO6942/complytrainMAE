@@ -53,6 +53,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     // If the user has already passed, immediately show the results/completed state.
     if (hasAlreadyPassed) {
       setShowResults(true);
+      setFinalScore(null); // We don't store individual scores, so don't show a stale one.
     } else {
         // Reset state if quiz changes and hasn't been passed
         setShowResults(false);
@@ -165,6 +166,12 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                     </p>
                 </div>
             </CardContent>
+             <CardFooter>
+                 <Button onClick={handleNextCourse} className="w-full">
+                    Cours Suivant
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+            </CardFooter>
         </Card>
       );
   }
@@ -220,7 +227,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
 
             // Badge logic
             const quizPassed = score >= 80;
-            const alreadyPassed = userData.completedQuizzes?.includes(quiz.id);
+            const alreadyPassed = userData.completedQuizzes?.includes(quizId);
 
             if (quizPassed && !alreadyPassed) {
                 const currentPassedCount = userData.quizzesPassed || 0;
@@ -228,7 +235,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
 
                 transaction.update(userRef, {
                     quizzesPassed: newPassedCount,
-                    completedQuizzes: arrayUnion(quiz.id)
+                    completedQuizzes: arrayUnion(quizId)
                 });
 
                 if (newPassedCount > 0 && newPassedCount % 3 === 0) {
@@ -300,7 +307,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             {quiz.questions.map((question, qIndex) => (
               <Accordion key={qIndex} type="single" collapsible>
                 <AccordionItem value={`item-${qIndex}`}>
-                  <AccordionTrigger className="text-green-900 dark:text-green-200 hover:text-green-950 dark:hover:text-green-200">Question {qIndex + 1}</AccordionTrigger>
+                  <AccordionTrigger className="text-green-950 dark:text-green-200 hover:text-green-950 dark:hover:text-green-200">Question {qIndex + 1}</AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-4">
                       <p className="font-medium">{question.text}</p>
@@ -311,6 +318,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                                 id={`q${qIndex}o${oIndex}`}
                                 onCheckedChange={(checked) => handleAnswerChange(qIndex, oIndex, checked as boolean)}
                                 disabled={showResults}
+                                checked={selectedAnswers[qIndex]?.includes(oIndex) || false}
                             />
                             <Label htmlFor={`q${qIndex}o${oIndex}`}>{option}</Label>
                           </div>
@@ -338,7 +346,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                 <div className="text-center w-full space-y-4">
                     {finalScore !== null && (
                         <div className="font-bold text-lg">
-                            Votre score : {finalScore}%
+                           Votre score : <span className={cn(finalScore >= 80 ? 'text-green-600' : 'text-red-600')}>{finalScore}%</span>
                         </div>
                     )}
                      <Button onClick={handleNextCourse} className="w-full">

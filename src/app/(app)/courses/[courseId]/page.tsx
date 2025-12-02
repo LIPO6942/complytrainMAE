@@ -136,6 +136,14 @@ export default function CourseDetailPage() {
         }
     }
   }, [courseId, courseFromDb, quizFromDb]);
+
+  const hasPassedQuiz = userProfile?.completedQuizzes?.includes(quizId as string);
+
+  useEffect(() => {
+    if (hasPassedQuiz) {
+        setIsContentReviewed(true);
+    }
+  }, [hasPassedQuiz]);
   
   const isLoading = isCourseLoading || isLoadingCourses;
   const isQuizLoading = isQuizLoadingFromDb || (isCourseLoading && !currentCourse);
@@ -154,7 +162,7 @@ export default function CourseDetailPage() {
   const hasContent = currentCourse && (currentCourse.videoUrl || currentCourse.pdfUrl || currentCourse.markdownContent);
 
   const isQuizLocked = hasContent && !isContentReviewed && !isAdmin;
-  const isContentLockedForUser = isContentReviewed && !isAdmin;
+  const isContentLockedForUser = isContentReviewed && !isAdmin && !hasPassedQuiz;
 
   if (isLoading) {
     return (
@@ -257,7 +265,7 @@ export default function CourseDetailPage() {
             </Card>
         )}
 
-        {hasContent && (
+        {hasContent && !hasPassedQuiz && (
             <Card>
             <CardContent className="p-6 flex items-center space-x-2">
                 <Checkbox 
