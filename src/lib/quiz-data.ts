@@ -1,5 +1,6 @@
 
 
+
 export type Question = {
     text: string;
     options: string[];
@@ -27,6 +28,119 @@ export type Course = {
 };
 
 export const staticCourses: Course[] = [
+    {
+        id: 'guide-pratique-kyc',
+        title: "Guide Pratique : Remplir la Fiche KYC",
+        category: "KYC",
+        description: "Un guide détaillé avec des études de cas pour maîtriser le remplissage de la fiche 'Connaissance du Client' selon les meilleures pratiques.",
+        image: "course-kyc",
+        isStatic: true,
+        markdownContent: `
+### **Introduction à la Fiche KYC (Know Your Customer)**
+Cette fiche est un document essentiel pour toute institution financière. Elle permet de collecter les informations nécessaires sur un client afin d'évaluer les risques de blanchiment d'argent et de financement du terrorisme (BA/FT) associés. Un remplissage rigoureux est la première ligne de défense de votre institution.
+
+---
+
+### **Section 1 : Données Générales**
+Cette section collecte les informations d'identification de base.
+
+*   **Bonnes Pratiques :**
+    *   Vérifiez toujours l'identité du client à l'aide d'un document officiel en cours de validité (Carte d'Identité Nationale, Passeport).
+    *   Assurez-vous que le nom et le prénom correspondent exactement au document.
+    *   La date et le lieu de naissance sont des informations cruciales pour éviter les homonymies.
+
+---
+
+### **Section 2 : Identifiant Capital et Revenus & Sources de Richesse**
+L'objectif est de comprendre la situation financière globale du client.
+
+*   **Bonnes Pratiques :**
+    *   **Source des revenus :** Ne vous contentez pas de "Salaire". Précisez l'employeur et le secteur d'activité. Pour un indépendant, demandez la nature de son activité.
+    *   **Source de la richesse :** Comment le client a-t-il accumulé son patrimoine ? (Héritage, vente d'un bien immobilier, revenus professionnels, etc.). Demandez des justificatifs pour les montants importants.
+    *   **Cohérence :** Le capital et les revenus déclarés doivent être cohérents avec la profession et l'âge du client. Un jeune déclarant un patrimoine très élevé sans justification claire (héritage, etc.) représente un risque plus élevé.
+
+---
+
+### **Section 3 : Relation d'Affaires (Objet et Nature)**
+C'est une section capitale pour l'évaluation du risque.
+
+*   **Bonnes Pratiques :**
+    *   Comprenez *pourquoi* le client a besoin de vos services. Est-ce pour une simple assurance auto ou pour des placements complexes à l'international ?
+    *   Évaluez la complexité des opérations envisagées. Des virements internationaux fréquents vers des juridictions à risque augmentent le niveau de vigilance nécessaire.
+
+*   **Étude de Cas n°1 (Risque Faible) :**
+    *   **Client :** Salarié, résident local, profession non risquée (ex: enseignant).
+    *   **Objet :** Souscrire une assurance habitation pour sa résidence principale.
+    *   **Analyse :** La relation est simple, transparente et cohérente avec le profil du client. Le risque de BA/FT est faible. Une vigilance standard est suffisante.
+
+*   **Étude de Cas n°2 (Risque Élevé) :**
+    *   **Client :** Entrepreneur dans un secteur à forte circulation d'espèces (ex: BTP, restauration).
+    *   **Objet :** Ouvrir un contrat de capitalisation avec des versements mensuels importants et des demandes de transferts vers des comptes à l'étranger.
+    *   **Analyse :** Le secteur d'activité, les montants élevés et les transferts internationaux sont des signaux de risque. Une **vigilance renforcée** est impérative : demandez des justificatifs sur l'origine des fonds, documentez la logique économique des transferts, et identifiez précisément les bénéficiaires effectifs.
+
+---
+
+### **Section 4 : Personne Politiquement Exposée (PPE)**
+L'identification des PPE est une obligation réglementaire stricte.
+
+*   **Définition :** Une PPE est une personne qui exerce ou a exercé des fonctions publiques importantes. Le risque est que sa position puisse être utilisée pour du blanchiment d'argent ou de la corruption.
+*   **Bonnes Pratiques :**
+    *   Posez la question directement au client.
+    *   Utilisez des bases de données spécialisées pour vérifier le statut de PPE.
+    *   L'obligation de vigilance s'étend aux membres de la famille proche et aux associés connus.
+    *   Si un client est identifié comme PPE, une **vigilance renforcée** et l'approbation d'un membre de la direction sont obligatoires avant de nouer la relation.
+
+---
+
+### **Section 5 : Bénéficiaire(s) Effectif(s)**
+Il est crucial de savoir qui contrôle réellement les fonds ou l'entité.
+
+*   **Bonnes Pratiques :**
+    *   Pour une personne morale (entreprise), ne vous arrêtez pas au gérant. Identifiez toute personne physique détenant, directement ou indirectement, plus de 20% du capital ou des droits de vote.
+    *   Si aucune personne ne dépasse ce seuil, identifiez la personne qui exerce un contrôle effectif sur la société.
+    *   Documentez la structure de propriété avec un organigramme si nécessaire.
+
+---
+
+### **Conclusion**
+Une fiche KYC bien remplie est votre meilleur atout de conformité. Elle doit raconter une histoire cohérente sur votre client. Chaque information doit être vérifiée, documentée et analysée. En cas de doute ou d'incohérence, n'hésitez jamais à demander des informations complémentaires. C'est votre responsabilité de protéger votre institution.`,
+        quiz: {
+            id: 'quiz-fiche-kyc-q',
+            title: "Quiz : Maîtrise de la Fiche KYC",
+            questions: [
+                {
+                    text: "Lors du remplissage de la section 'Données Générales', quelle est la meilleure pratique ?",
+                    options: [
+                        "Se fier aux informations déclarées par le client sans vérification.",
+                        "Vérifier l'identité à l'aide d'un document officiel et s'assurer que les informations correspondent exactement.",
+                        "Utiliser une copie simple du document d'identité fournie par e-mail.",
+                        "Demander uniquement le nom et le numéro de téléphone."
+                    ],
+                    correctAnswers: [1]
+                },
+                {
+                    text: "Un client déclare un patrimoine très élevé qui semble incohérent avec son âge et sa profession. Que devez-vous faire ?",
+                    options: [
+                        "Ignorer cette information car elle est d'ordre privé.",
+                        "Accepter la déclaration sans poser de questions pour ne pas froisser le client.",
+                        "Appliquer une vigilance renforcée et demander des justificatifs clairs sur l'origine de sa richesse.",
+                        "Refuser immédiatement le client."
+                    ],
+                    correctAnswers: [2]
+                },
+                {
+                    text: "Qu'est-ce qui est obligatoire si un client est identifié comme une Personne Politiquement Exposée (PPE) ?",
+                    options: [
+                        "Lui demander de fermer ses autres comptes bancaires.",
+                        "Appliquer une vigilance renforcée et obtenir l'approbation de la direction avant de commencer la relation d'affaires.",
+                        "Signaler systématiquement le client à la CTAF.",
+                        "Lui proposer uniquement des produits à faible risque."
+                    ],
+                    correctAnswers: [1]
+                }
+            ]
+        }
+    },
     {
         id: 'quiz-fondements',
         title: "Quiz 1 : Fondements Institutionnels et Législatifs",
@@ -426,3 +540,4 @@ export const staticCourses: Course[] = [
 
 
     
+

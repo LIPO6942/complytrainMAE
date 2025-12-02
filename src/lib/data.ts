@@ -46,6 +46,7 @@ export const allBadges = [
   { id: 'obligations-vigilance', name: 'Vigilance KYC', description: 'Quiz sur les obligations de vigilance.', icon: BadgeKycCertified, quizId: 'quiz-obligations-vigilance-q'},
   { id: 'beneficiaire-effectif', name: 'Expert BE & PPE', description: 'Quiz sur les Bénéficiaires Effectifs et PPE.', icon: BadgeAmlExpert, quizId: 'quiz-beneficiaire-effectif-ppe-q'},
   { id: 'listes-sanctions', name: 'Expert Sanctions', description: 'Quiz sur les listes de sanctions.', icon: BadgeSanctionsSpecialist, quizId: 'quiz-listes-sanctions-roles-q'},
+  { id: 'fiche-kyc-maitrise', name: 'Maîtrise Fiche KYC', description: 'Quiz sur le remplissage de la fiche KYC.', icon: BadgeKycCertified, quizId: 'quiz-fiche-kyc-q' },
 ];
 
 export const staticDepartments = [
