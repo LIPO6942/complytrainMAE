@@ -25,7 +25,6 @@ interface UserProfile {
   quizAttempts?: number;
   quizzesPassed?: number;
   completedQuizzes?: string[];
-  scores?: Record<string, number>;
 }
 
 interface FirebaseProviderProps {

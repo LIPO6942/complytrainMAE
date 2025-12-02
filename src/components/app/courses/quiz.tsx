@@ -48,7 +48,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   const [finalScore, setFinalScore] = useState<number | null>(null);
 
   const hasAlreadyPassed = userProfile?.completedQuizzes?.includes(quizId);
-  const previousScore = userProfile?.scores?.[quizId];
   
   const handleNextCourse = () => {
     const currentIndex = allCourses.findIndex(c => c.id === courseId);
@@ -61,15 +60,15 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   };
 
    useEffect(() => {
-    if (previousScore !== undefined) {
+    if (hasAlreadyPassed) {
       setShowResults(true);
-      setFinalScore(previousScore);
+      setFinalScore(80); // Simulate a passing score to show correct UI
     } else {
         setShowResults(false);
         setFinalScore(null);
         setSelectedAnswers({});
     }
-  }, [previousScore, quizId]);
+  }, [hasAlreadyPassed, quizId]);
 
   if (isQuizLoading) {
     return (
@@ -143,9 +142,9 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   const renderResult = (score: number) => {
     if (score >= 80) {
       return {
-        title: "Test réussi avec badge obtenu !",
+        title: "Test réussi !",
         icon: <Award className="w-16 h-16 text-yellow-500 mb-4" />,
-        description: `Félicitations ! Votre score est de ${score}%. Vous progressez vers votre prochain badge.`,
+        description: `Félicitations ! Vous avez réussi ce test.`,
         cardClass: "bg-green-100/50 dark:bg-green-900/30",
         titleClass: "text-green-800 dark:text-green-300"
       };
@@ -181,7 +180,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                     {result.icon}
                     <h3 className={cn("text-xl font-semibold", result.titleClass)}>{result.title}</h3>
                     <p className="text-muted-foreground mt-2">
-                       {result.description}
+                       {hasAlreadyPassed ? "Vous avez déjà réussi ce quiz." : result.description}
                     </p>
                 </div>
             </CardContent>
@@ -247,13 +246,10 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             const oldAverage = userData.averageScore || 0;
             const quizAttempts = (userData.quizAttempts || 0) + 1;
             const newAverage = (oldAverage * (quizAttempts - 1) + score) / quizAttempts;
-
-            const scoresUpdate = { [`scores.${quizId}`]: score };
             
             transaction.update(userRef, { 
                 averageScore: newAverage,
                 quizAttempts: increment(1),
-                ...scoresUpdate
             });
 
             // Badge logic
