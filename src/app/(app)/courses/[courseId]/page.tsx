@@ -56,7 +56,7 @@ export default function CourseDetailPage() {
   const lastSaveTimeRef = useRef<number>(Date.now());
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
-  const saveTimeSpent = (isFinal: boolean = false) => {
+  const saveTimeSpent = () => {
     // Critical check: Ensure user and firestore objects are available.
     if (!user || !firestore) {
       return;
@@ -87,23 +87,11 @@ export default function CourseDetailPage() {
         saveTimeSpent();
     }, 60000); 
     
-    // Function to run on component unmount
-    const cleanup = () => {
+    // Cleanup interval on component unmount
+    return () => {
         if (intervalIdRef.current) {
             clearInterval(intervalIdRef.current);
         }
-        // Save any remaining time, but only if user is still logged in
-        if (user) {
-           saveTimeSpent(true);
-        }
-    };
-    
-    // Add event listener for when the user leaves the page
-    window.addEventListener('beforeunload', cleanup);
-
-    return () => {
-        window.removeEventListener('beforeunload', cleanup);
-        cleanup();
     };
   }, [courseId, user, firestore]);
 
@@ -337,5 +325,3 @@ export default function CourseDetailPage() {
     </div>
   );
 }
-
-    
