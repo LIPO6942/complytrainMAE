@@ -58,19 +58,23 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   };
   
    useEffect(() => {
-    if (hasAlreadyPassed && savedScore !== undefined) {
-        setShowResults(true);
-        setFinalScore(savedScore);
-        // When showing results for an already passed quiz, we need to populate selectedAnswers from somewhere
-        // For now, we just show the results summary. The detailed answers aren't stored.
-    } else {
-        // Reset state when quiz changes or is retaken
+    // Only reset if the quiz itself changes, not just on userProfile updates.
+    // If we are already showing results for the current quiz, don't reset.
+    if (!showResults) {
         setShowResults(false);
         setFinalScore(null);
         setSelectedAnswers({});
         setCurrentQuestionIndex(0);
     }
-  }, [hasAlreadyPassed, savedScore, quizId]);
+  }, [quizId]); // Depend only on quizId to reset the state
+
+   useEffect(() => {
+    // This effect handles showing pre-existing results when the component first loads.
+    if (hasAlreadyPassed && savedScore !== undefined && !showResults) {
+        setShowResults(true);
+        setFinalScore(savedScore);
+    }
+  }, [hasAlreadyPassed, savedScore, showResults]);
 
   if (isQuizLoading) {
     return (
@@ -287,7 +291,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   const progressPercentage = (currentQuestionIndex / questions.length) * 100;
   
   // Renders the summary screen after submission
-  if (showResults || hasAlreadyPassed) {
+  if (showResults) {
     return (
         <Card>
             <CardHeader>
@@ -306,16 +310,16 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                 <h4 className="font-semibold">Résumé des réponses</h4>
                 {questions.map((question, qIndex) => (
                     <div key={qIndex} className="border-t pt-4">
-                        <p className="font-medium flex items-center gap-2 mb-2">
+                        <p className="font-medium flex items-start gap-2 mb-2">
                             {isCorrect(qIndex) 
-                                ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" /> 
-                                : <XCircle className="h-5 w-5 text-red-500 shrink-0" />
+                                ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" /> 
+                                : <XCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                             }
                             <span>Question {qIndex + 1}: {question.text}</span>
                         </p>
                         {!isCorrect(qIndex) && (
                             <div className="mt-2 p-3 rounded-md text-sm font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 ml-7">
-                                Votre réponse était incorrecte. La ou les bonne(s) réponse(s) était(ent) : {getCorrectAnswersText(question)}
+                                La ou les bonne(s) réponse(s) était(ent) : {getCorrectAnswersText(question)}
                             </div>
                         )}
                     </div>
