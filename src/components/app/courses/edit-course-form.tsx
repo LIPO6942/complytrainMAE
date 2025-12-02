@@ -115,7 +115,7 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
       const newQuestions = [...quizData.questions];
       newQuestions[qIndex].options = newQuestions[qIndex].options.filter((_, index) => index !== oIndex);
       // Also remove from correct answers if it was one
-      newQuestions[qIndex].correctAnswers = newQuestions[qIndex].correctAnswers.filter(ans => ans !== oIndex);
+      newQuestions[qIndex].correctAnswers = (newQuestions[qIndex].correctAnswers || []).filter(ans => ans !== oIndex);
       setQuizData({ ...quizData, questions: newQuestions });
   };
 
@@ -236,7 +236,7 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
                                 <div key={`${formId}-q-${qIndex}-o-${oIndex}`} className="flex items-center gap-2">
                                     <Checkbox 
                                         id={`q-${qIndex}-correct-${oIndex}`}
-                                        checked={question.correctAnswers.includes(oIndex)}
+                                        checked={(question.correctAnswers || []).includes(oIndex)}
                                         onCheckedChange={(checked) => handleCorrectAnswerChange(qIndex, oIndex, checked as boolean)}
                                     />
                                     <Input 
