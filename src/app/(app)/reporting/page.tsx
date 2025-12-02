@@ -67,6 +67,7 @@ export default function ReportingPage() {
   
   // Combine static and dynamic courses
   const allCourses = useMemo(() => {
+    if (isLoadingCourses) return []; // Return empty array while loading
     const courses = [...staticCourses];
     if (dynamicCourses) {
       const staticIds = new Set(staticCourses.map(c => c.id));
@@ -74,21 +75,22 @@ export default function ReportingPage() {
       courses.push(...filteredDynamic);
     }
     return courses;
-  }, [dynamicCourses]);
+  }, [dynamicCourses, isLoadingCourses]);
 
   // Determine the list of users to generate reports for.
   // Admins see all non-admin users. Regular users only see themselves.
   const reportingUsers = useMemo(() => {
+    if (isAuthLoading) return [];
     if (isAdmin) {
         return allUsers?.filter(u => u.role !== 'admin') || [];
     }
     return userProfile ? [userProfile as UserProfile] : [];
-  }, [isAdmin, allUsers, userProfile]);
+  }, [isAdmin, allUsers, userProfile, isAuthLoading]);
 
   // --- Memoized Data Calculations ---
 
   const completionData = useMemo(() => {
-    if (!reportingUsers || reportingUsers.length === 0 || allCourses.length === 0) return [];
+    if (reportingUsers.length === 0 || allCourses.length === 0) return [];
 
     const totalPossibleQuizzes = allCourses.filter(c => c.quizId || c.quiz).length;
     if (totalPossibleQuizzes === 0) return [];
@@ -117,7 +119,7 @@ export default function ReportingPage() {
   }, [reportingUsers, isAdmin, allCourses]);
   
   const successData = useMemo(() => {
-    if (!reportingUsers || reportingUsers.length === 0 || !departments) return [];
+    if (reportingUsers.length === 0 || !departments) return [];
 
     // For single user view
     if (!isAdmin && userProfile) {
@@ -162,35 +164,43 @@ export default function ReportingPage() {
 
   }, [reportingUsers, departments, isAdmin, userProfile]);
 
-  const heatmapTopics = useMemo(() => {
-    const categories = new Set<string>();
-    allCourses.forEach(course => {
-        if (course.category) {
-            categories.add(course.category);
-        }
-    });
-    return Array.from(categories);
-}, [allCourses]);
+  const heatmapDerivedData = useMemo(() => {
+    if (reportingUsers.length === 0 || allCourses.length === 0) {
+        return { heatmapTopics: [], heatmapData: [] };
+    }
 
-
-  const heatmapData = useMemo(() => {
-    if (!reportingUsers || reportingUsers.length === 0 || allCourses.length === 0 || heatmapTopics.length === 0) return [];
-    
+    // 1. Create a live map of quizId -> category from all available courses
     const quizIdToCategory: Record<string, string> = {};
     allCourses.forEach(course => {
         const quizId = course.quizId || course.quiz?.id;
-        if(quizId && course.category) {
+        if (quizId && course.category) {
             quizIdToCategory[quizId] = course.category;
         }
     });
 
-    const getUserScoresByCategory = (user: UserProfile) => {
+    // 2. Identify all unique categories that are actually in use by users with scores
+    const usedCategories = new Set<string>();
+    reportingUsers.forEach(user => {
+        if (user.scores) {
+            Object.keys(user.scores).forEach(quizId => {
+                const category = quizIdToCategory[quizId];
+                if (category) {
+                    usedCategories.add(category);
+                }
+            });
+        }
+    });
+    const heatmapTopics = Array.from(usedCategories).sort();
+
+    // 3. Generate heatmap data based on the live mapping
+    const heatmapData = reportingUsers.map(user => {
         const scoresByCategory: Record<string, { total: number; count: number }> = {};
         heatmapTopics.forEach(topic => scoresByCategory[topic] = { total: 0, count: 0 });
 
         if (user.scores) {
             Object.entries(user.scores).forEach(([quizId, score]) => {
                 const category = quizIdToCategory[quizId];
+                // Only include scores for categories that are currently in our dynamic list
                 if (category && heatmapTopics.includes(category)) {
                     scoresByCategory[category].total += score;
                     scoresByCategory[category].count++;
@@ -211,11 +221,11 @@ export default function ReportingPage() {
             }
         });
         return userHeatmapRow;
-    };
-    
-    return reportingUsers.map(getUserScoresByCategory);
+    });
 
-  }, [reportingUsers, allCourses, heatmapTopics]);
+    return { heatmapTopics, heatmapData };
+
+}, [reportingUsers, allCourses]);
   
   // The overall loading state depends on whether the user is admin or not
   const isLoading = useMemo(() => {
@@ -289,7 +299,7 @@ export default function ReportingPage() {
           <CardDescription>Scores par utilisateur et par sujet réglementaire. Les scores les plus bas indiquent un risque plus élevé.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Heatmap data={heatmapData} headers={heatmapTopics} isLoading={isLoading} />
+          <Heatmap data={heatmapDerivedData.heatmapData} headers={heatmapDerivedData.heatmapTopics} isLoading={isLoading} />
         </CardContent>
       </Card>
     </div>
