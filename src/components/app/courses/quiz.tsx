@@ -147,7 +147,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   }
 
   const renderResultHeader = (score: number, newBadge: boolean) => {
-    if (score >= 80) {
+    if (score >= 60) {
       return {
         title: newBadge ? "Test réussi avec badge !" : "Test réussi !",
         icon: newBadge ? <Award className="w-8 h-8 text-yellow-500" /> : <CheckCircle2 className="w-8 h-8 text-green-600" />,
@@ -224,7 +224,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                 [`scores.${quizId}`]: score
             };
 
-            const quizPassed = score >= 80;
+            const quizPassed = score >= 60;
             const alreadyPassed = userData.completedQuizzes?.includes(quizId);
 
             if (quizPassed && !alreadyPassed) {
