@@ -174,7 +174,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     }
   };
   
-  if (showResults && finalScore !== null) {
+  if (showResults && finalScore !== null && !hasAlreadyPassed) {
       const result = renderResult(finalScore, newBadgeEarned);
       return (
         <Card>
@@ -191,7 +191,10 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                     </p>
                 </div>
             </CardContent>
-             <CardFooter>
+             <CardFooter className="flex flex-col gap-4">
+                 <Button onClick={() => setShowResults(false)} variant="outline" className="w-full">
+                    Revoir mes réponses
+                </Button>
                  <Button onClick={handleNextCourse} className="w-full">
                     Cours Suivant
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -333,13 +336,13 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
       <>
           <CardContent className="space-y-4">
             {quiz.questions.map((question, qIndex) => (
-              <Accordion key={qIndex} type="single" collapsible>
+              <Accordion key={qIndex} type="single" collapsible defaultValue={showResults ? `item-${qIndex}` : ''}>
                 <AccordionItem value={`item-${qIndex}`}>
                   <AccordionTrigger className="hover:no-underline">
                     <div className="flex items-center gap-2">
                        {showResults && (isCorrect(qIndex) 
                            ? <CheckCircle2 className="h-5 w-5 text-green-500" /> 
-                           : <ShieldQuestion className="h-5 w-5 text-red-500" />
+                           : <XCircle className="h-5 w-5 text-red-500" />
                        )}
                        <span>Question {qIndex + 1}</span>
                     </div>
@@ -353,7 +356,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                             <Checkbox 
                                 id={`q${qIndex}o${oIndex}`}
                                 onCheckedChange={(checked) => handleAnswerChange(qIndex, oIndex, checked as boolean)}
-                                disabled={showResults}
+                                disabled={showResults || hasAlreadyPassed}
                                 checked={selectedAnswers[qIndex]?.includes(oIndex) || false}
                             />
                             <Label htmlFor={`q${qIndex}o${oIndex}`}>{option}</Label>
@@ -380,7 +383,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                     Soumettre le quiz
                 </Button>
             )}
-            {(hasAlreadyPassed || showResults) && (
+            {(hasAlreadyPassed || (showResults && finalScore !== null)) && (
                  <Button onClick={handleNextCourse} className="w-full">
                     Cours Suivant
                     <ArrowRight className="ml-2 h-4 w-4" />
