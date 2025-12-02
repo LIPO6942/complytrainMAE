@@ -6,26 +6,47 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, setDocumentNonBlocking, useAuth } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { FormEvent, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from 'next-themes';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
+import { updatePassword, deleteUser } from 'firebase/auth';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, Users } from 'lucide-react';
+import Link from 'next/link';
 
 export default function SettingsPage() {
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
+  const auth = useAuth();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const isAdmin = userProfile?.role === 'admin';
   
   useEffect(() => {
     if (userProfile) {
@@ -34,7 +55,7 @@ export default function SettingsPage() {
     }
   }, [userProfile]);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleProfileSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!user || !firestore) {
         toast({
@@ -57,6 +78,69 @@ export default function SettingsPage() {
     });
   };
 
+  const handlePasswordSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+
+    if (password !== confirmPassword) {
+        setPasswordError("Les mots de passe ne correspondent pas.");
+        return;
+    }
+    if (!user) {
+        setPasswordError("Utilisateur non authentifié.");
+        return;
+    }
+    if(password.length < 6) {
+        setPasswordError("Le mot de passe doit comporter au moins 6 caractères.");
+        return;
+    }
+
+    try {
+        await updatePassword(user, password);
+        toast({
+            title: "Succès",
+            description: "Votre mot de passe a été mis à jour.",
+        });
+        setPassword('');
+        setConfirmPassword('');
+    } catch (error: any) {
+        console.error("Password update error:", error);
+        if (error.code === 'auth/requires-recent-login') {
+             setPasswordError("Cette opération est sensible et nécessite une authentification récente. Veuillez vous reconnecter avant de réessayer.");
+        } else {
+            setPasswordError("Une erreur s'est produite lors de la mise à jour du mot de passe.");
+        }
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) {
+        toast({
+            title: "Erreur",
+            description: "Utilisateur non authentifié.",
+            variant: "destructive"
+        });
+        return;
+    }
+    try {
+        await deleteUser(user);
+        toast({
+            title: "Compte supprimé",
+            description: "Votre compte a été supprimé avec succès.",
+        });
+        // User will be redirected automatically by the auth listener
+    } catch (error: any) {
+        console.error("Account deletion error:", error);
+        toast({
+            title: "Erreur",
+            description: error.code === 'auth/requires-recent-login'
+                ? "Cette opération est sensible. Veuillez vous reconnecter avant de supprimer votre compte."
+                : "Une erreur s'est produite lors de la suppression du compte.",
+            variant: "destructive"
+        });
+    }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -75,7 +159,7 @@ export default function SettingsPage() {
         </TabsList>
         <TabsContent value="profile">
           <Card>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleProfileSubmit}>
               <CardHeader>
                 <CardTitle>Profil</CardTitle>
                 <CardDescription>
@@ -103,17 +187,83 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
         <TabsContent value="account">
-          <Card>
-            <CardHeader>
-              <CardTitle>Compte</CardTitle>
-              <CardDescription>
-                Gérez les paramètres de votre compte.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Les paramètres du compte seront ici.</p>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+             {isAdmin && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Gestion des administrateurs</CardTitle>
+                        <CardDescription>
+                            Gérez les utilisateurs et les invitations depuis le panneau d'administration.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                       <Button asChild>
+                           <Link href="/users">
+                            <Users className="mr-2 h-4 w-4" />
+                            Aller à la gestion des utilisateurs
+                           </Link>
+                       </Button>
+                    </CardContent>
+                </Card>
+            )}
+            <Card>
+                <form onSubmit={handlePasswordSubmit}>
+                    <CardHeader>
+                        <CardTitle>Changer le mot de passe</CardTitle>
+                        <CardDescription>
+                            Choisissez un nouveau mot de passe fort pour votre compte.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="new-password">Nouveau mot de passe</Label>
+                            <Input id="new-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
+                            <Input id="confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                        </div>
+                         {passwordError && (
+                            <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Erreur</AlertTitle>
+                                <AlertDescription>{passwordError}</AlertDescription>
+                            </Alert>
+                        )}
+                        <Button type="submit">Mettre à jour le mot de passe</Button>
+                    </CardContent>
+                </form>
+            </Card>
+            <Card className="border-destructive">
+                <CardHeader>
+                    <CardTitle className="text-destructive">Zone de danger</CardTitle>
+                    <CardDescription>
+                        Ces actions sont permanentes et ne peuvent pas être annulées.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive">Supprimer le compte</Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Cette action est irréversible. Toutes vos données, y compris votre progression et vos badges, seront définitivement supprimées.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive hover:bg-destructive/90">
+                                    Oui, supprimer mon compte
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </CardContent>
+            </Card>
+          </div>
         </TabsContent>
         <TabsContent value="notifications">
            <Card>
