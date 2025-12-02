@@ -17,6 +17,7 @@ import { collection } from 'firebase/firestore';
 import { useMemo }from 'react';
 import type { Course } from '@/lib/quiz-data';
 import { Skeleton } from '@/components/ui/skeleton';
+import { staticCourses } from '@/lib/quiz-data';
 
 type UserProfile = {
     id: string;
@@ -27,6 +28,8 @@ type UserProfile = {
     departmentId?: string;
     scores?: Record<string, number>;
     role?: string;
+    quizzesPassed?: number;
+    averageScore?: number;
 }
 
 type Department = {
@@ -60,7 +63,18 @@ export default function ReportingPage() {
     if (!firestore) return null;
     return collection(firestore, 'courses');
   }, [firestore]);
-  const { data: courses, isLoading: isLoadingCourses } = useCollection<Course>(coursesQuery);
+  const { data: dynamicCourses, isLoading: isLoadingCourses } = useCollection<Course>(coursesQuery);
+  
+  // Combine static and dynamic courses
+  const allCourses = useMemo(() => {
+    const courses = [...staticCourses];
+    if (dynamicCourses) {
+      const staticIds = new Set(staticCourses.map(c => c.id));
+      const filteredDynamic = dynamicCourses.filter(c => !staticIds.has(c.id));
+      courses.push(...filteredDynamic);
+    }
+    return courses;
+  }, [dynamicCourses]);
 
   // Determine the list of users to generate reports for.
   // Admins see all non-admin users. Regular users only see themselves.
@@ -74,24 +88,51 @@ export default function ReportingPage() {
   // --- Memoized Data Calculations ---
 
   const completionData = useMemo(() => {
-    if (!reportingUsers || reportingUsers.length === 0 || !allBadges) return [];
+    if (!reportingUsers || reportingUsers.length === 0 || allCourses.length === 0) return [];
 
-    const totalPossibleBadges = reportingUsers.length * allBadges.length;
-    const totalEarnedBadges = reportingUsers.reduce((acc, user) => acc + (user.badges?.length || 0), 0);
-
-    if (totalPossibleBadges === 0) return [];
+    const totalPossibleQuizzes = allCourses.filter(c => c.quizId || c.quiz).length;
+    if (totalPossibleQuizzes === 0) return [];
     
-    const completionPercentage = Math.round((totalEarnedBadges / totalPossibleBadges) * 100);
+    // For admin, calculate average completion
+    if (isAdmin) {
+        const totalPassedQuizzes = reportingUsers.reduce((acc, user) => acc + (user.quizzesPassed || 0), 0);
+        const totalPossibleForAllUsers = reportingUsers.length * totalPossibleQuizzes;
+        if (totalPossibleForAllUsers === 0) return [];
+        const completionPercentage = Math.round((totalPassedQuizzes / totalPossibleForAllUsers) * 100);
+        return [
+            { name: 'Complété', value: completionPercentage, fill: 'var(--color-chart-1)' },
+            { name: 'À faire', value: 100 - completionPercentage, fill: 'hsl(var(--muted))' }
+        ];
+    }
+
+    // For single user
+    const user = reportingUsers[0];
+    const userPassedQuizzes = user.quizzesPassed || 0;
+    const completionPercentage = Math.round((userPassedQuizzes / totalPossibleQuizzes) * 100);
 
     return [
       { name: 'Complété', value: completionPercentage, fill: 'var(--color-chart-1)' },
       { name: 'À faire', value: 100 - completionPercentage, fill: 'hsl(var(--muted))' }
     ];
-  }, [reportingUsers]);
+  }, [reportingUsers, isAdmin, allCourses]);
   
   const successData = useMemo(() => {
     if (!reportingUsers || reportingUsers.length === 0 || !departments) return [];
 
+    // For single user view
+    if (!isAdmin && userProfile) {
+        const avgScore = Math.round(userProfile.averageScore || 0);
+        if (avgScore > 0) {
+            return [{
+                name: "Mon score moyen",
+                value: avgScore,
+                fill: `var(--color-chart-1)`,
+            }];
+        }
+        return [];
+    }
+
+    // For admin view
     const deptScores: Record<string, { totalScore: number; count: number }> = {};
     
     reportingUsers.forEach(user => {
@@ -119,17 +160,18 @@ export default function ReportingPage() {
             };
         });
 
-  }, [reportingUsers, departments]);
+  }, [reportingUsers, departments, isAdmin, userProfile]);
 
 
   const heatmapData = useMemo(() => {
-    const topics = ['LAB/FT', 'KYC', 'Fraude', 'RGPD', 'Sanctions Internationales'];
-    if (!reportingUsers || reportingUsers.length === 0 || !courses) return [];
-
+    const topics = ['LAB/FT', 'KYC', 'Fraude', 'RGPD', 'Sanctions Internationales', 'Conformité Assurance', 'Quiz Thématique', 'QCM (réponse multiple)'];
+    if (!reportingUsers || reportingUsers.length === 0 || allCourses.length === 0) return [];
+    
     const quizIdToCategory: Record<string, string> = {};
-    courses.forEach(course => {
-        if(course.quizId && course.category) {
-            quizIdToCategory[course.quizId] = course.category;
+    allCourses.forEach(course => {
+        const quizId = course.quizId || course.quiz?.id;
+        if(quizId && course.category) {
+            quizIdToCategory[quizId] = course.category;
         }
     });
 
@@ -164,7 +206,7 @@ export default function ReportingPage() {
     
     return reportingUsers.map(getUserScoresByCategory);
 
-  }, [reportingUsers, courses]);
+  }, [reportingUsers, allCourses]);
   
   // The overall loading state depends on whether the user is admin or not
   const isLoading = useMemo(() => {
@@ -172,7 +214,8 @@ export default function ReportingPage() {
     if (isAdmin) {
         return isLoadingUsers || isLoadingDepartments || isLoadingCourses;
     }
-    return isLoadingDepartments || isLoadingCourses;
+    // For non-admins, we don't depend on isLoadingUsers
+    return isAuthLoading || isLoadingDepartments || isLoadingCourses;
   }, [isAuthLoading, isAdmin, isLoadingUsers, isLoadingDepartments, isLoadingCourses]);
 
   if (isLoading) {
@@ -215,7 +258,7 @@ export default function ReportingPage() {
         <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>Taux d'achèvement global</CardTitle>
-            <CardDescription>Pourcentage de tous les badges de conformité obtenus par les utilisateurs.</CardDescription>
+            <CardDescription>Pourcentage de tous les quiz de conformité terminés avec succès.</CardDescription>
           </CardHeader>
           <CardContent>
             <CompletionChart data={completionData} isLoading={isLoading} />
@@ -223,8 +266,8 @@ export default function ReportingPage() {
         </Card>
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Taux de réussite moyen par département</CardTitle>
-            <CardDescription>Taux de réussite moyen aux quiz pour chaque unité commerciale.</CardDescription>
+            <CardTitle>{isAdmin ? "Taux de réussite moyen par département" : "Mon score moyen"}</CardTitle>
+            <CardDescription>{isAdmin ? "Taux de réussite moyen aux quiz pour chaque unité commerciale." : "Votre performance moyenne sur tous les quiz."}</CardDescription>
           </CardHeader>
           <CardContent>
             <SuccessChart data={successData} isLoading={isLoading} />
