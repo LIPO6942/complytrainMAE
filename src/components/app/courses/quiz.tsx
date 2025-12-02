@@ -74,7 +74,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             setSelectedAnswers({});
         }
     }
-  }, [hasAlreadyPassed, savedScore, quizId, showResults]);
+  }, [hasAlreadyPassed, savedScore, quizId]);
 
   if (isQuizLoading) {
     return (
@@ -336,7 +336,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
       <>
           <CardContent className="space-y-4">
             {quiz.questions.map((question, qIndex) => (
-              <Accordion key={qIndex} type="single" collapsible defaultValue={showResults ? `item-${qIndex}` : ''}>
+              <Accordion key={qIndex} type="single" collapsible defaultValue={showResults || hasAlreadyPassed ? `item-${qIndex}` : ''}>
                 <AccordionItem value={`item-${qIndex}`}>
                   <AccordionTrigger className="hover:no-underline">
                     <div className="flex items-center gap-2">
@@ -359,7 +359,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                                 disabled={showResults || hasAlreadyPassed}
                                 checked={selectedAnswers[qIndex]?.includes(oIndex) || false}
                             />
-                            <Label htmlFor={`q${qIndex}o${oIndex}`}>{option}</Label>
+                            <Label htmlFor={`q${qIndex}o${oIndex}`} className="cursor-pointer">{option}</Label>
                           </div>
                         ))}
                       </div>
