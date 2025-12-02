@@ -184,24 +184,26 @@ export default function CourseDetailPage() {
         {!isContentLockedForUser ? (
             <div className="space-y-8">
                 <Card>
-                    {currentCourse.videoUrl && currentCourse.videoUrl.trim() !== '' ? (
-                        <div className="p-6">
-                            <VideoPlayer url={currentCourse.videoUrl} />
-                        </div>
-                    ) : imageUrl && (
-                        <Image
-                            src={imageUrl}
-                            alt={currentCourse.title}
-                            width={800}
-                            height={400}
-                            className="rounded-t-lg object-cover w-full aspect-video"
-                        />
-                    )}
-                    <CardHeader>
+                     <CardHeader>
                         <CardTitle>Description du cours</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground">{currentCourse.description}</p>
+                    <CardContent className="space-y-4">
+                        {currentCourse.videoUrl && currentCourse.videoUrl.trim() !== '' ? (
+                            <div className="p-2">
+                                <VideoPlayer url={currentCourse.videoUrl} />
+                            </div>
+                        ) : imageUrl && (
+                             <div className="p-2 flex justify-center">
+                                <Image
+                                    src={imageUrl}
+                                    alt={currentCourse.title}
+                                    width={400}
+                                    height={225}
+                                    className="rounded-lg object-cover"
+                                />
+                             </div>
+                        )}
+                        <p className="text-muted-foreground p-2">{currentCourse.description}</p>
                     </CardContent>
                 </Card>
 
