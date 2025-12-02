@@ -65,7 +65,7 @@ export function PersonalizedRecommendations() {
       const riskProfileParts = [
         `Département: ${userProfile.departmentId || 'Non assigné'}`,
         `Score moyen: ${userProfile.averageScore?.toFixed(0) ?? 'N/A'}%`,
-        `Quiz tentés: ${userProfile.quizAttempts || 0}`,
+        `Tests tentés: ${userProfile.quizAttempts || 0}`,
       ];
       const riskProfile = riskProfileParts.join(', ');
 

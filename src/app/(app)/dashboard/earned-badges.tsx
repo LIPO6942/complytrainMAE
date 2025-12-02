@@ -46,7 +46,7 @@ export function EarnedBadges() {
                     );
                 })
             ) : (
-                <p className="text-sm text-muted-foreground">Aucun badge obtenu pour le moment. Terminez des quiz pour en gagner !</p>
+                <p className="text-sm text-muted-foreground">Aucun badge obtenu pour le moment. Terminez des tests pour en gagner !</p>
             )}
           </CardContent>
         </Card>

@@ -39,7 +39,7 @@ export function UserStats() {
     }, [firestore]);
     const { data: dynamicCourses, isLoading: isLoadingCourses } = useCollection<Course>(coursesQuery);
 
-    const totalQuizzes = useMemo(() => {
+    const totalTests = useMemo(() => {
         const dynamicCourseIds = new Set(dynamicCourses?.map(c => c.id) || []);
         const uniqueStaticCourses = staticCourses.filter(c => !dynamicCourseIds.has(c.id) && c.quiz);
         const dynamicCoursesWithQuiz = dynamicCourses?.filter(c => c.quizId) || [];
@@ -48,9 +48,8 @@ export function UserStats() {
     
     const quizzesPassed = userProfile?.quizzesPassed || 0;
     const quizAttempts = userProfile?.quizAttempts || 0;
-    const quizzesFailed = quizAttempts - quizzesPassed;
     
-    const completionRate = totalQuizzes > 0 ? Math.round((quizzesPassed / totalQuizzes) * 100) : 0;
+    const completionRate = totalTests > 0 ? Math.round((quizzesPassed / totalTests) * 100) : 0;
     
     const averageScore = userProfile?.averageScore ? Math.round(userProfile.averageScore) : 0;
     const timeSpent = userProfile?.totalTimeSpent ? formatTime(userProfile.totalTimeSpent) : "0m";
@@ -60,10 +59,10 @@ export function UserStats() {
             title: "Taux de complétion",
             value: `${completionRate}%`,
             icon: <Target className="w-6 h-6 text-primary" />,
-            description: "Quiz réussis / Quiz total"
+            description: "Tests réussis / Tests total"
         },
         {
-            title: "Quiz Tentés",
+            title: "Tests Tentés",
             value: `${quizzesPassed} / ${quizAttempts}`,
             icon: <CheckCircle className="w-6 h-6 text-green-500" />,
             description: "Réussis / Total Tentatives"
@@ -72,7 +71,7 @@ export function UserStats() {
             title: "Score Moyen",
             value: `${averageScore}%`,
             icon: <TrendingUp className="w-6 h-6 text-blue-500" />,
-            description: "Performance aux quiz"
+            description: "Performance aux tests"
         },
         {
             title: "Temps Passé",
