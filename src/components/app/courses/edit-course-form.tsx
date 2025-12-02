@@ -37,13 +37,15 @@ interface EditCourseFormProps {
 const courseCategories = [
     "LAB/FT",
     "KYC",
-    "Fraude",
     "RGPD",
-    "Sanctions Internationales",
-    "Conformité Assurance",
-    "Quiz Thématique",
-    "QCM (réponse multiple)"
 ];
+
+const quizTypes = [
+    "QCM (réponse multiple)",
+    "Quiz",
+    "Vrai / Faux",
+    "Classement (Ranking)"
+]
 
 export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCourseFormProps) {
   const firestore = useFirestore();
@@ -63,6 +65,8 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
   const [quizData, setQuizData] = useState<QuizData | null>(
     quiz ? { ...quiz } : null
   );
+
+  const [quizType, setQuizType] = useState(quiz?.type || 'Quiz');
 
   const handleCourseChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -165,7 +169,7 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
             if (!quizId) throw new Error("ID de quiz manquant");
 
             const quizRef = doc(firestore, 'courses', course.id, 'quizzes', quizId);
-            batch.set(quizRef, quizData, { merge: true });
+            batch.set(quizRef, {...quizData, type: quizType}, { merge: true });
         }
         
         await batch.commit();
@@ -253,6 +257,21 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
                 <CardDescription>Modifiez les questions, les options et les réponses correctes pour ce quiz.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+                 <div className="space-y-2">
+                    <Label htmlFor="quizType">Type de test</Label>
+                    <Select value={quizType} onValueChange={setQuizType}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un type de test" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {quizTypes.map((type) => (
+                                <SelectItem key={type} value={type}>
+                                    {type}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="quizTitle">Titre du Quiz</Label>
                     <Input id="quizTitle" value={quizData.title} onChange={handleQuizTitleChange} />
@@ -314,3 +333,5 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
     </form>
   );
 }
+
+    

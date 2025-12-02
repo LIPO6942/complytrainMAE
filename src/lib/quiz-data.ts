@@ -1,6 +1,7 @@
 
 
 
+
 export type Question = {
     text: string;
     options: string[];
@@ -11,6 +12,7 @@ export type QuizData = {
     id: string;
     title: string;
     questions: Question[];
+    type?: string;
 };
 
 export type Course = {
@@ -107,6 +109,7 @@ Une fiche KYC bien remplie est votre meilleur atout de conformité. Elle doit ra
         quiz: {
             id: 'quiz-fiche-kyc-q',
             title: "Quiz : Maîtrise de la Fiche KYC",
+            type: "Quiz",
             questions: [
                 {
                     text: "Lors du remplissage de la section 'Données Générales', quelle est la meilleure pratique ?",
@@ -152,6 +155,7 @@ Une fiche KYC bien remplie est votre meilleur atout de conformité. Elle doit ra
         quiz: {
             id: 'quiz-fondements-q',
             title: "Fondements Institutionnels et Législatifs",
+            type: "QCM (réponse multiple)",
             questions: [
                 {
                     text: "Quel est le rôle principal de la Commission Tunisienne des Analyses Financières (CTAF) ?",
@@ -197,6 +201,7 @@ Une fiche KYC bien remplie est votre meilleur atout de conformité. Elle doit ra
         quiz: {
             id: 'quiz-abr-kyc-q',
             title: "ABR et KYC",
+            type: "QCM (réponse multiple)",
             questions: [
                 {
                     text: "Selon l'Approche Basée sur les Risques (ABR) et les lignes directrices du CGA, quels sont les quatre facteurs de risque inhérent que les sociétés d'assurance doivent prendre en compte lors de l'évaluation des risques de BA/FT ?",
@@ -232,6 +237,7 @@ Une fiche KYC bien remplie est votre meilleur atout de conformité. Elle doit ra
         quiz: {
             id: 'quiz-declarations-sanctions-q',
             title: "Déclarations, Sanctions et Vigilance",
+            type: "QCM (réponse multiple)",
             questions: [
                 {
                     text: "Dans quels cas le correspondant de la CTAF d'une entreprise d'assurance doit-il procéder à une Déclaration de Soupçon (DS) ?",
@@ -277,6 +283,7 @@ Une fiche KYC bien remplie est votre meilleur atout de conformité. Elle doit ra
         quiz: {
             id: 'quiz-assurances-specifiques-q',
             title: "Assurances Spécifiques et Contrats",
+            type: "QCM (réponse multiple)",
             questions: [
                 {
                     text: "Qu'est-ce qui caractérise le régime d'Assurance Takaful ?",
@@ -322,6 +329,7 @@ Une fiche KYC bien remplie est votre meilleur atout de conformité. Elle doit ra
         quiz: {
             id: 'quiz-definitions-q',
             title: "Définitions et Cadre Légal",
+            type: "QCM (réponse multiple)",
             questions: [
                 {
                     text: "Quelle est la loi organique fondamentale relative à la lutte contre le terrorisme et à la répression du blanchiment d'argent, telle que modifiée en 2019, qui sert de référence au dispositif réglementaire tunisien ?",
@@ -367,6 +375,7 @@ Une fiche KYC bien remplie est votre meilleur atout de conformité. Elle doit ra
         quiz: {
             id: 'quiz-phases-blanchiment-q',
             title: "Les Phases du Blanchiment d'Argent",
+            type: "QCM (réponse multiple)",
             questions: [
                 {
                     text: "Comment nomme-t-on la première phase du processus de blanchiment d’argent, qui consiste à introduire les sommes d'argent en espèces (produit des délits) dans le système financier ou économique ?",
@@ -412,6 +421,7 @@ Une fiche KYC bien remplie est votre meilleur atout de conformité. Elle doit ra
         quiz: {
             id: 'quiz-obligations-vigilance-q',
             title: "Obligations de Vigilance (KYC) et Diligences",
+            type: "QCM (réponse multiple)",
             questions: [
                 {
                     text: "Selon le Règlement du CGA n°2019-02, dans quels cas spécifiques les compagnies d'assurance doivent-elles prendre des mesures de vigilance renforcée (Diligences Renforcées) ?",
@@ -457,6 +467,7 @@ Une fiche KYC bien remplie est votre meilleur atout de conformité. Elle doit ra
         quiz: {
             id: 'quiz-beneficiaire-effectif-ppe-q',
             title: "Bénéficiaire Effectif (BE) et PPE",
+            type: "QCM (réponse multiple)",
             questions: [
                 {
                     text: "Selon le Règlement du CGA n°2019-02, dans la première étape d'identification du Bénéficiaire Effectif (BE) d'une personne morale (Approche Mathématique), quel est le seuil minimum de détention (directe ou indirecte) du capital ou des droits de vote qui déclenche l'identification comme BE ?",
@@ -502,6 +513,7 @@ Une fiche KYC bien remplie est votre meilleur atout de conformité. Elle doit ra
         quiz: {
             id: 'quiz-listes-sanctions-roles-q',
             title: "Listes de Sanctions et Rôles Institutionnels",
+            type: "QCM (réponse multiple)",
             questions: [
                 {
                     text: "Quel organisme tunisien est le centre national chargé de la réception et de l’analyse des déclarations de soupçon (DS) et de leur transmission au Procureur de la République des déclarations dont l’analyse a confirmé le soupçon ?",
@@ -541,3 +553,6 @@ Une fiche KYC bien remplie est votre meilleur atout de conformité. Elle doit ra
 
     
 
+
+
+    
