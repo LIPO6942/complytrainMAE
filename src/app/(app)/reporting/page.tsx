@@ -163,14 +163,15 @@ export default function ReportingPage() {
   }, [reportingUsers, departments, isAdmin, userProfile]);
 
   const heatmapTopics = useMemo(() => {
-      const categories = new Set<string>();
-      allCourses.forEach(course => {
-          if (course.category) {
-              categories.add(course.category);
-          }
-      });
-      return Array.from(categories);
-  }, [allCourses]);
+    const categories = new Set<string>();
+    allCourses.forEach(course => {
+        if (course.category) {
+            categories.add(course.category);
+        }
+    });
+    return Array.from(categories);
+}, [allCourses]);
+
 
   const heatmapData = useMemo(() => {
     if (!reportingUsers || reportingUsers.length === 0 || allCourses.length === 0 || heatmapTopics.length === 0) return [];
