@@ -265,9 +265,9 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   };
   
   const isCorrect = (questionIndex: number) => {
-    if (!quiz) return false;
+    if (!quiz || !quiz.questions[questionIndex]?.correctAnswers) return false;
     const userAnswers = (selectedAnswers[questionIndex] || []).sort();
-    const correctAnswers = quiz.questions[questionIndex].correctAnswers.sort();
+    const correctAnswers = [...quiz.questions[questionIndex].correctAnswers].sort();
     
     if (userAnswers.length !== correctAnswers.length) {
         return false;
