@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useUser, useFirestore, setDocumentNonBlocking, useAuth } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { FormEvent, useState, useEffect } from 'react';
+import { FormEvent, useState, useEffect, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from 'next-themes';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -32,6 +32,7 @@ import { updatePassword, deleteUser } from 'firebase/auth';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, Users } from 'lucide-react';
 import Link from 'next/link';
+import { allDepartments } from '@/lib/data';
 
 export default function SettingsPage() {
   const { user, userProfile } = useUser();
@@ -54,6 +55,11 @@ export default function SettingsPage() {
       setLastName(userProfile.lastName || '');
     }
   }, [userProfile]);
+  
+  const departmentName = useMemo(() => {
+    if (!userProfile?.departmentId) return "Non assigné";
+    return allDepartments.find(dept => dept.id === userProfile.departmentId)?.name || "Inconnu";
+  }, [userProfile?.departmentId]);
 
   const handleProfileSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -167,7 +173,7 @@ export default function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                 <div className="grid grid-cols-2 gap-4">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="firstName">Prénom</Label>
                         <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
@@ -176,6 +182,16 @@ export default function SettingsPage() {
                         <Label htmlFor="lastName">Nom</Label>
                         <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} />
                     </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="department">Département</Label>
+                        <Input id="department" value={departmentName} disabled readOnly />
+                    </div>
+                     {userProfile?.agencyCode && userProfile.agencyCode !== 'SIEGE' && (
+                        <div className="space-y-2">
+                            <Label htmlFor="agencyCode">Code Agence</Label>
+                            <Input id="agencyCode" value={userProfile.agencyCode} disabled readOnly />
+                        </div>
+                    )}
                  </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
