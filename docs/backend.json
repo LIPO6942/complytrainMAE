@@ -59,6 +59,17 @@
         "quizAttempts": {
             "type": "number",
             "description": "Total number of quizzes attempted by the user."
+        },
+        "quizzesPassed": {
+            "type": "number",
+            "description": "Total number of quizzes passed with a score of 80% or more."
+        },
+        "completedQuizzes": {
+            "type": "array",
+            "description": "An array of quiz IDs that the user has passed.",
+            "items": {
+                "type": "string"
+            }
         }
       },
       "required": ["id", "email", "role"]

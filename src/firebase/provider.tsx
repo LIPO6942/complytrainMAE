@@ -23,6 +23,8 @@ interface UserProfile {
   totalTimeSpent?: number;
   averageScore?: number;
   quizAttempts?: number;
+  quizzesPassed?: number;
+  completedQuizzes?: string[];
 }
 
 interface FirebaseProviderProps {

@@ -155,11 +155,10 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     setShowResults(true);
     const score = getScore();
     
-    if (!user || !firestore) return;
+    if (!user || !firestore || !quiz) return;
     
     const userRef = doc(firestore, 'users', user.uid);
     
-    // Update average score and quiz attempts using a transaction
     try {
         await runTransaction(firestore, async (transaction) => {
             const userDoc = await transaction.get(userRef);
@@ -167,16 +166,51 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                 throw "Document does not exist!";
             }
             
-            const oldAverage = userDoc.data().averageScore || 0;
-            const quizAttempts = (userDoc.data().quizAttempts || 0) + 1;
-            
-            // Calculate new average: (old_average * (n-1) + new_score) / n
+            const userData = userDoc.data();
+            const oldAverage = userData.averageScore || 0;
+            const quizAttempts = (userData.quizAttempts || 0) + 1;
             const newAverage = (oldAverage * (quizAttempts - 1) + score) / quizAttempts;
             
             transaction.update(userRef, { 
                 averageScore: newAverage,
                 quizAttempts: increment(1)
             });
+
+            // Badge logic
+            const quizPassed = score >= 80;
+            const alreadyPassed = userData.completedQuizzes?.includes(quiz.id);
+
+            if (quizPassed && !alreadyPassed) {
+                const currentPassedCount = userData.quizzesPassed || 0;
+                const newPassedCount = currentPassedCount + 1;
+
+                transaction.update(userRef, {
+                    quizzesPassed: newPassedCount,
+                    completedQuizzes: arrayUnion(quiz.id)
+                });
+
+                if (newPassedCount > 0 && newPassedCount % 3 === 0) {
+                    const earnedBadges = userData.badges || [];
+                    const nextBadge = allBadges.find(b => !earnedBadges.includes(b.id));
+
+                    if (nextBadge) {
+                        transaction.update(userRef, {
+                            badges: arrayUnion(nextBadge.id)
+                        });
+
+                        // We can't use the toast hook inside a transaction,
+                        // so we'll have to show it outside based on the result.
+                        // For simplicity, we toast optimistically here but in a real app
+                        // you might want a more robust solution.
+                         setTimeout(() => {
+                           toast({
+                                title: "Badge débloqué !",
+                                description: `Félicitations, vous avez gagné le badge "${nextBadge.name}" !`,
+                            });
+                         }, 500);
+                    }
+                }
+            }
         });
     } catch (e) {
         console.error("Transaction failed: ", e);
@@ -185,23 +219,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             description: "Impossible de sauvegarder votre score. Veuillez réessayer.",
             variant: "destructive"
         });
-    }
-
-
-    // Badge awarding logic
-    const badgeToAward = allBadges.find(b => b.quizId === quiz.id);
-    if (score === 100 && badgeToAward) {
-        const userHasBadge = userProfile?.badges?.includes(badgeToAward.id);
-        if (!userHasBadge) {
-            setDocumentNonBlocking(userRef, {
-                badges: arrayUnion(badgeToAward.id)
-            }, { merge: true });
-
-            toast({
-                title: "Badge débloqué !",
-                description: `Félicitations, vous avez gagné le badge "${badgeToAward.name}" !`,
-            });
-        }
     }
   };
   
@@ -233,7 +250,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             {quiz.questions.map((question, qIndex) => (
               <Accordion key={qIndex} type="single" collapsible>
                 <AccordionItem value={`item-${qIndex}`}>
-                  <AccordionTrigger className="text-green-900 dark:text-green-300 hover:text-green-950 dark:hover:text-green-200">Question {qIndex + 1}</AccordionTrigger>
+                  <AccordionTrigger className="text-green-950 dark:text-green-200 hover:text-green-950 dark:hover:text-green-200">Question {qIndex + 1}</AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-4">
                       <p className="font-medium">{question.text}</p>
