@@ -32,11 +32,14 @@ interface QuizProps {
     allCourses: Course[];
 }
 
-export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic, allCourses }: QuizProps) {
+export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLocked, isStatic, allCourses }: QuizProps) {
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
+
+  // Use quiz.id as the primary source of truth, fallback to prop
+  const quizId = quiz?.id || quizIdProp;
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number[]>>({});
@@ -191,7 +194,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     if (!quizId) {
         toast({
             title: "Erreur",
-            description: "ID de quiz non défini. Impossible de sauvegarder le score.",
+            description: "Id de quiz non défini. Impossible de sauvegarder le score.",
             variant: "destructive"
         });
         return;
