@@ -39,6 +39,7 @@ type UserProfile = {
   quizzesPassed?: number;
   totalTimeSpent?: number;
   badges?: string[];
+  role?: string;
 }
 
 // Helper to format time from seconds to a readable string like '120h 30m'
@@ -64,8 +65,13 @@ export default function AdminDashboardPage() {
 
   const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
 
+  const nonAdminUsers = useMemo(() => {
+    return users?.filter(user => user.role !== 'admin') || [];
+  }, [users]);
+
+
   const departmentStats = useMemo(() => {
-    if (!users) return [];
+    if (!nonAdminUsers) return [];
 
     const totalCourses = allBadges.length;
 
@@ -80,7 +86,7 @@ export default function AdminDashboardPage() {
 
     const statsMap = new Map(statsByDept.map(s => [s.id, s]));
 
-    users.forEach(user => {
+    nonAdminUsers.forEach(user => {
       if (user.departmentId) {
         const stat = statsMap.get(user.departmentId);
         if (stat) {
@@ -101,17 +107,17 @@ export default function AdminDashboardPage() {
         avgTimePerUser: stat.userCount > 0 ? formatTimeInHours(stat.totalTimeSpent / stat.userCount) : '0m',
         totalTimeHours: stat.totalTimeSpent / 3600,
       })).filter(stat => stat.userCount > 0);
-  }, [users]);
+  }, [nonAdminUsers]);
   
   const overallStats = useMemo(() => {
-    if (!users) return { totalUsers: 0, avgCompletion: 0, totalTime: '0h', totalBadges: 0 };
+    if (!nonAdminUsers) return { totalUsers: 0, avgCompletion: 0, totalTime: '0h', totalBadges: 0 };
 
     const totalCourses = allBadges.length;
     let totalCompletionSum = 0;
     let totalTimeSum = 0;
     let totalBadgesSum = 0;
 
-    users.forEach(user => {
+    nonAdminUsers.forEach(user => {
         const userCompletion = user.quizzesPassed || 0;
         if (totalCourses > 0) {
             totalCompletionSum += (userCompletion / totalCourses) * 100;
@@ -121,12 +127,12 @@ export default function AdminDashboardPage() {
     });
 
     return {
-      totalUsers: users.length,
-      avgCompletion: users.length > 0 ? Math.round(totalCompletionSum / users.length) : 0,
+      totalUsers: nonAdminUsers.length,
+      avgCompletion: nonAdminUsers.length > 0 ? Math.round(totalCompletionSum / nonAdminUsers.length) : 0,
       totalTime: formatTimeInHours(totalTimeSum),
       totalBadges: totalBadgesSum,
     };
-  }, [users]);
+  }, [nonAdminUsers]);
 
   const isLoading = isLoadingUsers;
 
@@ -176,6 +182,9 @@ export default function AdminDashboardPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold">{overallStats.totalUsers}</div>
+                    <p className="text-xs text-muted-foreground">
+                        (Administrateurs exclus)
+                    </p>
                 </CardContent>
             </Card>
             <Card>
