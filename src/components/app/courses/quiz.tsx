@@ -233,7 +233,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             {quiz.questions.map((question, qIndex) => (
               <Accordion key={qIndex} type="single" collapsible>
                 <AccordionItem value={`item-${qIndex}`}>
-                  <AccordionTrigger className="text-green-800 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300">Question {qIndex + 1}</AccordionTrigger>
+                  <AccordionTrigger className="text-green-900 dark:text-green-300 hover:text-green-950 dark:hover:text-green-200">Question {qIndex + 1}</AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-4">
                       <p className="font-medium">{question.text}</p>
