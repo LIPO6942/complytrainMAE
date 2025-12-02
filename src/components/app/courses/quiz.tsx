@@ -8,24 +8,19 @@ import {
   CardTitle,
   CardFooter
 } from '@/components/ui/card';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { doc, arrayUnion, runTransaction, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Lock, Award, ShieldQuestion, CheckCircle2, ArrowRight, XCircle } from 'lucide-react';
+import { Lock, Award, ShieldQuestion, CheckCircle2, ArrowRight, XCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { QuizData, Question, Course } from '@/lib/quiz-data';
 import { allBadges } from '@/lib/data';
 import { useRouter } from 'next/navigation';
+import { Progress } from '@/components/ui/progress';
 
 interface QuizProps {
     quiz: QuizData | null;
@@ -43,6 +38,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   const { toast } = useToast();
   const router = useRouter();
 
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number[]>>({});
   const [showResults, setShowResults] = useState(false);
   const [finalScore, setFinalScore] = useState<number | null>(null);
@@ -65,10 +61,14 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     if (hasAlreadyPassed && savedScore !== undefined) {
         setShowResults(true);
         setFinalScore(savedScore);
+        // When showing results for an already passed quiz, we need to populate selectedAnswers from somewhere
+        // For now, we just show the results summary. The detailed answers aren't stored.
     } else {
+        // Reset state when quiz changes or is retaken
         setShowResults(false);
         setFinalScore(null);
         setSelectedAnswers({});
+        setCurrentQuestionIndex(0);
     }
   }, [hasAlreadyPassed, savedScore, quizId]);
 
@@ -220,7 +220,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                 [`scores.${quizId}`]: score
             };
 
-            // Badge logic
             const quizPassed = score >= 80;
             const alreadyPassed = userData.completedQuizzes?.includes(quizId);
 
@@ -283,67 +282,97 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   }
 
   const resultHeader = (showResults && finalScore !== null) ? renderResultHeader(finalScore, newBadgeEarned) : null;
+  const questions = quiz.questions;
+  const currentQuestion = questions[currentQuestionIndex];
+  const progressPercentage = (currentQuestionIndex / questions.length) * 100;
+  
+  // Renders the summary screen after submission
+  if (showResults || hasAlreadyPassed) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>{quiz.title}</CardTitle>
+            </CardHeader>
+            {resultHeader && (
+                <CardContent className={cn("m-6 mb-0 p-4 rounded-lg flex items-center gap-4", resultHeader.cardClass)}>
+                    {resultHeader.icon}
+                    <div>
+                        <h3 className={cn("font-semibold text-lg", resultHeader.titleClass)}>{resultHeader.title}</h3>
+                        <p className="text-sm text-muted-foreground">{resultHeader.description}</p>
+                    </div>
+                </CardContent>
+            )}
+            <CardContent className="space-y-4 pt-6">
+                <h4 className="font-semibold">Résumé des réponses</h4>
+                {questions.map((question, qIndex) => (
+                    <div key={qIndex} className="border-t pt-4">
+                        <p className="font-medium flex items-center gap-2 mb-2">
+                            {isCorrect(qIndex) 
+                                ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" /> 
+                                : <XCircle className="h-5 w-5 text-red-500 shrink-0" />
+                            }
+                            <span>Question {qIndex + 1}: {question.text}</span>
+                        </p>
+                        {!isCorrect(qIndex) && (
+                            <div className="mt-2 p-3 rounded-md text-sm font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 ml-7">
+                                Votre réponse était incorrecte. La ou les bonne(s) réponse(s) était(ent) : {getCorrectAnswersText(question)}
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </CardContent>
+             <CardFooter>
+                <Button onClick={handleNextCourse} className="w-full">
+                    Cours Suivant
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+            </CardFooter>
+        </Card>
+    )
+  }
 
+  // Renders the question-by-question view
   return (
     <Card>
       <CardHeader>
         <CardTitle>{quiz.title}</CardTitle>
-        {!(showResults || hasAlreadyPassed) && (
-            <CardDescription>Testez vos connaissances sur ce module. Plusieurs réponses peuvent être correctes.</CardDescription>
-        )}
+        <CardDescription>Question {currentQuestionIndex + 1} sur {questions.length}</CardDescription>
+        <Progress value={progressPercentage} className="mt-2" />
       </CardHeader>
       
-      {resultHeader && (
-        <CardContent className={cn("m-6 mb-0 p-4 rounded-lg flex items-center gap-4", resultHeader.cardClass)}>
-            {resultHeader.icon}
-            <div>
-                <h3 className={cn("font-semibold text-lg", resultHeader.titleClass)}>{resultHeader.title}</h3>
-                <p className="text-sm text-muted-foreground">{resultHeader.description}</p>
+      <CardContent className="space-y-4 min-h-[200px]">
+        <p className="font-medium">{currentQuestion.text}</p>
+        <div className='space-y-2'>
+            {currentQuestion.options.map((option, oIndex) => (
+            <div key={oIndex} className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted/50 transition-colors">
+                <Checkbox 
+                    id={`q${currentQuestionIndex}o${oIndex}`}
+                    onCheckedChange={(checked) => handleAnswerChange(currentQuestionIndex, oIndex, checked as boolean)}
+                    checked={selectedAnswers[currentQuestionIndex]?.includes(oIndex) || false}
+                />
+                <Label htmlFor={`q${currentQuestionIndex}o${oIndex}`} className="cursor-pointer flex-1">{option}</Label>
             </div>
-        </CardContent>
-      )}
-
-      <CardContent className="space-y-4">
-        {quiz.questions.map((question, qIndex) => (
-          <div key={qIndex} className="border-t pt-4">
-            <p className="font-medium flex items-center gap-2 mb-2">
-                {(showResults || hasAlreadyPassed) && (isCorrect(qIndex) 
-                    ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" /> 
-                    : <XCircle className="h-5 w-5 text-red-500 shrink-0" />
-                )}
-                <span>Question {qIndex + 1}: {question.text}</span>
-            </p>
-            <div className='space-y-2 pl-7'>
-                {question.options.map((option, oIndex) => (
-                <div key={oIndex} className="flex items-center space-x-2">
-                    <Checkbox 
-                        id={`q${qIndex}o${oIndex}`}
-                        onCheckedChange={(checked) => handleAnswerChange(qIndex, oIndex, checked as boolean)}
-                        disabled={showResults || hasAlreadyPassed}
-                        checked={selectedAnswers[qIndex]?.includes(oIndex) || false}
-                    />
-                    <Label htmlFor={`q${qIndex}o${oIndex}`} className="cursor-pointer">{option}</Label>
-                </div>
-                ))}
-            </div>
-            {(showResults || hasAlreadyPassed) && !isCorrect(qIndex) && (
-                <div className="mt-4 p-3 rounded-md text-sm font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 ml-7">
-                    Incorrect. La ou les bonne(s) réponse(s) était(ent) : {getCorrectAnswersText(question)}
-                </div>
-            )}
-          </div>
-        ))}
+            ))}
+        </div>
       </CardContent>
-      <CardFooter className="flex-col gap-4">
-        {!hasAlreadyPassed && !showResults && (
-            <Button onClick={handleSubmit} className="w-full" disabled={showResults || quiz.questions.length === 0}>
-                Soumettre le quiz
-            </Button>
-        )}
-        {(hasAlreadyPassed || showResults) && (
-              <Button onClick={handleNextCourse} className="w-full">
-                Cours Suivant
+
+      <CardFooter className="flex justify-between border-t pt-6">
+        <Button 
+            variant="outline"
+            onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
+            disabled={currentQuestionIndex === 0}
+        >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Précédent
+        </Button>
+        {currentQuestionIndex < questions.length - 1 ? (
+             <Button onClick={() => setCurrentQuestionIndex(prev => prev + 1)}>
+                Suivant
                 <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+        ) : (
+            <Button onClick={handleSubmit}>
+                Soumettre le quiz
             </Button>
         )}
       </CardFooter>
