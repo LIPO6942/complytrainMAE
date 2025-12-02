@@ -82,5 +82,5 @@ export const auditLogs = [
   { id: '3', user: 'Alex Dupont', action: 'Module terminé: Essentiels KYC', timestamp: '2024-07-30T15:45:12Z', details: 'Score: 92%' },
   { id: '4', user: 'Carla', action: 'Rapport généré: Conformité trimestrielle', timestamp: '2024-07-30T11:20:05Z', details: 'Exporté en PDF.' },
   { id: '5', user: 'Alex Dupont', action: 'Échec au quiz: Détection avancée de la fraude', timestamp: '2024-07-29T14:00:00Z', details: 'Score: 55%' },
-  { id: '6', user: 'Admin', action: 'Nouvel utilisateur ajouté: Ben', timestamp: '204-07-29T09:05:00Z', details: 'Rôle: Apprenant, Département: Ventes' },
+  { id: '6', user: 'Admin', action: 'Nouvel utilisateur ajouté: Ben', timestamp: '2024-07-29T09:05:00Z', details: 'Rôle: Apprenant, Département: Ventes' },
 ];

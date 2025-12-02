@@ -47,6 +47,18 @@
             "items": {
                 "type": "string"
             }
+        },
+        "totalTimeSpent": {
+            "type": "number",
+            "description": "Total time in seconds spent on training."
+        },
+        "averageScore": {
+            "type": "number",
+            "description": "Average score across all quizzes taken."
+        },
+        "quizAttempts": {
+            "type": "number",
+            "description": "Total number of quizzes attempted by the user."
         }
       },
       "required": ["id", "email", "role"]

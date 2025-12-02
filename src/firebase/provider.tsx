@@ -20,6 +20,9 @@ interface UserProfile {
   agencyCode?: string;
   badges?: string[];
   lastSignInTime?: string;
+  totalTimeSpent?: number;
+  averageScore?: number;
+  quizAttempts?: number;
 }
 
 interface FirebaseProviderProps {

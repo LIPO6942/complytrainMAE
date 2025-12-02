@@ -12,15 +12,29 @@ import { allBadges } from '@/lib/data';
 import { Clock, Target, CheckCircle, TrendingUp } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
+function formatTime(seconds: number): string {
+    if (isNaN(seconds) || seconds < 0) {
+        return "0m";
+    }
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+
+    if (h > 0) {
+        return `${h}h ${m}m`;
+    }
+    return `${m}m`;
+}
+
+
 export function UserStats() {
     const { userProfile, isUserLoading } = useUser();
+    
     const badgesEarned = userProfile?.badges?.length || 0;
     const totalBadges = allBadges.length;
     const completionRate = totalBadges > 0 ? Math.round((badgesEarned / totalBadges) * 100) : 0;
     
-    // Simulating data for now
-    const averageScore = 92;
-    const timeSpent = "12h 45m";
+    const averageScore = userProfile?.averageScore ? Math.round(userProfile.averageScore) : 0;
+    const timeSpent = userProfile?.totalTimeSpent ? formatTime(userProfile.totalTimeSpent) : "0m";
 
     const stats = [
         {
@@ -39,13 +53,13 @@ export function UserStats() {
             title: "Score Moyen",
             value: `${averageScore}%`,
             icon: <TrendingUp className="w-6 h-6 text-blue-500" />,
-            description: "Performance aux quiz (simulé)"
+            description: "Performance aux quiz"
         },
         {
             title: "Temps Passé",
             value: timeSpent,
             icon: <Clock className="w-6 h-6 text-orange-500" />,
-            description: "Formation totale (simulé)"
+            description: "Formation totale"
         }
     ];
 

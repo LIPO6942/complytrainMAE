@@ -1,7 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { doc, collection } from 'firebase/firestore';
+import { useState, useEffect, useRef } from 'react';
+import { useDoc, useFirestore, useUser, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
+import { doc, collection, increment } from 'firebase/firestore';
 import {
   Card,
   CardContent,
@@ -42,13 +42,44 @@ export default function CourseDetailPage() {
   const params = useParams();
   const courseId = params.courseId as string;
   const firestore = useFirestore();
-  const { userProfile } = useUser();
+  const { user, userProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [isContentReviewed, setIsContentReviewed] = useState(false);
   const [isStatic, setIsStatic] = useState(false);
   
   const [currentCourse, setCurrentCourse] = useState<Course | null>(null);
   const [currentQuiz, setCurrentQuiz] = useState<QuizData | null>(null);
+
+  // Time tracking logic
+  const timeSpentRef = useRef<number>(0);
+  const startTimeRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    startTimeRef.current = Date.now();
+
+    const handleBeforeUnload = () => {
+        if (startTimeRef.current && user && firestore) {
+            const endTime = Date.now();
+            const timeDiffInSeconds = Math.round((endTime - startTimeRef.current) / 1000);
+            
+            if (timeDiffInSeconds > 0) {
+                const userRef = doc(firestore, 'users', user.uid);
+                 // Note: This is a sync call, which might not complete on page unload.
+                 // For more robust tracking, a beacon or periodic update would be better.
+                setDocumentNonBlocking(userRef, {
+                    totalTimeSpent: increment(timeDiffInSeconds)
+                }, { merge: true });
+            }
+        }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+        handleBeforeUnload(); // Save time when component unmounts (e.g., navigation)
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [user, firestore]);
 
   const courseRef = useMemoFirebase(() => {
     if (!firestore || !courseId) return null;

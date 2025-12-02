@@ -18,7 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useUser, useFirestore, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { doc, collection, arrayUnion } from 'firebase/firestore';
+import { doc, collection, arrayUnion, runTransaction, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PlusCircle, Lock, Award, ShieldQuestion } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -249,16 +249,48 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
       return Math.round((correctCount / quiz.questions.length) * 100);
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setShowResults(true);
     const score = getScore();
+    
+    if (!user || !firestore) return;
+    
+    const userRef = doc(firestore, 'users', user.uid);
+    
+    // Update average score and quiz attempts using a transaction
+    try {
+        await runTransaction(firestore, async (transaction) => {
+            const userDoc = await transaction.get(userRef);
+            if (!userDoc.exists()) {
+                throw "Document does not exist!";
+            }
+            
+            const oldAverage = userDoc.data().averageScore || 0;
+            const quizAttempts = (userDoc.data().quizAttempts || 0) + 1;
+            
+            // Calculate new average: (old_average * (n-1) + new_score) / n
+            const newAverage = (oldAverage * (quizAttempts - 1) + score) / quizAttempts;
+            
+            transaction.update(userRef, { 
+                averageScore: newAverage,
+                quizAttempts: increment(1)
+            });
+        });
+    } catch (e) {
+        console.error("Transaction failed: ", e);
+        toast({
+            title: "Erreur",
+            description: "Impossible de sauvegarder votre score. Veuillez réessayer.",
+            variant: "destructive"
+        });
+    }
+
 
     // Badge awarding logic
     const badgeToAward = allBadges.find(b => b.quizId === quiz.id);
-    if (score === 100 && badgeToAward && user && firestore) {
+    if (score === 100 && badgeToAward) {
         const userHasBadge = userProfile?.badges?.includes(badgeToAward.id);
         if (!userHasBadge) {
-            const userRef = doc(firestore, 'users', user.uid);
             setDocumentNonBlocking(userRef, {
                 badges: arrayUnion(badgeToAward.id)
             }, { merge: true });
