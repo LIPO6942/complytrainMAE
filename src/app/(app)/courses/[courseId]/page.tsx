@@ -107,7 +107,14 @@ export default function CourseDetailPage() {
   }, [firestore, courseId]);
 
   const { data: courseFromDb, isLoading: isCourseLoading } = useDoc(courseRef);
-  const quizId = courseFromDb?.quizId || currentCourse?.quizId;
+  
+  // Consolidate quizId logic
+  const quizId = useMemo(() => {
+    if (courseFromDb) return courseFromDb.quizId;
+    const staticCourse = staticCourses.find(c => c.id === courseId);
+    return staticCourse?.quiz?.id || staticCourse?.quizId;
+  }, [courseFromDb, courseId]);
+
 
   const quizRef = useMemoFirebase(() => {
     if (!firestore || !courseId || !quizId || !courseFromDb) return null;
