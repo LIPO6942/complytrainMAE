@@ -30,7 +30,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { AddUserDialog } from '@/components/app/users/add-user-dialog';
 import { useMemo } from 'react';
-import { staticDepartments } from '@/lib/data';
+import { allDepartments } from '@/lib/data';
 
 type UserProfile = {
     id: string;
@@ -197,11 +197,11 @@ export default function UsersPage() {
                                         onValueChange={(newDeptId: string) => handleFieldChange(user.id, 'departmentId', newDeptId)}
                                         disabled={!user.isRegistered}
                                     >
-                                        <SelectTrigger className="w-[180px]">
+                                        <SelectTrigger className="w-[220px]">
                                             <SelectValue placeholder="Non assigné" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {staticDepartments.map(dept => (
+                                            {allDepartments.map(dept => (
                                                 <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
                                             ))}
                                         </SelectContent>

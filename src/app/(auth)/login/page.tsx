@@ -15,7 +15,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, getAuth } f
 import { redirect } from 'next/navigation';
 import { setDoc, doc, getFirestore, collection, query, where, getDocs, writeBatch, runTransaction } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { staticDepartments } from '@/lib/data';
+import { staticDepartments, siegeDepartments } from '@/lib/data';
 import { Checkbox } from '@/components/ui/checkbox';
 
 
@@ -50,16 +50,6 @@ function AnonymousLoginButton() {
         </Button>
     )
 }
-
-const siegeDepartments = [
-    { id: 'siege-commerciale', name: 'Commerciale' },
-    { id: 'siege-audit', name: 'Audit' },
-    { id: 'siege-financier', name: 'Financier' },
-    { id: 'siege-technique', name: 'Technique' },
-    { id: 'siege-juridique', name: 'Juridique' },
-    { id: 'siege-equipement', name: 'Equipement' },
-    { id: 'siege-inspection', name: 'Inspection' },
-];
 
 function AuthForm({ isSignUp }: { isSignUp: boolean }) {
     const auth = useAuth();

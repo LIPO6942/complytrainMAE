@@ -59,6 +59,18 @@ export const staticDepartments = [
     { id: 'delegation-nord-ouest', name: 'Délégation Nord Ouest' },
 ];
 
+export const siegeDepartments = [
+    { id: 'siege-commerciale', name: 'Siège - Commerciale' },
+    { id: 'siege-audit', name: 'Siège - Audit' },
+    { id: 'siege-financier', name: 'Siège - Financier' },
+    { id: 'siege-technique', name: 'Siège - Technique' },
+    { id: 'siege-juridique', name: 'Siège - Juridique' },
+    { id: 'siege-equipement', name: 'Siège - Equipement' },
+    { id: 'siege-inspection', name: 'Siège - Inspection' },
+];
+
+export const allDepartments = [...staticDepartments, ...siegeDepartments];
+
 export const reportingData = {
   completionRate: [
     { month: 'Janvier', desktop: 186, mobile: 80 },
