@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -35,8 +35,16 @@ export default function CoursesPage() {
   
   const { data: dynamicCourses, isLoading } = useCollection(coursesQuery);
 
-  const visibleStaticCourses = staticCourses.filter(c => !hiddenStaticCourses.includes(c.id));
-  const allCourses = [...visibleStaticCourses, ...(dynamicCourses || [])];
+  const allCourses = useMemo(() => {
+    const dynamicCourseIds = new Set(dynamicCourses?.map(c => c.id) || []);
+    // Filter out static courses that have a dynamic counterpart
+    const uniqueStaticCourses = staticCourses.filter(c => !dynamicCourseIds.has(c.id));
+    
+    const visibleStaticCourses = uniqueStaticCourses.filter(c => !hiddenStaticCourses.includes(c.id));
+    
+    return [...visibleStaticCourses, ...(dynamicCourses || [])];
+  }, [dynamicCourses, hiddenStaticCourses]);
+
 
   const handleCourseDeleted = (courseId: string) => {
     // This is for visually hiding static courses
@@ -46,7 +54,8 @@ export default function CoursesPage() {
     }
   };
 
-  const getImageUrl = (imageIdentifier: string): string => {
+  const getImageUrl = (imageIdentifier: string | undefined): string => {
+    if (!imageIdentifier) return PlaceHolderImages[PlaceHolderImages.length-1].imageUrl;
     if (imageIdentifier.startsWith('http')) {
         return getGoogleDriveImageUrl(imageIdentifier);
     }
