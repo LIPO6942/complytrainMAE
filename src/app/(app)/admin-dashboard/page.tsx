@@ -142,7 +142,7 @@ export default function AdminDashboardPage() {
 
   const isLoading = isLoadingUsers || isAuthLoading;
 
-  if (isLoading && isAdmin) {
+  if (isAuthLoading) {
     return (
         <div className="space-y-6">
             <Skeleton className="h-8 w-1/3" />
