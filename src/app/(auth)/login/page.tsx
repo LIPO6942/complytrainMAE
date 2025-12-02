@@ -63,6 +63,8 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
         const formData = new FormData(event.currentTarget);
         const email = formData.get('email') as string;
         const password = formData.get('password') as string;
+        const firstName = formData.get('firstName') as string;
+        const lastName = formData.get('lastName') as string;
         const departmentId = formData.get('departmentId') as string;
         const agencyCode = formData.get('agencyCode') as string;
         const db = getFirestore(auth.app);
@@ -100,6 +102,8 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                         const userProfileData = {
                             id: user.uid,
                             email: user.email,
+                            firstName: firstName,
+                            lastName: lastName,
                             role: userRole,
                             departmentId: userDepartmentId,
                             agencyCode: userAgencyCode,
@@ -171,6 +175,18 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
     return (
         <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
+                 {isSignUp && (
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="firstName">Prénom</Label>
+                            <Input id="firstName" name="firstName" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="lastName">Nom</Label>
+                            <Input id="lastName" name="lastName" required />
+                        </div>
+                    </div>
+                )}
                 <div className="space-y-2">
                     <Label htmlFor={isSignUp ? 'signup-email' : 'signin-email'}>Email</Label>
                     <Input

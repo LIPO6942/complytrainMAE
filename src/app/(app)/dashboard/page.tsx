@@ -20,7 +20,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Bonjour, {displayName} !</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Bonjour, {displayName}!</h1>
           <p className="text-muted-foreground">
             Voici un résumé de votre progression en formation de conformité.
           </p>
