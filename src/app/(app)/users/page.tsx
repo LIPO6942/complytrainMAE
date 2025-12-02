@@ -1,5 +1,5 @@
 'use client';
-import { useCollection, useFirestore, useUser, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useUser, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import {
   Card,
@@ -29,8 +29,9 @@ import { fr } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { AddUserDialog } from '@/components/app/users/add-user-dialog';
-import { useMemo } from 'react';
-import { allDepartments } from '@/lib/data';
+import { useMemo, useState } from 'react';
+import { allDepartments, siegeDepartments } from '@/lib/data';
+import { Input } from '@/components/ui/input';
 
 type UserProfile = {
     id: string;
@@ -49,11 +50,14 @@ type Invitation = {
     departmentId?: string;
 }
 
+const siegeDepartmentIds = new Set(siegeDepartments.map(d => d.id));
+
 export default function UsersPage() {
     const { userProfile } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
     const isAdmin = userProfile?.role === 'admin';
+    const [editingAgencyCodes, setEditingAgencyCodes] = useState<Record<string, string>>({});
 
     const usersQuery = useMemoFirebase(() => {
         if (!firestore || !isAdmin) return null;
@@ -113,15 +117,48 @@ export default function UsersPage() {
 
     const isLoading = isLoadingUsers || isLoadingInvitations;
 
-    const handleFieldChange = (userId: string, field: 'role' | 'departmentId' | 'agencyCode', value: string) => {
+    const handleFieldChange = (userId: string, field: 'role' | 'departmentId', value: string) => {
         if (!firestore) return;
         const userRef = doc(firestore, 'users', userId);
-        setDocumentNonBlocking(userRef, { [field]: value }, { merge: true });
+        const payload: { [key: string]: any } = { [field]: value };
+        
+        // If changing to a siege department, clear the agency code.
+        if (field === 'departmentId' && siegeDepartmentIds.has(value)) {
+            payload.agencyCode = '';
+        }
+
+        setDocumentNonBlocking(userRef, payload, { merge: true });
+
         toast({
             title: "Utilisateur mis à jour",
             description: `Le profil de l'utilisateur a été mis à jour.`
         });
     };
+
+    const handleAgencyCodeChange = (userId: string, value: string) => {
+        setEditingAgencyCodes(prev => ({ ...prev, [userId]: value }));
+    };
+
+    const handleAgencyCodeBlur = (userId: string) => {
+        if (!firestore) return;
+        const newAgencyCode = editingAgencyCodes[userId];
+
+        // Check if value actually changed
+        const originalUser = users?.find(u => u.id === userId);
+        if (originalUser && originalUser.agencyCode === newAgencyCode) {
+            return; // No change, no DB write
+        }
+
+        if (typeof newAgencyCode === 'string') {
+            const userRef = doc(firestore, 'users', userId);
+            updateDocumentNonBlocking(userRef, { agencyCode: newAgencyCode });
+            toast({
+                title: "Code Agence mis à jour",
+                description: "Le code agence de l'utilisateur a été sauvegardé."
+            });
+        }
+    };
+
 
     if (!isAdmin) {
         return (
@@ -156,7 +193,7 @@ export default function UsersPage() {
                         <TableHead>Email</TableHead>
                         <TableHead>Statut</TableHead>
                         <TableHead>Dernière connexion</TableHead>
-                        <TableHead>Département</TableHead>
+                        <TableHead>Département / Délégation</TableHead>
                         <TableHead>Code Agence</TableHead>
                         <TableHead className="text-right">Rôle</TableHead>
                         </TableRow>
@@ -168,11 +205,15 @@ export default function UsersPage() {
                                 <TableCell><Skeleton className="h-6 w-[100px]" /></TableCell>
                                 <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                                 <TableCell><Skeleton className="h-8 w-[180px]" /></TableCell>
-                                <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                                <TableCell><Skeleton className="h-8 w-[100px]" /></TableCell>
                                 <TableCell className="text-right"><Skeleton className="h-8 w-[120px] ml-auto" /></TableCell>
                             </TableRow>
                         ))}
-                        {!isLoading && allUsersAndInvites?.map((user) => (
+                        {!isLoading && allUsersAndInvites?.map((user) => {
+                            const isSiegeDept = user.departmentId && siegeDepartmentIds.has(user.departmentId);
+                            const canEditAgencyCode = user.isRegistered && !isSiegeDept;
+
+                            return (
                             <TableRow key={user.id}>
                                 <TableCell className="font-medium">{user.email}</TableCell>
                                 <TableCell>
@@ -207,8 +248,19 @@ export default function UsersPage() {
                                         </SelectContent>
                                     </Select>
                                 </TableCell>
-                                <TableCell className="text-muted-foreground">
-                                    {user.agencyCode || '—'}
+                                <TableCell>
+                                     {canEditAgencyCode ? (
+                                        <Input
+                                            type="text"
+                                            value={editingAgencyCodes[user.id] ?? user.agencyCode ?? ''}
+                                            onChange={(e) => handleAgencyCodeChange(user.id, e.target.value)}
+                                            onBlur={() => handleAgencyCodeBlur(user.id)}
+                                            className="h-9 w-[100px]"
+                                            placeholder="Code..."
+                                        />
+                                    ) : (
+                                        <span className="text-muted-foreground">{isSiegeDept ? 'N/A' : '—'}</span>
+                                    )}
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <Select 
@@ -226,7 +278,7 @@ export default function UsersPage() {
                                     </Select>
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        )})}
                     </TableBody>
                  </Table>
             </CardContent>
