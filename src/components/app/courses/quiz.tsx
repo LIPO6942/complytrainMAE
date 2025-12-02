@@ -20,11 +20,12 @@ import { Button } from '@/components/ui/button';
 import { useUser, useFirestore, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { doc, collection, arrayUnion, runTransaction, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Lock, Award, ShieldQuestion, CheckCircle2 } from 'lucide-react';
+import { PlusCircle, Lock, Award, ShieldQuestion, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import type { QuizData, Question } from '@/lib/quiz-data';
+import type { QuizData, Question, Course } from '@/lib/quiz-data';
 import { allBadges } from '@/lib/data';
+import { useRouter } from 'next/navigation';
 
 interface QuizProps {
     quiz: QuizData | null;
@@ -33,12 +34,14 @@ interface QuizProps {
     quizId: string;
     isLocked: boolean;
     isStatic?: boolean;
+    allCourses: Course[];
 }
 
-export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic }: QuizProps) {
+export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic, allCourses }: QuizProps) {
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const router = useRouter();
   const isAdmin = userProfile?.role === 'admin';
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number[]>>({});
   const [showResults, setShowResults] = useState(false);
@@ -47,13 +50,16 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   const hasAlreadyPassed = userProfile?.completedQuizzes?.includes(quizId);
   
    useEffect(() => {
+    // If the user has already passed, immediately show the results/completed state.
     if (hasAlreadyPassed) {
       setShowResults(true);
-      // We don't have the user's past score, so we can't display it.
-      // We will just show that it's completed.
-      // Or, we could calculate it on the fly if answers were stored, but they aren't.
+    } else {
+        // Reset state if quiz changes and hasn't been passed
+        setShowResults(false);
+        setFinalScore(null);
+        setSelectedAnswers({});
     }
-  }, [hasAlreadyPassed]);
+  }, [hasAlreadyPassed, quizId]);
 
 
   const handleCreateQuiz = () => {
@@ -142,6 +148,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     );
   }
 
+  // This is the main view for users who have already passed the quiz.
   if (hasAlreadyPassed && !isAdmin) {
       return (
         <Card>
@@ -154,7 +161,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                     <CheckCircle2 className="w-16 h-16 text-green-600 dark:text-green-500 mb-4" />
                     <h3 className="text-xl font-semibold text-green-800 dark:text-green-300">Félicitations, quiz réussi !</h3>
                     <p className="text-muted-foreground mt-2">
-                        Vous pouvez revoir les questions, mais vous ne pouvez pas le soumettre à nouveau.
+                       Vous pouvez continuer vers le prochain cours.
                     </p>
                 </div>
             </CardContent>
@@ -270,6 +277,17 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     return question.correctAnswers.map(i => `"${question.options[i]}"`).join(', ');
   }
 
+  const handleNextCourse = () => {
+    const currentIndex = allCourses.findIndex(c => c.id === courseId);
+    if (currentIndex > -1 && currentIndex < allCourses.length - 1) {
+      const nextCourse = allCourses[currentIndex + 1];
+      router.push(`/courses/${nextCourse.id}`);
+    } else {
+      toast({ title: 'Félicitations !', description: 'Vous avez terminé tous les cours disponibles.' });
+    }
+  };
+
+
   return (
     <Card>
       <CardHeader>
@@ -282,7 +300,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             {quiz.questions.map((question, qIndex) => (
               <Accordion key={qIndex} type="single" collapsible>
                 <AccordionItem value={`item-${qIndex}`}>
-                  <AccordionTrigger className="text-green-950 dark:text-green-200 hover:text-green-950 dark:hover:text-green-200">Question {qIndex + 1}</AccordionTrigger>
+                  <AccordionTrigger className="text-green-900 dark:text-green-200 hover:text-green-950 dark:hover:text-green-200">Question {qIndex + 1}</AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-4">
                       <p className="font-medium">{question.text}</p>
@@ -310,13 +328,23 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             ))}
           </CardContent>
           <CardFooter className="flex-col gap-4">
-            <Button onClick={handleSubmit} className="w-full" disabled={showResults || quiz.questions.length === 0}>
-                Soumettre le quiz
-            </Button>
+            {!showResults && (
+                <Button onClick={handleSubmit} className="w-full" disabled={showResults || quiz.questions.length === 0}>
+                    Soumettre le quiz
+                </Button>
+            )}
             
-            {showResults && finalScore !== null && (
-                <div className="text-center font-bold text-lg">
-                    Votre score : {finalScore}%
+            {showResults && (
+                <div className="text-center w-full space-y-4">
+                    {finalScore !== null && (
+                        <div className="font-bold text-lg">
+                            Votre score : {finalScore}%
+                        </div>
+                    )}
+                     <Button onClick={handleNextCourse} className="w-full">
+                        Cours Suivant
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
                 </div>
             )}
           </CardFooter>

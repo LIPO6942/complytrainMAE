@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
-import { useDoc, useFirestore, useUser, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useDoc, useFirestore, useUser, useMemoFirebase, setDocumentNonBlocking, useCollection } from '@/firebase';
 import { doc, collection, increment } from 'firebase/firestore';
 import {
   Card,
@@ -50,10 +50,28 @@ export default function CourseDetailPage() {
   
   const [currentCourse, setCurrentCourse] = useState<Course | null>(null);
   const [currentQuiz, setCurrentQuiz] = useState<QuizData | null>(null);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
 
   // Time tracking logic
   const timeSpentRef = useRef<number>(0);
   const startTimeRef = useRef<number | null>(null);
+
+  // --- Fetch all courses for "Next Course" navigation ---
+  const coursesQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'courses');
+  }, [firestore]);
+  
+  const { data: dynamicCourses, isLoading: isLoadingCourses } = useCollection<Course>(coursesQuery);
+
+  useEffect(() => {
+    if (!isLoadingCourses) {
+        const dynamicCourseIds = new Set(dynamicCourses?.map(c => c.id) || []);
+        const uniqueStaticCourses = staticCourses.filter(c => !dynamicCourseIds.has(c.id));
+        setAllCourses([...uniqueStaticCourses, ...(dynamicCourses || [])]);
+    }
+  }, [dynamicCourses, isLoadingCourses]);
+  // --- End of fetching all courses ---
 
   useEffect(() => {
     startTimeRef.current = Date.now();
@@ -93,10 +111,12 @@ export default function CourseDetailPage() {
 
   const quizRef = useMemoFirebase(() => {
     if (!firestore || !courseId || !quizId || !courseFromDb) return null;
+    // If the course is static, we don't fetch its quiz from DB
+    if (!courseFromDb && staticCourses.some(c => c.id === courseId)) return null;
     return doc(collection(firestore, 'courses', courseId, 'quizzes'), quizId);
   }, [firestore, courseId, quizId, courseFromDb]);
   
-  const { data: quizFromDb, isLoading: isQuizLoading } = useDoc(quizRef);
+  const { data: quizFromDb, isLoading: isQuizLoadingFromDb } = useDoc(quizRef);
   
   useEffect(() => {
     // If we get a course from DB, it takes precedence
@@ -117,7 +137,8 @@ export default function CourseDetailPage() {
     }
   }, [courseId, courseFromDb, quizFromDb]);
   
-  const isLoading = isCourseLoading;
+  const isLoading = isCourseLoading || isLoadingCourses;
+  const isQuizLoading = isQuizLoadingFromDb || (isCourseLoading && !currentCourse);
   
   const getImageUrl = (imageIdentifier: string | undefined): string => {
     if (!imageIdentifier) return PlaceHolderImages[PlaceHolderImages.length-1].imageUrl; // Default image
@@ -188,20 +209,19 @@ export default function CourseDetailPage() {
                         <CardTitle>Description du cours</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {currentCourse.videoUrl && currentCourse.videoUrl.trim() !== '' ? (
+                       <div className="p-2 flex justify-center">
+                            <Image
+                                src={imageUrl}
+                                alt={currentCourse.title}
+                                width={400}
+                                height={225}
+                                className="rounded-lg object-cover"
+                            />
+                         </div>
+                        {currentCourse.videoUrl && currentCourse.videoUrl.trim() !== '' && (
                             <div className="p-2">
                                 <VideoPlayer url={currentCourse.videoUrl} />
                             </div>
-                        ) : imageUrl && (
-                             <div className="p-2 flex justify-center">
-                                <Image
-                                    src={imageUrl}
-                                    alt={currentCourse.title}
-                                    width={400}
-                                    height={225}
-                                    className="rounded-lg object-cover"
-                                />
-                             </div>
                         )}
                         <p className="text-muted-foreground p-2">{currentCourse.description}</p>
                     </CardContent>
@@ -256,11 +276,12 @@ export default function CourseDetailPage() {
       <div>
         <Quiz 
             quiz={currentQuiz} 
-            isQuizLoading={isLoading}
+            isQuizLoading={isQuizLoading}
             courseId={courseId} 
             quizId={quizId as string}
             isLocked={isQuizLocked}
             isStatic={isStatic}
+            allCourses={allCourses}
         />
       </div>
     </div>
