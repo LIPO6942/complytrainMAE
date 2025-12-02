@@ -78,10 +78,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     if (hasAlreadyPassed && savedScore !== undefined && !showResults) {
         setShowResults(true);
         setFinalScore(savedScore);
-        // Since we don't store the user's specific answers, we can't show them.
-        // We'll just show the score and the result summary.
-        // Or, we could just block re-taking, which might be better.
-        // For now, showing results is fine.
     }
   }, [hasAlreadyPassed, savedScore, showResults]);
 
@@ -309,7 +305,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   const resultHeader = (showResults && finalScore !== null) ? renderResultHeader(finalScore, newBadgeEarned) : null;
   const questions = quiz.questions;
   const currentQuestion = questions[currentQuestionIndex];
-  const progressPercentage = (currentQuestionIndex / questions.length) * 100;
+  const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
   
   // Renders the summary screen after submission
   if (showResults) {
