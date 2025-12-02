@@ -16,6 +16,7 @@ import { redirect } from 'next/navigation';
 import { setDoc, doc, getFirestore, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { staticDepartments } from '@/lib/data';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 function AuthButton({ isSignUp }: { isSignUp: boolean }) {
@@ -50,9 +51,20 @@ function AnonymousLoginButton() {
     )
 }
 
+const siegeDepartments = [
+    { id: 'siege-commerciale', name: 'Commerciale' },
+    { id: 'siege-audit', name: 'Audit' },
+    { id: 'siege-financier', name: 'Financier' },
+    { id: 'siege-technique', name: 'Technique' },
+    { id: 'siege-juridique', name: 'Juridique' },
+    { id: 'siege-equipement', name: 'Equipement' },
+    { id: 'siege-inspection', name: 'Inspection' },
+];
+
 function AuthForm({ isSignUp }: { isSignUp: boolean }) {
     const auth = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
+    const [isSiege, setIsSiege] = useState(false);
     
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -79,6 +91,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
 
                 let userRole = 'user'; // Default role
                 let userDepartmentId = departmentId;
+                let userAgencyCode = isSiege ? 'SIEGE' : agencyCode;
 
                 if (!querySnapshot.empty) {
                     const invitationDoc = querySnapshot.docs[0];
@@ -97,7 +110,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                     email: user.email, // Ensure email is always set
                     role: userRole,
                     departmentId: userDepartmentId,
-                    agencyCode: agencyCode,
+                    agencyCode: userAgencyCode,
                     createdAt: new Date().toISOString()
                 });
 
@@ -167,28 +180,53 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 </div>
                 {isSignUp && (
                     <>
-                        <div className="space-y-2">
-                            <Label htmlFor="departmentId">Département</Label>
-                            <Select name="departmentId">
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Sélectionner un département" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {staticDepartments.map(dept => (
-                                        <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox id="isSiege" checked={isSiege} onCheckedChange={(checked) => setIsSiege(checked as boolean)} />
+                            <Label htmlFor="isSiege" className="cursor-pointer">
+                                Utilisateur du Siège
+                            </Label>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="agencyCode">Code Agence</Label>
-                            <Input
-                                id="agencyCode"
-                                type="text"
-                                name="agencyCode"
-                                placeholder="101"
-                            />
-                        </div>
+                        {isSiege ? (
+                             <div className="space-y-2">
+                                <Label htmlFor="departmentId">Département du Siège</Label>
+                                <Select name="departmentId">
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Sélectionner un département" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {siegeDepartments.map(dept => (
+                                            <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="departmentId">Délégation</Label>
+                                    <Select name="departmentId">
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Sélectionner une délégation" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {staticDepartments.map(dept => (
+                                                <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="agencyCode">Code Agence</Label>
+                                    <Input
+                                        id="agencyCode"
+                                        type="text"
+                                        name="agencyCode"
+                                        placeholder="101"
+                                    />
+                                </div>
+                            </>
+                        )}
+                        
                     </>
                 )}
                 {errorMessage && (

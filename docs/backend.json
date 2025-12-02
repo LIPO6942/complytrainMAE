@@ -34,7 +34,7 @@
         },
         "agencyCode": {
             "type": "string",
-            "description": "User's agency code within a department."
+            "description": "User's agency code within a department. Set to 'SIEGE' for headquarters users."
         },
         "lastSignInTime": {
           "type": "string",
@@ -87,10 +87,6 @@
         "name": {
           "type": "string",
           "description": "Name of the department or business unit."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the department or business unit."
         }
       },
       "required": ["id", "name"]
