@@ -16,14 +16,6 @@ import { Button } from '@/components/ui/button';
 import { useFirestore, type WithId } from '@/firebase';
 import { doc, writeBatch, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { Course, QuizData } from '@/lib/quiz-data';
 import { useRouter } from 'next/navigation';
 
@@ -52,10 +44,6 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleImageChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, image: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,19 +120,14 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="image">Image du cours</Label>
-            <Select value={formData.image} onValueChange={handleImageChange}>
-                <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une image" />
-                </SelectTrigger>
-                <SelectContent>
-                    {PlaceHolderImages.map((img) => (
-                        <SelectItem key={img.id} value={img.id}>
-                            {img.description}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
+            <Label htmlFor="image">URL de l'image du cours</Label>
+            <Input
+              id="image"
+              name="image"
+              value={formData.image}
+              onChange={handleChange}
+              placeholder="https://.../image.png"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>

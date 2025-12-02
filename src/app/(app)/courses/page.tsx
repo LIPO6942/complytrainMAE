@@ -45,8 +45,12 @@ export default function CoursesPage() {
     }
   };
 
-  const getImage = (id: string) => {
-    return PlaceHolderImages.find((img) => img.id === id);
+  const getImageUrl = (imageIdentifier: string): string => {
+    if (imageIdentifier.startsWith('http')) {
+        return imageIdentifier;
+    }
+    const placeholder = PlaceHolderImages.find((img) => img.id === imageIdentifier);
+    return placeholder ? placeholder.imageUrl : PlaceHolderImages[PlaceHolderImages.length-1].imageUrl;
   };
 
   const isAdmin = userProfile?.role === 'admin';
@@ -61,20 +65,19 @@ export default function CoursesPage() {
         {!isLoading && allCourses && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {allCourses.map((course) => {
-                    const image = getImage(course.image);
+                    const imageUrl = getImageUrl(course.image);
                     const isStatic = 'isStatic' in course && course.isStatic;
                     return (
                       <Card key={course.id} className="flex flex-col w-full group/card relative">
                           <Link href={`/courses/${course.id}`} className="flex flex-col w-full h-full hover:border-primary transition-colors">
                             <CardHeader>
                             <div className="relative h-40 w-full mb-4">
-                                {image && (
+                                {imageUrl && (
                                 <Image
-                                    src={image.imageUrl}
+                                    src={imageUrl}
                                     alt={course.title}
                                     fill
                                     className="rounded-lg object-cover"
-                                    data-ai-hint={image.imageHint}
                                 />
                                 )}
                             </div>

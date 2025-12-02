@@ -117,11 +117,17 @@ export default function CourseDetailPage() {
   }, [courseId, courseFromDb, quizFromDb]);
   
   const isLoading = isCourseLoading;
-
-  const getImage = (id: string) => {
-    return PlaceHolderImages.find((img) => img.id === id);
+  
+  const getImageUrl = (imageIdentifier: string | undefined): string => {
+    if (!imageIdentifier) return PlaceHolderImages[PlaceHolderImages.length-1].imageUrl; // Default image
+    if (imageIdentifier.startsWith('http')) {
+        return imageIdentifier;
+    }
+    const placeholder = PlaceHolderImages.find((img) => img.id === imageIdentifier);
+    return placeholder ? placeholder.imageUrl : PlaceHolderImages[PlaceHolderImages.length-1].imageUrl;
   };
-  const image = currentCourse ? getImage(currentCourse.image) : null;
+  
+  const imageUrl = getImageUrl(currentCourse?.image);
   const isAdmin = userProfile?.role === 'admin';
   const hasContent = currentCourse && (currentCourse.videoUrl || currentCourse.pdfUrl || currentCourse.markdownContent);
 
@@ -181,14 +187,13 @@ export default function CourseDetailPage() {
                         <div className="p-6">
                             <VideoPlayer url={currentCourse.videoUrl} />
                         </div>
-                    ) : image && (
+                    ) : imageUrl && (
                         <Image
-                            src={image.imageUrl}
+                            src={imageUrl}
                             alt={currentCourse.title}
                             width={800}
                             height={400}
                             className="rounded-t-lg object-cover w-full aspect-video"
-                            data-ai-hint={image.imageHint}
                         />
                     )}
                     <CardHeader>

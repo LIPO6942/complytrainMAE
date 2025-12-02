@@ -47,7 +47,7 @@ export function AddCourseDialog() {
       title: 'Nouveau Quiz Thématique',
       description: 'Un nouveau quiz thématique prêt à être configuré.',
       category: 'Quiz Thématique',
-      image: 'course-new',
+      image: PlaceHolderImages.find(img => img.id === 'course-new')?.imageUrl || '',
       quizTitle: 'Quiz sur le blanchiment d\'argent',
       quizQuestionText: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LAB) ?'
   });
@@ -111,7 +111,7 @@ export function AddCourseDialog() {
             title: 'Nouveau Quiz Thématique',
             description: 'Un nouveau quiz thématique prêt à être configuré.',
             category: 'Quiz Thématique',
-            image: 'course-new',
+            image: PlaceHolderImages.find(img => img.id === 'course-new')?.imageUrl || '',
             quizTitle: 'Quiz sur le blanchiment d\'argent',
             quizQuestionText: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LAB) ?'
         });
@@ -168,19 +168,8 @@ export function AddCourseDialog() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="image">Image du cours</Label>
-            <Select value={formData.image} onValueChange={(value) => handleSelectChange('image', value)}>
-                <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une image" />
-                </SelectTrigger>
-                <SelectContent>
-                    {PlaceHolderImages.map((img) => (
-                        <SelectItem key={img.id} value={img.id}>
-                            {img.description}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
+            <Label htmlFor="image">URL de l'image du cours</Label>
+            <Input id="image" name="image" value={formData.image} onChange={handleChange} placeholder="https://.../image.png" />
           </div>
           <hr className="my-4" />
           <h3 className="font-semibold text-lg">Quiz Initial</h3>
