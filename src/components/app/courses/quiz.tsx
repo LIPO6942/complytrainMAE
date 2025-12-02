@@ -115,6 +115,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     );
   }
 
+  const isAdmin = userProfile?.role === 'admin';
   if (!quiz && isAdmin && !isStatic) {
     return (
         <Card className="text-center">
@@ -314,7 +315,12 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   }
 
   const getCorrectAnswersText = (question: Question) => {
-    return question.correctAnswers.map(i => `"${question.options[i]}"`).join(', ');
+    if (!question.correctAnswers || question.correctAnswers.length === 0) {
+        return "Aucune réponse correcte définie.";
+    }
+    return question.correctAnswers
+        .map(index => `"${question.options[index]}"`)
+        .join(', ');
   }
 
   return (
@@ -356,7 +362,10 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                       </div>
                       {showResults && (
                         <div className={cn("mt-4 p-3 rounded-md text-sm font-semibold", isCorrect(qIndex) ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300')}>
-                            {isCorrect(qIndex) ? 'Correct !' : `Incorrect. La ou les bonne(s) réponse(s) était(ent) : ${getCorrectAnswersText(question)}`}
+                            {isCorrect(qIndex) 
+                                ? 'Correct !' 
+                                : `Incorrect. La ou les bonne(s) réponse(s) était(ent) : ${getCorrectAnswersText(question)}`
+                            }
                         </div>
                       )}
                     </div>
@@ -366,9 +375,15 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             ))}
           </CardContent>
           <CardFooter className="flex-col gap-4">
-            {!showResults && (
+            {!hasAlreadyPassed && !showResults && (
                 <Button onClick={handleSubmit} className="w-full" disabled={showResults || quiz.questions.length === 0}>
                     Soumettre le quiz
+                </Button>
+            )}
+            {(hasAlreadyPassed || showResults) && (
+                 <Button onClick={handleNextCourse} className="w-full">
+                    Cours Suivant
+                    <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
             )}
           </CardFooter>
