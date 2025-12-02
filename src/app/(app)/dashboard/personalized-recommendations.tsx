@@ -34,8 +34,12 @@ export function PersonalizedRecommendations() {
       setIsLoading(true);
       setError(null);
       
-      // Use departmentId if available, otherwise a generic fallback.
-      const riskProfile = userProfile?.departmentId || 'Profil de risque général. Pas de département assigné.';
+      const riskProfileParts = [
+        `Département: ${userProfile.departmentId || 'Non assigné'}`,
+        `Score moyen: ${userProfile.averageScore?.toFixed(0) ?? 'N/A'}%`,
+        `Quiz tentés: ${userProfile.quizAttempts || 0}`,
+      ];
+      const riskProfile = riskProfileParts.join(', ');
 
       try {
         const result = await personalizedRiskRecommendations({
@@ -45,7 +49,7 @@ export function PersonalizedRecommendations() {
         if (result && result.recommendations) {
             const recommendationItems = result.recommendations
             .split('\n')
-            .map((item) => item.replace(/^\d+\.\s/, ''))
+            .map((item) => item.replace(/^\s*-\s*/, '')) // Remove leading dash and spaces
             .filter(Boolean);
             setRecommendations(recommendationItems);
         } else {

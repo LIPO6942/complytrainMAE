@@ -48,7 +48,7 @@ const prompt = ai.definePrompt({
   {{riskProfile}}
 
   Fournissez des recommandations de conformité personnalisées pour combler leurs faiblesses spécifiques.
-  Formatez les recommandations sous forme de liste numérotée.
+  Formatez les recommandations sous forme de liste à puces (utilisez un tiret '-' pour chaque élément).
   N'incluez pas de remarques introductives ou de conclusion ; fournissez uniquement la liste.
   Soyez bref, en ne listant que les titres des cours ou des modules à réviser ; ne soyez pas conversationnel.
   Concentrez-vous spécifiquement sur les exigences de conformité et réglementaires.
