@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
-import { Logo } from '@/components/icons';
+import { Logo, MaeLogo } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
@@ -186,7 +186,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                                 id="agencyCode"
                                 type="text"
                                 name="agencyCode"
-                                placeholder="ex: 101"
+                                placeholder="101"
                             />
                         </div>
                     </>
@@ -227,7 +227,8 @@ export default function LoginPage() {
     <main className="flex items-center justify-center min-h-screen bg-background">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <div className="flex justify-center items-center mb-4">
+          <div className="flex justify-center items-center gap-4 mb-4">
+            <MaeLogo className="h-12 w-12" />
             <Logo className="h-12 w-12 text-primary" />
           </div>
           <CardTitle className="text-2xl">ComplyTrain</CardTitle>

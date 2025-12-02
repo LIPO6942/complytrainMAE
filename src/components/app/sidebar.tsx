@@ -18,7 +18,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Logo } from '@/components/icons';
+import { Logo, MaeLogo } from '@/components/icons';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useUser } from '@/firebase';
@@ -52,6 +52,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarHeader className="border-b">
           <div className="flex items-center gap-2">
+            <MaeLogo className="h-8 w-8" />
             <Logo className="h-8 w-8 text-primary" />
             <span className="text-lg font-semibold">ComplyTrain</span>
           </div>
