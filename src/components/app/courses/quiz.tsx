@@ -48,6 +48,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   const [finalScore, setFinalScore] = useState<number | null>(null);
 
   const hasAlreadyPassed = userProfile?.completedQuizzes?.includes(quizId);
+  const savedScore = userProfile?.scores?.[quizId];
   
   const handleNextCourse = () => {
     const currentIndex = allCourses.findIndex(c => c.id === courseId);
@@ -60,15 +61,15 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   };
 
    useEffect(() => {
-    if (hasAlreadyPassed) {
+    if (hasAlreadyPassed && savedScore !== undefined) {
       setShowResults(true);
-      setFinalScore(80); // Simulate a passing score to show correct UI
+      setFinalScore(savedScore);
     } else {
         setShowResults(false);
         setFinalScore(null);
         setSelectedAnswers({});
     }
-  }, [hasAlreadyPassed, quizId]);
+  }, [hasAlreadyPassed, savedScore, quizId]);
 
   if (isQuizLoading) {
     return (
@@ -139,12 +140,12 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     );
   }
 
-  const renderResult = (score: number) => {
+  const renderResult = (score: number, newBadgeEarned: boolean) => {
     if (score >= 80) {
       return {
         title: "Test réussi !",
         icon: <Award className="w-16 h-16 text-yellow-500 mb-4" />,
-        description: `Félicitations ! Vous avez réussi ce test.`,
+        description: `Félicitations ! Votre score est de ${score}%. ${newBadgeEarned ? 'Vous avez obtenu un nouveau badge !' : ''}`,
         cardClass: "bg-green-100/50 dark:bg-green-900/30",
         titleClass: "text-green-800 dark:text-green-300"
       };
@@ -152,7 +153,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
       return {
         title: "Test Réussi !",
         icon: <CheckCircle2 className="w-16 h-16 text-green-600 mb-4" />,
-        description: `Bien joué ! Votre score est de ${score}%. Continuez comme ça !`,
+        description: `Bien joué ! Votre score est de ${score}%.`,
         cardClass: "bg-green-100/50 dark:bg-green-900/30",
         titleClass: "text-green-800 dark:text-green-300"
       };
@@ -166,9 +167,11 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
       };
     }
   };
+  
+  const [newBadgeEarned, setNewBadgeEarned] = useState(false);
 
   if (showResults && finalScore !== null) {
-      const result = renderResult(finalScore);
+      const result = renderResult(finalScore, newBadgeEarned);
       return (
         <Card>
             <CardHeader>
@@ -180,7 +183,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                     {result.icon}
                     <h3 className={cn("text-xl font-semibold", result.titleClass)}>{result.title}</h3>
                     <p className="text-muted-foreground mt-2">
-                       {hasAlreadyPassed ? "Vous avez déjà réussi ce quiz." : result.description}
+                       {result.description}
                     </p>
                 </div>
             </CardContent>
@@ -230,6 +233,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     const score = getScore();
     setFinalScore(score);
     setShowResults(true);
+    setNewBadgeEarned(false);
     
     if (!user || !firestore || !quiz) return;
     
@@ -247,10 +251,11 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             const quizAttempts = (userData.quizAttempts || 0) + 1;
             const newAverage = (oldAverage * (quizAttempts - 1) + score) / quizAttempts;
             
-            transaction.update(userRef, { 
+            const updates: Record<string, any> = { 
                 averageScore: newAverage,
                 quizAttempts: increment(1),
-            });
+                [`scores.${quizId}`]: score
+            };
 
             // Badge logic
             const quizPassed = score >= 80;
@@ -259,31 +264,29 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             if (quizPassed && !alreadyPassed) {
                 const currentPassedCount = userData.quizzesPassed || 0;
                 const newPassedCount = currentPassedCount + 1;
-
-                transaction.update(userRef, {
-                    quizzesPassed: newPassedCount,
-                    completedQuizzes: arrayUnion(quizId)
-                });
+                
+                updates.quizzesPassed = newPassedCount;
+                updates.completedQuizzes = arrayUnion(quizId);
 
                 if (newPassedCount > 0 && newPassedCount % 3 === 0) {
                     const earnedBadges = userData.badges || [];
-                    // Find the next badge that is not yet earned
                     const nextBadge = allBadges.find(b => !earnedBadges.includes(b.id));
 
                     if (nextBadge) {
-                        transaction.update(userRef, {
-                            badges: arrayUnion(nextBadge.id)
-                        });
+                        updates.badges = arrayUnion(nextBadge.id);
 
                          setTimeout(() => {
                            toast({
                                 title: "Badge débloqué !",
                                 description: `Félicitations, vous avez gagné le badge "${nextBadge.name}" !`,
                             });
+                            setNewBadgeEarned(true);
                          }, 500);
                     }
                 }
             }
+            
+            transaction.update(userRef, updates);
         });
     } catch (e) {
         console.error("Transaction failed: ", e);

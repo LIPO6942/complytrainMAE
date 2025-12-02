@@ -70,6 +70,13 @@
             "items": {
                 "type": "string"
             }
+        },
+        "scores": {
+          "type": "object",
+          "description": "A map of quiz IDs to scores achieved by the user.",
+          "additionalProperties": {
+            "type": "number"
+          }
         }
       },
       "required": ["id", "email", "role"]
