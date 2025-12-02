@@ -34,7 +34,7 @@ export function EarnedBadges() {
                     return (
                         <div key={badge.id} className="flex flex-col items-center gap-2 text-center w-24">
                         {Icon ? (
-                            <Icon className="w-16 h-16 text-accent" />
+                            <Icon className="w-16 h-16 text-green-700" />
                         ) : (
                             <Award className="w-16 h-16 text-muted-foreground" />
                         )}
