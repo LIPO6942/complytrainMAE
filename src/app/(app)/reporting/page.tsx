@@ -18,6 +18,8 @@ import { useMemo }from 'react';
 import type { Course } from '@/lib/quiz-data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { staticCourses } from '@/lib/quiz-data';
+import { courseCategories } from '@/components/app/courses/edit-course-form';
+
 
 type UserProfile = {
     id: string;
@@ -165,11 +167,12 @@ export default function ReportingPage() {
   }, [reportingUsers, departments, isAdmin, userProfile]);
 
   const heatmapDerivedData = useMemo(() => {
-    if (reportingUsers.length === 0 || allCourses.length === 0) {
-        return { heatmapTopics: [], heatmapData: [] };
+    if (reportingUsers.length === 0) {
+        // Use the predefined list of categories for headers even if there are no users/scores.
+        return { heatmapTopics: courseCategories.sort(), heatmapData: [] };
     }
 
-    // 1. Create a live map of quizId -> category from all available courses
+    // 1. Create a live map of quizId -> category from all available courses.
     const quizIdToCategory: Record<string, string> = {};
     allCourses.forEach(course => {
         const quizId = course.quizId || course.quiz?.id;
@@ -177,22 +180,20 @@ export default function ReportingPage() {
             quizIdToCategory[quizId] = course.category;
         }
     });
-
-    // 2. Identify all unique categories that are actually in use by users with scores
-    const usedCategories = new Set<string>();
-    reportingUsers.forEach(user => {
-        if (user.scores) {
-            Object.keys(user.scores).forEach(quizId => {
-                const category = quizIdToCategory[quizId];
-                if (category) {
-                    usedCategories.add(category);
-                }
-            });
+    
+    // 2. Identify all unique categories from the available courses to create the headers.
+    const allAvailableCategories = new Set<string>();
+    allCourses.forEach(course => {
+        if (course.category) {
+            allAvailableCategories.add(course.category);
         }
     });
-    const heatmapTopics = Array.from(usedCategories).sort();
+    // Ensure all base categories are present, even if no course uses them yet.
+    courseCategories.forEach(cat => allAvailableCategories.add(cat));
 
-    // 3. Generate heatmap data based on the live mapping
+    const heatmapTopics = Array.from(allAvailableCategories).sort();
+
+    // 3. Generate heatmap data based on the dynamic mapping.
     const heatmapData = reportingUsers.map(user => {
         const scoresByCategory: Record<string, { total: number; count: number }> = {};
         heatmapTopics.forEach(topic => scoresByCategory[topic] = { total: 0, count: 0 });
@@ -200,7 +201,6 @@ export default function ReportingPage() {
         if (user.scores) {
             Object.entries(user.scores).forEach(([quizId, score]) => {
                 const category = quizIdToCategory[quizId];
-                // Only include scores for categories that are currently in our dynamic list
                 if (category && heatmapTopics.includes(category)) {
                     scoresByCategory[category].total += score;
                     scoresByCategory[category].count++;
@@ -225,7 +225,7 @@ export default function ReportingPage() {
 
     return { heatmapTopics, heatmapData };
 
-}, [reportingUsers, allCourses]);
+  }, [reportingUsers, allCourses]);
   
   // The overall loading state depends on whether the user is admin or not
   const isLoading = useMemo(() => {
