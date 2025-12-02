@@ -178,12 +178,33 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
         }
     });
   };
+
+    const isCorrect = (questionIndex: number, submittedAnswers: Record<number, number[]>) => {
+        const question = quiz?.questions[questionIndex];
+        if (!question || !question.correctAnswers) return false;
+        
+        const userAnswers = submittedAnswers[questionIndex] || [];
+        const correctAnswers = question.correctAnswers;
+    
+        if (userAnswers.length !== correctAnswers.length) {
+        return false;
+        }
+    
+        const userAnswersSet = new Set(userAnswers);
+        for (const answer of correctAnswers) {
+        if (!userAnswersSet.has(answer)) {
+            return false;
+        }
+        }
+    
+        return true;
+    };
   
-  const getScore = () => {
+    const getScore = (submittedAnswers: Record<number, number[]>) => {
       if (!quiz || quiz.questions.length === 0) return 0;
       let correctCount = 0;
       quiz.questions.forEach((_, index) => {
-          if (isCorrect(index)) {
+          if (isCorrect(index, submittedAnswers)) {
               correctCount++;
           }
       });
@@ -200,7 +221,9 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
         return;
     }
 
-    const score = getScore();
+    const finalSelectedAnswers = { ...selectedAnswers };
+    const score = getScore(finalSelectedAnswers);
+
     setFinalScore(score);
     setShowResults(true);
     setNewBadgeEarned(false);
@@ -266,33 +289,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
         });
     }
   };
-  
-  const isCorrect = (questionIndex: number) => {
-    if (!quiz || !quiz.questions[questionIndex]?.correctAnswers) return false;
-    
-    const userAnswers = selectedAnswers[questionIndex] || [];
-    const correctAnswers = quiz.questions[questionIndex].correctAnswers || [];
-  
-    if (userAnswers.length !== correctAnswers.length) {
-      return false;
-    }
-  
-    // Create sets for order-independent comparison
-    const userAnswersSet = new Set(userAnswers);
-    const correctAnswersSet = new Set(correctAnswers);
-  
-    if (userAnswersSet.size !== correctAnswersSet.size) {
-      return false; // Should be redundant due to length check, but safe
-    }
-  
-    for (const answer of userAnswersSet) {
-      if (!correctAnswersSet.has(answer)) {
-        return false;
-      }
-    }
-  
-    return true;
-  };
 
   const getCorrectAnswersText = (question: Question) => {
     if (!question.correctAnswers || question.correctAnswers.length === 0) {
@@ -329,13 +325,13 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
                 {questions.map((question, qIndex) => (
                     <div key={qIndex} className="border-t pt-4">
                         <p className="font-medium flex items-start gap-2 mb-2">
-                            {isCorrect(qIndex) 
+                            {isCorrect(qIndex, selectedAnswers) 
                                 ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" /> 
                                 : <XCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                             }
                             <span>Question {qIndex + 1}: {question.text}</span>
                         </p>
-                        {!isCorrect(qIndex) && (
+                        {!isCorrect(qIndex, selectedAnswers) && (
                             <div className="mt-2 p-3 rounded-md text-sm font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 ml-7">
                                 La ou les bonne(s) réponse(s) était(ent) : {getCorrectAnswersText(question)}
                             </div>
