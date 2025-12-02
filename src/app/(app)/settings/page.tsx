@@ -14,12 +14,15 @@ import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { FormEvent, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-
+import { useTheme } from 'next-themes';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
 
 export default function SettingsPage() {
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -120,8 +123,28 @@ export default function SettingsPage() {
                 Configurez la manière dont vous recevez les notifications.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p>Les paramètres de notification seront ici.</p>
+            <CardContent className="space-y-6">
+                <div className="flex items-center justify-between space-x-4 rounded-md border p-4">
+                    <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium leading-none">Notifications par e-mail</p>
+                        <p className="text-sm text-muted-foreground">Recevoir des e-mails pour les mises à jour importantes.</p>
+                    </div>
+                    <Switch />
+                </div>
+                <div className="flex items-center justify-between space-x-4 rounded-md border p-4">
+                    <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium leading-none">Nouveaux cours</p>
+                        <p className="text-sm text-muted-foreground">Être notifié lorsqu'un nouveau cours est disponible.</p>
+                    </div>
+                    <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between space-x-4 rounded-md border p-4">
+                    <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium leading-none">Rappels de quiz</p>
+                        <p className="text-sm text-muted-foreground">Recevoir des rappels pour les quiz non terminés.</p>
+                    </div>
+                    <Switch defaultChecked />
+                </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -130,11 +153,26 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle>Apparence</CardTitle>
               <CardDescription>
-                Personnalisez l'apparence de l'application.
+                Personnalisez l'apparence de l'application. Passez en mode clair ou sombre.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Les paramètres d'apparence seront ici.</p>
+              <RadioGroup value={theme} onValueChange={setTheme}>
+                <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="light" id="theme-light" />
+                        <Label htmlFor="theme-light">Clair</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="dark" id="theme-dark" />
+                        <Label htmlFor="theme-dark">Sombre</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="system" id="theme-system" />
+                        <Label htmlFor="theme-system">Système</Label>
+                    </div>
+                </div>
+              </RadioGroup>
             </CardContent>
           </Card>
         </TabsContent>
