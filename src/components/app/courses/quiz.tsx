@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { doc, arrayUnion, runTransaction, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Lock, Award, ShieldQuestion, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Lock, Award, ShieldQuestion, CheckCircle2, ArrowRight, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { QuizData, Question, Course } from '@/lib/quiz-data';
@@ -48,6 +48,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   const [finalScore, setFinalScore] = useState<number | null>(null);
 
   const hasAlreadyPassed = userProfile?.completedQuizzes?.includes(quizId);
+  const previousScore = userProfile?.scores?.[quizId];
   
   const handleNextCourse = () => {
     const currentIndex = allCourses.findIndex(c => c.id === courseId);
@@ -60,18 +61,15 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   };
 
    useEffect(() => {
-    // If the user has already passed, immediately show the results/completed state.
-    if (hasAlreadyPassed) {
+    if (previousScore !== undefined) {
       setShowResults(true);
-      // We don't store individual scores, so we can't set it here.
-      // We just show the completion state.
+      setFinalScore(previousScore);
     } else {
-        // Reset state if quiz changes and hasn't been passed
         setShowResults(false);
         setFinalScore(null);
         setSelectedAnswers({});
     }
-  }, [hasAlreadyPassed, quizId]);
+  }, [previousScore, quizId]);
 
   if (isQuizLoading) {
     return (
@@ -142,20 +140,48 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     );
   }
 
-  // This is the main view for users who have already passed the quiz.
-  if (hasAlreadyPassed && !isAdmin) {
+  const renderResult = (score: number) => {
+    if (score >= 80) {
+      return {
+        title: "Test réussi avec badge obtenu !",
+        icon: <Award className="w-16 h-16 text-yellow-500 mb-4" />,
+        description: `Félicitations ! Votre score est de ${score}%. Vous progressez vers votre prochain badge.`,
+        cardClass: "bg-green-100/50 dark:bg-green-900/30",
+        titleClass: "text-green-800 dark:text-green-300"
+      };
+    } else if (score >= 60) {
+      return {
+        title: "Test Réussi !",
+        icon: <CheckCircle2 className="w-16 h-16 text-green-600 mb-4" />,
+        description: `Bien joué ! Votre score est de ${score}%. Continuez comme ça !`,
+        cardClass: "bg-green-100/50 dark:bg-green-900/30",
+        titleClass: "text-green-800 dark:text-green-300"
+      };
+    } else {
+      return {
+        title: "Test échoué",
+        icon: <XCircle className="w-16 h-16 text-red-600 mb-4" />,
+        description: `Votre score est de ${score}%. N'hésitez pas à revoir le cours et à retenter votre chance.`,
+        cardClass: "bg-red-100/50 dark:bg-red-900/30",
+        titleClass: "text-red-800 dark:text-red-300"
+      };
+    }
+  };
+
+  if (showResults && finalScore !== null) {
+      const result = renderResult(finalScore);
       return (
         <Card>
             <CardHeader>
                 <CardTitle>{quiz.title}</CardTitle>
-                <CardDescription>Vous avez déjà terminé ce quiz.</CardDescription>
+                <CardDescription>Résultats de votre tentative.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="flex flex-col items-center justify-center p-8 text-center bg-green-100/50 dark:bg-green-900/30 rounded-lg">
-                    <CheckCircle2 className="w-16 h-16 text-green-600 dark:text-green-500 mb-4" />
-                    <h3 className="text-xl font-semibold text-green-800 dark:text-green-300">Félicitations, quiz réussi !</h3>
+                <div className={cn("flex flex-col items-center justify-center p-8 text-center rounded-lg", result.cardClass)}>
+                    {result.icon}
+                    <h3 className={cn("text-xl font-semibold", result.titleClass)}>{result.title}</h3>
                     <p className="text-muted-foreground mt-2">
-                       Vous pouvez continuer vers le prochain cours.
+                       {result.description}
                     </p>
                 </div>
             </CardContent>
@@ -193,7 +219,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   }
 
   const handleSubmit = async () => {
-    // Critical check to prevent undefined value in arrayUnion
     if (!quizId) {
         toast({
             title: "Erreur",
@@ -222,10 +247,13 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             const oldAverage = userData.averageScore || 0;
             const quizAttempts = (userData.quizAttempts || 0) + 1;
             const newAverage = (oldAverage * (quizAttempts - 1) + score) / quizAttempts;
+
+            const scoresUpdate = { [`scores.${quizId}`]: score };
             
             transaction.update(userRef, { 
                 averageScore: newAverage,
-                quizAttempts: increment(1)
+                quizAttempts: increment(1),
+                ...scoresUpdate
             });
 
             // Badge logic
@@ -340,20 +368,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                 <Button onClick={handleSubmit} className="w-full" disabled={showResults || quiz.questions.length === 0}>
                     Soumettre le quiz
                 </Button>
-            )}
-            
-            {showResults && (
-                <div className="text-center w-full space-y-4">
-                    {finalScore !== null && (
-                        <div className="font-bold text-lg">
-                           Votre score : <span className={cn(finalScore >= 80 ? 'text-green-600' : 'text-red-600')}>{finalScore}%</span>
-                        </div>
-                    )}
-                     <Button onClick={handleNextCourse} className="w-full">
-                        Cours Suivant
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                </div>
             )}
           </CardFooter>
         </>
