@@ -42,14 +42,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
-  const isAdmin = userProfile?.role === 'admin';
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number[]>>({});
-  const [showResults, setShowResults] = useState(false);
-  const [finalScore, setFinalScore] = useState<number | null>(null);
 
-  const hasAlreadyPassed = userProfile?.completedQuizzes?.includes(quizId);
-  const savedScore = userProfile?.scores?.[quizId];
-  
   const handleNextCourse = () => {
     const currentIndex = allCourses.findIndex(c => c.id === courseId);
     if (currentIndex > -1 && currentIndex < allCourses.length - 1) {
@@ -60,6 +53,15 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     }
   };
 
+  const isAdmin = userProfile?.role === 'admin';
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number[]>>({});
+  const [showResults, setShowResults] = useState(false);
+  const [finalScore, setFinalScore] = useState<number | null>(null);
+  const [newBadgeEarned, setNewBadgeEarned] = useState(false);
+
+  const hasAlreadyPassed = userProfile?.completedQuizzes?.includes(quizId);
+  const savedScore = userProfile?.scores?.[quizId];
+  
    useEffect(() => {
     if (hasAlreadyPassed && savedScore !== undefined) {
       setShowResults(true);
@@ -168,8 +170,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     }
   };
   
-  const [newBadgeEarned, setNewBadgeEarned] = useState(false);
-
   if (showResults && finalScore !== null) {
       const result = renderResult(finalScore, newBadgeEarned);
       return (
