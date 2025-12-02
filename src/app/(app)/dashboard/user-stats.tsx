@@ -59,7 +59,7 @@ export function UserStats() {
         {
             title: "Taux de complétion",
             value: `${completionRate}%`,
-            icon: <Target className="w-6 h-6 text-blue-600 dark:text-blue-300" />,
+            icon: <Target className="w-6 h-6 text-primary" />,
             description: "Tests réussis / Tests total",
             color: "bg-blue-100 dark:bg-blue-900/30",
             textColor: "text-blue-800 dark:text-blue-200"
@@ -67,7 +67,7 @@ export function UserStats() {
         {
             title: "Tests Tentés",
             value: `${quizzesPassed} / ${quizAttempts}`,
-            icon: <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-300" />,
+            icon: <CheckCircle className="w-6 h-6 text-primary" />,
             description: "Réussis / Total Tentatives",
             color: "bg-green-100 dark:bg-green-900/30",
             textColor: "text-green-800 dark:text-green-200"
@@ -75,7 +75,7 @@ export function UserStats() {
         {
             title: "Score Moyen",
             value: `${averageScore}%`,
-            icon: <TrendingUp className="w-6 h-6 text-yellow-600 dark:text-yellow-300" />,
+            icon: <TrendingUp className="w-6 h-6 text-primary" />,
             description: "Performance aux tests",
             color: "bg-yellow-100 dark:bg-yellow-900/30",
             textColor: "text-yellow-800 dark:text-yellow-200"
@@ -83,7 +83,7 @@ export function UserStats() {
         {
             title: "Temps Passé",
             value: timeSpent,
-            icon: <Clock className="w-6 h-6 text-orange-600 dark:text-orange-300" />,
+            icon: <Clock className="w-6 h-6 text-primary" />,
             description: "Formation totale",
             color: "bg-orange-100 dark:bg-orange-900/30",
             textColor: "text-orange-800 dark:text-orange-200"
