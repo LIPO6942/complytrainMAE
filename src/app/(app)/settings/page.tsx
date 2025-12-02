@@ -48,6 +48,7 @@ export default function SettingsPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const isAdmin = userProfile?.role === 'admin';
+  const isSiegeUser = userProfile?.agencyCode === 'SIEGE';
   
   useEffect(() => {
     if (userProfile) {
@@ -183,10 +184,10 @@ export default function SettingsPage() {
                         <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="department">Département</Label>
+                        <Label htmlFor="department">{isSiegeUser ? 'Département (Siège)' : 'Délégation'}</Label>
                         <Input id="department" value={departmentName} disabled readOnly />
                     </div>
-                     {userProfile?.agencyCode && userProfile.agencyCode !== 'SIEGE' && (
+                    {!isSiegeUser && userProfile?.agencyCode && (
                         <div className="space-y-2">
                             <Label htmlFor="agencyCode">Code Agence</Label>
                             <Input id="agencyCode" value={userProfile.agencyCode} disabled readOnly />
