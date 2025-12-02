@@ -23,6 +23,7 @@ import { GoogleDrivePdfViewer } from '@/components/app/courses/google-drive-pdf-
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { staticCourses, type Course, type QuizData } from '@/lib/quiz-data';
+import { getGoogleDriveImageUrl } from '@/lib/utils';
 
 function VideoPlayer({ url }: { url: string }) {
     return (
@@ -121,7 +122,7 @@ export default function CourseDetailPage() {
   const getImageUrl = (imageIdentifier: string | undefined): string => {
     if (!imageIdentifier) return PlaceHolderImages[PlaceHolderImages.length-1].imageUrl; // Default image
     if (imageIdentifier.startsWith('http')) {
-        return imageIdentifier;
+        return getGoogleDriveImageUrl(imageIdentifier);
     }
     const placeholder = PlaceHolderImages.find((img) => img.id === imageIdentifier);
     return placeholder ? placeholder.imageUrl : PlaceHolderImages[PlaceHolderImages.length-1].imageUrl;

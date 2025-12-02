@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { AddCourseDialog } from '@/components/app/courses/add-course-dialog';
 import { staticCourses, type Course } from '@/lib/quiz-data';
+import { getGoogleDriveImageUrl } from '@/lib/utils';
 
 export default function CoursesPage() {
   const { userProfile } = useUser();
@@ -47,7 +48,7 @@ export default function CoursesPage() {
 
   const getImageUrl = (imageIdentifier: string): string => {
     if (imageIdentifier.startsWith('http')) {
-        return imageIdentifier;
+        return getGoogleDriveImageUrl(imageIdentifier);
     }
     const placeholder = PlaceHolderImages.find((img) => img.id === imageIdentifier);
     return placeholder ? placeholder.imageUrl : PlaceHolderImages[PlaceHolderImages.length-1].imageUrl;
