@@ -62,17 +62,13 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   };
   
    useEffect(() => {
-    // Only update state from props if we are not already showing results from a recent submission.
-    if (!showResults) {
-        if (hasAlreadyPassed && savedScore !== undefined) {
-            setShowResults(true);
-            setFinalScore(savedScore);
-        } else {
-            // This is the initial state or a reset is needed (e.g. navigating to a new quiz)
-            setShowResults(false);
-            setFinalScore(null);
-            setSelectedAnswers({});
-        }
+    if (hasAlreadyPassed && savedScore !== undefined) {
+        setShowResults(true);
+        setFinalScore(savedScore);
+    } else {
+        setShowResults(false);
+        setFinalScore(null);
+        setSelectedAnswers({});
     }
   }, [hasAlreadyPassed, savedScore, quizId]);
 
@@ -146,64 +142,24 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     );
   }
 
-  const renderResult = (score: number, newBadgeEarned: boolean) => {
+  const renderResultHeader = (score: number, newBadge: boolean) => {
     if (score >= 80) {
       return {
-        title: newBadgeEarned ? "Test réussi avec badge !" : "Test réussi !",
-        icon: newBadgeEarned ? <Award className="w-16 h-16 text-yellow-500 mb-4" /> : <CheckCircle2 className="w-16 h-16 text-green-600 mb-4" />,
-        description: `Félicitations ! Votre score est de ${score}%. ${newBadgeEarned ? 'Vous avez obtenu un nouveau badge !' : ''}`,
+        title: newBadge ? "Test réussi avec badge !" : "Test réussi !",
+        icon: newBadge ? <Award className="w-8 h-8 text-yellow-500" /> : <CheckCircle2 className="w-8 h-8 text-green-600" />,
+        description: `Félicitations ! Votre score est de ${score}%. ${newBadge ? 'Vous avez obtenu un nouveau badge !' : ''}`,
         cardClass: "bg-green-100/50 dark:bg-green-900/30",
         titleClass: "text-green-800 dark:text-green-300"
-      };
-    } else if (score >= 60) {
-      return {
-        title: "Test Réussi !",
-        icon: <CheckCircle2 className="w-16 h-16 text-green-600 mb-4" />,
-        description: `Bien joué ! Votre score est de ${score}%.`,
-        cardClass: "bg-green-100/50 dark:bg-green-900/30",
-        titleClass: "text-green-800 dark:text-green-300"
-      };
-    } else {
-      return {
-        title: "Test échoué",
-        icon: <XCircle className="w-16 h-16 text-red-600 mb-4" />,
-        description: `Votre score est de ${score}%. N'hésitez pas à revoir le cours et à retenter votre chance.`,
-        cardClass: "bg-red-100/50 dark:bg-red-900/30",
-        titleClass: "text-red-800 dark:text-red-300"
       };
     }
+    return {
+      title: "Test échoué",
+      icon: <XCircle className="w-8 h-8 text-red-600" />,
+      description: `Votre score est de ${score}%. N'hésitez pas à revoir le cours et à retenter votre chance. Les corrections sont ci-dessous.`,
+      cardClass: "bg-red-100/50 dark:bg-red-900/30",
+      titleClass: "text-red-800 dark:text-red-300"
+    };
   };
-  
-  if (showResults && finalScore !== null && !hasAlreadyPassed) {
-      const result = renderResult(finalScore, newBadgeEarned);
-      return (
-        <Card>
-            <CardHeader>
-                <CardTitle>{quiz.title}</CardTitle>
-                <CardDescription>Voici les résultats de votre tentative.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className={cn("flex flex-col items-center justify-center p-8 text-center rounded-lg", result.cardClass)}>
-                    {result.icon}
-                    <h3 className={cn("text-xl font-semibold", result.titleClass)}>{result.title}</h3>
-                    <p className="text-muted-foreground mt-2">
-                       {result.description}
-                    </p>
-                </div>
-            </CardContent>
-             <CardFooter className="flex flex-col gap-4">
-                 <Button onClick={() => setShowResults(false)} variant="outline" className="w-full">
-                    Revoir mes réponses
-                </Button>
-                 <Button onClick={handleNextCourse} className="w-full">
-                    Cours Suivant
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-            </CardFooter>
-        </Card>
-      );
-  }
-
 
   const handleAnswerChange = (questionIndex: number, answerIndex: number, checked: boolean) => {
     setSelectedAnswers(prev => {
@@ -326,71 +282,71 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
         .join(', ');
   }
 
+  const resultHeader = (showResults && finalScore !== null) ? renderResultHeader(finalScore, newBadgeEarned) : null;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{quiz.title}</CardTitle>
-        <CardDescription>Testez vos connaissances sur ce module. Plusieurs réponses peuvent être correctes.</CardDescription>
+        {!(showResults || hasAlreadyPassed) && (
+            <CardDescription>Testez vos connaissances sur ce module. Plusieurs réponses peuvent être correctes.</CardDescription>
+        )}
       </CardHeader>
       
-      <>
-          <CardContent className="space-y-4">
-            {quiz.questions.map((question, qIndex) => (
-              <Accordion key={qIndex} type="single" collapsible defaultValue={showResults || hasAlreadyPassed ? `item-${qIndex}` : ''}>
-                <AccordionItem value={`item-${qIndex}`}>
-                  <AccordionTrigger className="hover:no-underline">
-                    <div className="flex items-center gap-2">
-                       {showResults && (isCorrect(qIndex) 
-                           ? <CheckCircle2 className="h-5 w-5 text-green-500" /> 
-                           : <XCircle className="h-5 w-5 text-red-500" />
-                       )}
-                       <span>Question {qIndex + 1}</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4">
-                      <p className="font-medium">{question.text}</p>
-                      <div className='space-y-2'>
-                        {question.options.map((option, oIndex) => (
-                          <div key={oIndex} className="flex items-center space-x-2">
-                            <Checkbox 
-                                id={`q${qIndex}o${oIndex}`}
-                                onCheckedChange={(checked) => handleAnswerChange(qIndex, oIndex, checked as boolean)}
-                                disabled={showResults || hasAlreadyPassed}
-                                checked={selectedAnswers[qIndex]?.includes(oIndex) || false}
-                            />
-                            <Label htmlFor={`q${qIndex}o${oIndex}`} className="cursor-pointer">{option}</Label>
-                          </div>
-                        ))}
-                      </div>
-                      {showResults && (
-                        <div className={cn("mt-4 p-3 rounded-md text-sm font-semibold", isCorrect(qIndex) ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300')}>
-                            {isCorrect(qIndex) 
-                                ? 'Correct !' 
-                                : `Incorrect. La ou les bonne(s) réponse(s) était(ent) : ${getCorrectAnswersText(question)}`
-                            }
-                        </div>
-                      )}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            ))}
-          </CardContent>
-          <CardFooter className="flex-col gap-4">
-            {!hasAlreadyPassed && !showResults && (
-                <Button onClick={handleSubmit} className="w-full" disabled={showResults || quiz.questions.length === 0}>
-                    Soumettre le quiz
-                </Button>
+      {resultHeader && (
+        <CardContent className={cn("m-6 mb-0 p-4 rounded-lg flex items-center gap-4", resultHeader.cardClass)}>
+            {resultHeader.icon}
+            <div>
+                <h3 className={cn("font-semibold text-lg", resultHeader.titleClass)}>{resultHeader.title}</h3>
+                <p className="text-sm text-muted-foreground">{resultHeader.description}</p>
+            </div>
+        </CardContent>
+      )}
+
+      <CardContent className="space-y-4">
+        {quiz.questions.map((question, qIndex) => (
+          <div key={qIndex} className="border-t pt-4">
+            <p className="font-medium flex items-center gap-2 mb-2">
+                {(showResults || hasAlreadyPassed) && (isCorrect(qIndex) 
+                    ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" /> 
+                    : <XCircle className="h-5 w-5 text-red-500 shrink-0" />
+                )}
+                <span>Question {qIndex + 1}: {question.text}</span>
+            </p>
+            <div className='space-y-2 pl-7'>
+                {question.options.map((option, oIndex) => (
+                <div key={oIndex} className="flex items-center space-x-2">
+                    <Checkbox 
+                        id={`q${qIndex}o${oIndex}`}
+                        onCheckedChange={(checked) => handleAnswerChange(qIndex, oIndex, checked as boolean)}
+                        disabled={showResults || hasAlreadyPassed}
+                        checked={selectedAnswers[qIndex]?.includes(oIndex) || false}
+                    />
+                    <Label htmlFor={`q${qIndex}o${oIndex}`} className="cursor-pointer">{option}</Label>
+                </div>
+                ))}
+            </div>
+            {(showResults || hasAlreadyPassed) && !isCorrect(qIndex) && (
+                <div className="mt-4 p-3 rounded-md text-sm font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 ml-7">
+                    Incorrect. La ou les bonne(s) réponse(s) était(ent) : {getCorrectAnswersText(question)}
+                </div>
             )}
-            {(hasAlreadyPassed || (showResults && finalScore !== null)) && (
-                 <Button onClick={handleNextCourse} className="w-full">
-                    Cours Suivant
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-            )}
-          </CardFooter>
-        </>
+          </div>
+        ))}
+      </CardContent>
+      <CardFooter className="flex-col gap-4">
+        {!hasAlreadyPassed && !showResults && (
+            <Button onClick={handleSubmit} className="w-full" disabled={showResults || quiz.questions.length === 0}>
+                Soumettre le quiz
+            </Button>
+        )}
+        {(hasAlreadyPassed || showResults) && (
+              <Button onClick={handleNextCourse} className="w-full">
+                Cours Suivant
+                <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+        )}
+      </CardFooter>
     </Card>
   );
 }
