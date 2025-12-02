@@ -16,6 +16,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebas
 import { collection } from 'firebase/firestore';
 import { useMemo }from 'react';
 import type { Course } from '@/lib/quiz-data';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type UserProfile = {
     id: string;
@@ -36,14 +37,16 @@ type Department = {
 
 export default function ReportingPage() {
   const firestore = useFirestore();
-  const { userProfile } = useUser();
-  const isAdmin = userProfile?.role === 'admin';
+  const { userProfile, isUserLoading: isAuthLoading } = useUser();
+  
+  const isAdmin = useMemo(() => !isAuthLoading && userProfile?.role === 'admin', [isAuthLoading, userProfile]);
 
   // --- Firestore Data Hooks ---
   const usersQuery = useMemoFirebase(() => {
-    if (!firestore) return null; // Wait for firestore
+    // IMPORTANT: Only fetch all users if the current user is a confirmed admin
+    if (!firestore || !isAdmin) return null;
     return collection(firestore, 'users');
-  }, [firestore]);
+  }, [firestore, isAdmin]);
   
   const { data: allUsers, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
 
@@ -59,16 +62,22 @@ export default function ReportingPage() {
   }, [firestore]);
   const { data: courses, isLoading: isLoadingCourses } = useCollection<Course>(coursesQuery);
 
-  // Filter out admin users
-  const users = useMemo(() => allUsers?.filter(u => u.role !== 'admin') || [], [allUsers]);
+  // Determine the list of users to generate reports for.
+  // Admins see all non-admin users. Regular users only see themselves.
+  const reportingUsers = useMemo(() => {
+    if (isAdmin) {
+        return allUsers?.filter(u => u.role !== 'admin') || [];
+    }
+    return userProfile ? [userProfile as UserProfile] : [];
+  }, [isAdmin, allUsers, userProfile]);
 
   // --- Memoized Data Calculations ---
 
   const completionData = useMemo(() => {
-    if (!users || !allBadges) return [];
+    if (!reportingUsers || reportingUsers.length === 0 || !allBadges) return [];
 
-    const totalPossibleBadges = users.length * allBadges.length;
-    const totalEarnedBadges = users.reduce((acc, user) => acc + (user.badges?.length || 0), 0);
+    const totalPossibleBadges = reportingUsers.length * allBadges.length;
+    const totalEarnedBadges = reportingUsers.reduce((acc, user) => acc + (user.badges?.length || 0), 0);
 
     if (totalPossibleBadges === 0) return [];
     
@@ -78,14 +87,14 @@ export default function ReportingPage() {
       { name: 'Complété', value: completionPercentage, fill: 'var(--color-chart-1)' },
       { name: 'À faire', value: 100 - completionPercentage, fill: 'hsl(var(--muted))' }
     ];
-  }, [users]);
+  }, [reportingUsers]);
   
   const successData = useMemo(() => {
-    if (!users || !departments) return [];
+    if (!reportingUsers || reportingUsers.length === 0 || !departments) return [];
 
     const deptScores: Record<string, { totalScore: number; count: number }> = {};
     
-    users.forEach(user => {
+    reportingUsers.forEach(user => {
         if (user.departmentId && user.scores) {
             if (!deptScores[user.departmentId]) {
                 deptScores[user.departmentId] = { totalScore: 0, count: 0 };
@@ -110,12 +119,12 @@ export default function ReportingPage() {
             };
         });
 
-  }, [users, departments]);
+  }, [reportingUsers, departments]);
 
 
   const heatmapData = useMemo(() => {
     const topics = ['LAB/FT', 'KYC', 'Fraude', 'RGPD', 'Sanctions Internationales'];
-    if (!users || !courses) return [];
+    if (!reportingUsers || reportingUsers.length === 0 || !courses) return [];
 
     const quizIdToCategory: Record<string, string> = {};
     courses.forEach(course => {
@@ -153,14 +162,31 @@ export default function ReportingPage() {
         return userHeatmapRow;
     };
     
-    const targetUsers = isAdmin ? users : (userProfile ? [userProfile as UserProfile] : []);
-    
-    return targetUsers.map(getUserScoresByCategory);
+    return reportingUsers.map(getUserScoresByCategory);
 
-  }, [users, courses, isAdmin, userProfile]);
+  }, [reportingUsers, courses]);
   
-  const isLoading = isLoadingUsers || isLoadingDepartments || isLoadingCourses;
+  // The overall loading state depends on whether the user is admin or not
+  const isLoading = useMemo(() => {
+    if (isAuthLoading) return true;
+    if (isAdmin) {
+        return isLoadingUsers || isLoadingDepartments || isLoadingCourses;
+    }
+    return isLoadingDepartments || isLoadingCourses;
+  }, [isAuthLoading, isAdmin, isLoadingUsers, isLoadingDepartments, isLoadingCourses]);
 
+  if (isLoading) {
+    return (
+        <div className="space-y-6">
+            <Skeleton className="h-10 w-1/3" />
+             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+                <Skeleton className="h-80 lg:col-span-3" />
+                <Skeleton className="h-80 lg:col-span-2" />
+            </div>
+            <Skeleton className="h-96" />
+        </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -168,7 +194,10 @@ export default function ReportingPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Rapports et analyses</h1>
           <p className="text-muted-foreground">
-            Analyse en temps réel de la formation à la conformité de votre organisation.
+            {isAdmin 
+              ? "Analyse en temps réel de la formation à la conformité de votre organisation." 
+              : "Analyse en temps réel de votre progression de formation."
+            }
           </p>
         </div>
         <div className="flex gap-2">
