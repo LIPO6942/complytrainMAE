@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 type HeatmapProps = {
   data: { user: string; [key: string]: string | number }[];
+  headers: string[];
   isLoading: boolean;
 };
 
@@ -25,7 +26,7 @@ const getColorForScore = (score: number | string) => {
   return 'bg-red-200/50 dark:bg-red-900/50 text-red-900 dark:text-red-200';
 };
 
-export function Heatmap({ data, isLoading }: HeatmapProps) {
+export function Heatmap({ data, headers, isLoading }: HeatmapProps) {
   if (isLoading) {
     return (
         <Table>
@@ -47,10 +48,9 @@ export function Heatmap({ data, isLoading }: HeatmapProps) {
     )
   }
   
-  if (!data || data.length === 0) {
-    return <p className="text-center text-muted-foreground p-4">Aucune donnée utilisateur à afficher.</p>;
+  if (!data || data.length === 0 || !headers || headers.length === 0) {
+    return <p className="text-center text-muted-foreground p-4">Aucune donnée utilisateur ou catégorie à afficher.</p>;
   }
-  const headers = Object.keys(data[0]).filter((key) => key !== 'user');
 
   return (
     <div className="overflow-x-auto">

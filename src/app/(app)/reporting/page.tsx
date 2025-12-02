@@ -162,10 +162,18 @@ export default function ReportingPage() {
 
   }, [reportingUsers, departments, isAdmin, userProfile]);
 
+  const heatmapTopics = useMemo(() => {
+      const categories = new Set<string>();
+      allCourses.forEach(course => {
+          if (course.category) {
+              categories.add(course.category);
+          }
+      });
+      return Array.from(categories);
+  }, [allCourses]);
 
   const heatmapData = useMemo(() => {
-    const topics = ['LAB/FT', 'KYC', 'Fraude', 'RGPD', 'Sanctions Internationales', 'Conformité Assurance', 'Quiz Thématique', 'QCM (réponse multiple)'];
-    if (!reportingUsers || reportingUsers.length === 0 || allCourses.length === 0) return [];
+    if (!reportingUsers || reportingUsers.length === 0 || allCourses.length === 0 || heatmapTopics.length === 0) return [];
     
     const quizIdToCategory: Record<string, string> = {};
     allCourses.forEach(course => {
@@ -177,12 +185,12 @@ export default function ReportingPage() {
 
     const getUserScoresByCategory = (user: UserProfile) => {
         const scoresByCategory: Record<string, { total: number; count: number }> = {};
-        topics.forEach(topic => scoresByCategory[topic] = { total: 0, count: 0 });
+        heatmapTopics.forEach(topic => scoresByCategory[topic] = { total: 0, count: 0 });
 
         if (user.scores) {
             Object.entries(user.scores).forEach(([quizId, score]) => {
                 const category = quizIdToCategory[quizId];
-                if (category && topics.includes(category)) {
+                if (category && heatmapTopics.includes(category)) {
                     scoresByCategory[category].total += score;
                     scoresByCategory[category].count++;
                 }
@@ -193,7 +201,7 @@ export default function ReportingPage() {
             user: user.firstName || user.email,
         };
 
-        topics.forEach(topic => {
+        heatmapTopics.forEach(topic => {
             const categoryData = scoresByCategory[topic];
             if (categoryData.count > 0) {
                 userHeatmapRow[topic] = Math.round(categoryData.total / categoryData.count);
@@ -206,7 +214,7 @@ export default function ReportingPage() {
     
     return reportingUsers.map(getUserScoresByCategory);
 
-  }, [reportingUsers, allCourses]);
+  }, [reportingUsers, allCourses, heatmapTopics]);
   
   // The overall loading state depends on whether the user is admin or not
   const isLoading = useMemo(() => {
@@ -280,7 +288,7 @@ export default function ReportingPage() {
           <CardDescription>Scores par utilisateur et par sujet réglementaire. Les scores les plus bas indiquent un risque plus élevé.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Heatmap data={heatmapData} isLoading={isLoading} />
+          <Heatmap data={heatmapData} headers={heatmapTopics} isLoading={isLoading} />
         </CardContent>
       </Card>
     </div>
