@@ -35,103 +35,6 @@ interface QuizProps {
     isStatic?: boolean;
 }
 
-function AddQuestionForm({ courseId, quizId, onAdd }: { courseId: string; quizId: string; onAdd: () => void }) {
-    const firestore = useFirestore();
-    const [questionText, setQuestionText] = useState('');
-    const [options, setOptions] = useState(['', '', '']);
-    const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
-    const { toast } = useToast();
-
-    const handleOptionChange = (index: number, value: string) => {
-        const newOptions = [...options];
-        newOptions[index] = value;
-        setOptions(newOptions);
-    };
-    
-    const handleCorrectAnswerChange = (index: number, checked: boolean) => {
-        setCorrectAnswers(prev => {
-            if (checked) {
-                return [...prev, index];
-            } else {
-                return prev.filter(i => i !== index);
-            }
-        });
-    };
-
-    const handleAddQuestion = () => {
-        if (!firestore) return;
-        if (!questionText || options.some(opt => !opt.trim()) || correctAnswers.length === 0) {
-            toast({
-                title: "Champs incomplets",
-                description: "Veuillez remplir la question, toutes les options, et sélectionner au moins une bonne réponse.",
-                variant: "destructive"
-            });
-            return;
-        }
-
-        const quizRef = doc(firestore, 'courses', courseId, 'quizzes', quizId);
-
-        const newQuestion = {
-            text: questionText,
-            options: options,
-            correctAnswers: correctAnswers.sort((a, b) => a - b)
-        };
-
-        setDocumentNonBlocking(quizRef, {
-            questions: arrayUnion(newQuestion)
-        }, { merge: true });
-
-        toast({
-            title: "Question ajoutée",
-            description: "La nouvelle question a été ajoutée au quiz."
-        });
-
-        // Reset form
-        setQuestionText('');
-        setOptions(['', '', '']);
-        setCorrectAnswers([]);
-        onAdd(); // Close the form
-    };
-
-    return (
-        <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-            <h4 className="font-semibold">Ajouter une nouvelle question</h4>
-            <div className="space-y-2">
-                <Label>Texte de la question</Label>
-                <input value={questionText} onChange={(e) => setQuestionText(e.target.value)} className="w-full p-2 border rounded-md" />
-            </div>
-            <div className="space-y-2">
-                <Label>Options de réponse</Label>
-                {options.map((option, index) => (
-                     <div key={index} className="flex items-center gap-2">
-                        <input value={option} onChange={(e) => handleOptionChange(index, e.target.value)} className="w-full p-2 border rounded-md" />
-                     </div>
-                ))}
-            </div>
-             <div className="space-y-2">
-                <Label>Bonnes réponses (choix multiples)</Label>
-                 <div className="space-y-2">
-                    {options.map((option, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                            <Checkbox 
-                                id={`correct-opt-${index}`} 
-                                onCheckedChange={(checked) => handleCorrectAnswerChange(index, checked as boolean)}
-                                checked={correctAnswers.includes(index)}
-                            />
-                            <Label htmlFor={`correct-opt-${index}`}>Option {index + 1}</Label>
-                        </div>
-                    ))}
-                </div>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleAddQuestion}>Enregistrer la question</Button>
-              <Button variant="ghost" onClick={onAdd}>Annuler</Button>
-            </div>
-        </div>
-    );
-}
-
-
 export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic }: QuizProps) {
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
@@ -139,7 +42,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
   const isAdmin = userProfile?.role === 'admin';
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number[]>>({});
   const [showResults, setShowResults] = useState(false);
-  const [showAddQuestion, setShowAddQuestion] = useState(false);
   
   const handleCreateQuiz = () => {
     if (!firestore || !courseId || !quizId) return;
@@ -202,13 +104,13 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
         <Card className="text-center">
             <CardHeader>
                 <CardTitle>Aucun quiz trouvé</CardTitle>
-                <CardDescription>Ce cours n'a pas encore de quiz.</CardDescription>
+                <CardDescription>Ce cours n'a pas encore de quiz. Vous pouvez en créer un dans l'écran de modification.</CardDescription>
             </CardHeader>
             <CardContent>
-                <Button onClick={handleCreateQuiz}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Créer un quiz de base
-                </Button>
+                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <ShieldQuestion className="w-12 h-12"/>
+                    <p>Cliquez sur "Modifier" en haut de la page pour ajouter un quiz.</p>
+                </div>
             </CardContent>
         </Card>
     );
@@ -357,20 +259,9 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                 </AccordionItem>
               </Accordion>
             ))}
-
-            {isAdmin && !isStatic && (
-                showAddQuestion ? (
-                    <AddQuestionForm courseId={courseId} quizId={quizId} onAdd={() => setShowAddQuestion(false)} />
-                ) : (
-                    <Button variant="outline" className="w-full mt-4" onClick={() => setShowAddQuestion(true)}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Ajouter une question
-                    </Button>
-                )
-            )}
           </CardContent>
           <CardFooter className="flex-col gap-4">
-            <Button onClick={handleSubmit} className="w-full" disabled={showResults}>
+            <Button onClick={handleSubmit} className="w-full" disabled={showResults || quiz.questions.length === 0}>
                 Soumettre le quiz
             </Button>
             

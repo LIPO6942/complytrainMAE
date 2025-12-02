@@ -174,7 +174,7 @@ export default function CourseDetailPage() {
             <div className="flex gap-2">
                 <Button onClick={() => setIsEditing(true)} variant="outline">
                     <Pencil className="mr-2 h-4 w-4" />
-                    Modifier le cours
+                    Modifier
                 </Button>
                 <DeleteCourseDialog courseId={currentCourse.id} isStatic={isStatic} />
             </div>
