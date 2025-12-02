@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useDoc, useFirestore, useUser, useMemoFirebase, setDocumentNonBlocking, useCollection } from '@/firebase';
+import { useDoc, useFirestore, useUser, useMemoFirebase, useCollection, updateDocumentNonBlocking } from '@/firebase';
 import { doc, collection, increment } from 'firebase/firestore';
 import {
   Card,
@@ -53,7 +53,56 @@ export default function CourseDetailPage() {
   const [allCourses, setAllCourses] = useState<Course[]>([]);
 
   // Time tracking logic
-  const startTimeRef = useRef<number | null>(null);
+  const lastSaveTimeRef = useRef<number>(Date.now());
+  const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
+
+  const saveTimeSpent = (isFinal: boolean = false) => {
+    if (!user || !firestore) return;
+
+    const now = Date.now();
+    const timeDiffInSeconds = Math.round((now - lastSaveTimeRef.current) / 1000);
+
+    if (timeDiffInSeconds > 0) {
+        const userRef = doc(firestore, 'users', user.uid);
+        updateDocumentNonBlocking(userRef, {
+            totalTimeSpent: increment(timeDiffInSeconds)
+        });
+        lastSaveTimeRef.current = now; // Reset timer after saving
+    }
+};
+
+  useEffect(() => {
+    lastSaveTimeRef.current = Date.now();
+
+    // Clear any existing interval
+    if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+    }
+    
+    // Save progress every 60 seconds
+    intervalIdRef.current = setInterval(() => {
+        saveTimeSpent();
+    }, 60000); 
+    
+    // Function to run on component unmount
+    const cleanup = () => {
+        if (intervalIdRef.current) {
+            clearInterval(intervalIdRef.current);
+        }
+        // Save any remaining time, but only if user is still logged in
+        if (user) {
+           saveTimeSpent(true);
+        }
+    };
+    
+    // Add event listener for when the user leaves the page
+    window.addEventListener('beforeunload', cleanup);
+
+    return () => {
+        window.removeEventListener('beforeunload', cleanup);
+        cleanup();
+    };
+  }, [courseId, user, firestore]);
 
   // --- Fetch all courses for "Next Course" navigation ---
   const coursesQuery = useMemoFirebase(() => {
@@ -72,10 +121,6 @@ export default function CourseDetailPage() {
   }, [dynamicCourses, isLoadingCourses]);
   // --- End of fetching all courses ---
 
-  useEffect(() => {
-    // Set the start time when the component mounts
-    startTimeRef.current = Date.now();
-  }, [courseId]); // Reset timer if the user navigates to a new course
 
   const courseRef = useMemoFirebase(() => {
     if (!firestore || !courseId) return null;
@@ -283,7 +328,7 @@ export default function CourseDetailPage() {
             isLocked={isQuizLocked}
             isStatic={isStatic}
             allCourses={allCourses}
-            startTime={startTimeRef.current}
+            onQuizSubmit={saveTimeSpent}
         />
       </div>
     </div>

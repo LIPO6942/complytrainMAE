@@ -30,10 +30,10 @@ interface QuizProps {
     isLocked: boolean;
     isStatic?: boolean;
     allCourses: Course[];
-    startTime: number | null;
+    onQuizSubmit: () => void;
 }
 
-export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLocked, isStatic, allCourses, startTime }: QuizProps) {
+export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLocked, isStatic, allCourses, onQuizSubmit }: QuizProps) {
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -216,6 +216,11 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
         return;
     }
 
+    // Save time spent before processing results
+    if (onQuizSubmit) {
+        onQuizSubmit();
+    }
+    
     const finalSelectedAnswers = { ...selectedAnswers };
     const score = getScore(finalSelectedAnswers);
 
@@ -227,8 +232,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     if (!user || !firestore || !quiz) return;
     
     const userRef = doc(firestore, 'users', user.uid);
-    const endTime = Date.now();
-    const timeDiffInSeconds = startTime ? Math.round((endTime - startTime) / 1000) : 0;
     
     try {
         await runTransaction(firestore, async (transaction) => {
@@ -247,10 +250,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
                 quizAttempts: increment(1),
                 [`scores.${quizId}`]: score,
             };
-
-            if (timeDiffInSeconds > 0) {
-              updates.totalTimeSpent = increment(timeDiffInSeconds);
-            }
 
             const quizPassed = score >= 60;
             const alreadyPassed = userData.completedQuizzes?.includes(quizId);
