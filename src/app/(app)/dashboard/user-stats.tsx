@@ -50,7 +50,7 @@ export function UserStats() {
     const quizzesPassed = userProfile?.quizzesPassed || 0;
     const quizAttempts = userProfile?.quizAttempts || 0;
     
-    const completionRate = totalTests > 0 ? Math.round((quizzesPassed / totalTests) * 100) : 0;
+    const completionRate = totalTests > 0 ? Math.min(100, Math.round((quizzesPassed / totalTests) * 100)) : 0;
     
     const averageScore = userProfile?.averageScore ? Math.round(userProfile.averageScore) : 0;
     const timeSpent = userProfile?.totalTimeSpent ? formatTime(userProfile.totalTimeSpent) : "0m";
