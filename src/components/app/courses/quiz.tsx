@@ -17,10 +17,10 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { useUser, useFirestore, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { doc, collection, arrayUnion, runTransaction, increment } from 'firebase/firestore';
+import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
+import { doc, arrayUnion, runTransaction, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Lock, Award, ShieldQuestion, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Lock, Award, ShieldQuestion, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { QuizData, Question, Course } from '@/lib/quiz-data';
@@ -49,11 +49,22 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
 
   const hasAlreadyPassed = userProfile?.completedQuizzes?.includes(quizId);
   
+  const handleNextCourse = () => {
+    const currentIndex = allCourses.findIndex(c => c.id === courseId);
+    if (currentIndex > -1 && currentIndex < allCourses.length - 1) {
+      const nextCourse = allCourses[currentIndex + 1];
+      router.push(`/courses/${nextCourse.id}`);
+    } else {
+      toast({ title: 'Félicitations !', description: 'Vous avez terminé tous les cours disponibles.' });
+    }
+  };
+
    useEffect(() => {
     // If the user has already passed, immediately show the results/completed state.
     if (hasAlreadyPassed) {
       setShowResults(true);
-      setFinalScore(100); // Assume 100 as we don't store individual scores
+      // We don't store individual scores, so we can't set it here.
+      // We just show the completion state.
     } else {
         // Reset state if quiz changes and hasn't been passed
         setShowResults(false);
@@ -61,24 +72,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
         setSelectedAnswers({});
     }
   }, [hasAlreadyPassed, quizId]);
-
-
-  const handleCreateQuiz = () => {
-    if (!firestore || !courseId || !quizId) return;
-
-    const quizRef = doc(collection(firestore, 'courses', courseId, 'quizzes'), quizId);
-    setDocumentNonBlocking(quizRef, {
-      id: quizId,
-      title: 'Quiz : Blanchiment d\'argent',
-      questions: [
-        {
-          text: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LBA/FT) ?',
-          options: ['Marketing sur les réseaux sociaux', 'Intégration des employés', 'Déclaration de transaction suspecte (DTS)'],
-          correctAnswers: [2]
-        }
-      ]
-    }, { merge: true });
-  };
 
   if (isQuizLoading) {
     return (
@@ -294,17 +287,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
     return question.correctAnswers.map(i => `"${question.options[i]}"`).join(', ');
   }
 
-  const handleNextCourse = () => {
-    const currentIndex = allCourses.findIndex(c => c.id === courseId);
-    if (currentIndex > -1 && currentIndex < allCourses.length - 1) {
-      const nextCourse = allCourses[currentIndex + 1];
-      router.push(`/courses/${nextCourse.id}`);
-    } else {
-      toast({ title: 'Félicitations !', description: 'Vous avez terminé tous les cours disponibles.' });
-    }
-  };
-
-
   return (
     <Card>
       <CardHeader>
@@ -317,7 +299,15 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
             {quiz.questions.map((question, qIndex) => (
               <Accordion key={qIndex} type="single" collapsible>
                 <AccordionItem value={`item-${qIndex}`}>
-                  <AccordionTrigger className="text-green-950 dark:text-green-200 hover:text-green-950 dark:hover:text-green-200">Question {qIndex + 1}</AccordionTrigger>
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-2">
+                       {showResults && (isCorrect(qIndex) 
+                           ? <CheckCircle2 className="h-5 w-5 text-green-500" /> 
+                           : <ShieldQuestion className="h-5 w-5 text-red-500" />
+                       )}
+                       <span>Question {qIndex + 1}</span>
+                    </div>
+                  </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-4">
                       <p className="font-medium">{question.text}</p>
@@ -335,7 +325,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId, isLocked, isStatic
                         ))}
                       </div>
                       {showResults && (
-                        <div className={cn("mt-2 text-sm font-semibold", isCorrect(qIndex) ? 'text-green-600' : 'text-red-600')}>
+                        <div className={cn("mt-4 p-3 rounded-md text-sm font-semibold", isCorrect(qIndex) ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300')}>
                             {isCorrect(qIndex) ? 'Correct !' : `Incorrect. La ou les bonne(s) réponse(s) était(ent) : ${getCorrectAnswersText(question)}`}
                         </div>
                       )}
