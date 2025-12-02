@@ -125,7 +125,7 @@ export function PersonalizedRecommendations() {
               <Button asChild variant="outline" className="w-full justify-start h-auto" key={rec.courseId}>
                 <Link href={`/courses/${rec.courseId}`}>
                   <div className="flex items-center gap-4 p-2">
-                    <BookMarked className="h-6 w-6 text-accent shrink-0" />
+                    <BookMarked className="h-6 w-6 text-green-700 shrink-0" />
                     <span className="text-sm font-medium whitespace-normal text-left">{rec.title}</span>
                     <ArrowRight className="h-4 w-4 ml-auto" />
                   </div>
