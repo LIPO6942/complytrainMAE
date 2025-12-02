@@ -370,7 +370,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
                 <Checkbox 
                     id={`q${currentQuestionIndex}o${oIndex}`}
                     onCheckedChange={(checked) => handleAnswerChange(currentQuestionIndex, oIndex, checked as boolean)}
-                    checked={selectedAnswers[currentQuestionIndex]?.includes(oIndex) || false}
+                    checked={(selectedAnswers[currentQuestionIndex] || []).includes(oIndex)}
                 />
                 <Label htmlFor={`q${currentQuestionIndex}o${oIndex}`} className="cursor-pointer flex-1">{option}</Label>
             </div>
