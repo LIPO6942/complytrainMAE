@@ -63,23 +63,25 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   
    useEffect(() => {
     // Reset state when the quiz changes (e.g., navigating to a new course)
-    // but not when results are shown
-    if (!showResults) {
-        setShowResults(false);
-        setFinalScore(null);
-        setSelectedAnswers({});
-        setSubmittedAnswers({});
-        setCurrentQuestionIndex(0);
-    }
+    // but not when results are shown for the same quiz.
+    setShowResults(false);
+    setFinalScore(null);
+    setSelectedAnswers({});
+    setSubmittedAnswers({});
+    setCurrentQuestionIndex(0);
   }, [quizId]);
 
    useEffect(() => {
     // If the user has already passed this quiz, show their results immediately.
+    // This should only run once when the component loads or the user profile changes.
     if (hasAlreadyPassed && savedScore !== undefined && !showResults) {
         setShowResults(true);
         setFinalScore(savedScore);
+        // We don't have the user's original answers, so we can't show them.
+        // This part could be enhanced by storing answers in Firestore if needed.
+        setSubmittedAnswers({});
     }
-  }, [hasAlreadyPassed, savedScore, showResults]);
+  }, [hasAlreadyPassed, savedScore, quizId]);
 
   if (isQuizLoading) {
     return (
@@ -181,28 +183,22 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     });
   };
 
-    const isCorrect = (questionIndex: number, answersToCheck: Record<number, number[]>) => {
-        const question = quiz?.questions[questionIndex];
-        if (!question || !question.correctAnswers) return false;
-        
-        const userAnswers = answersToCheck[questionIndex] || [];
-        const correctAnswers = question.correctAnswers;
+  const isCorrect = (questionIndex: number, answersToCheck: Record<number, number[]>) => {
+    const question = quiz?.questions[questionIndex];
+    if (!question || !question.correctAnswers) return false;
+
+    const userAnswers = (answersToCheck[questionIndex] || []).sort();
+    const correctAnswers = [...question.correctAnswers].sort();
+
+    if (userAnswers.length !== correctAnswers.length) {
+      return false;
+    }
     
-        if (userAnswers.length !== correctAnswers.length) {
-          return false;
-        }
-    
-        const userAnswersSet = new Set(userAnswers);
-        for (const answer of correctAnswers) {
-          if (!userAnswersSet.has(answer)) {
-            return false;
-          }
-        }
-    
-        return true;
-    };
+    // Compare sorted arrays element by element
+    return userAnswers.every((value, index) => value === correctAnswers[index]);
+  };
   
-    const getScore = (answersToScore: Record<number, number[]>) => {
+  const getScore = (answersToScore: Record<number, number[]>) => {
       if (!quiz || quiz.questions.length === 0) return 0;
       let correctCount = 0;
       quiz.questions.forEach((_, index) => {
