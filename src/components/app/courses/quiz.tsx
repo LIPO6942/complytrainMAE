@@ -269,15 +269,30 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   
   const isCorrect = (questionIndex: number) => {
     if (!quiz || !quiz.questions[questionIndex]?.correctAnswers) return false;
-    const userAnswers = (selectedAnswers[questionIndex] || []).sort();
-    const correctAnswers = [...(quiz.questions[questionIndex].correctAnswers || [])].sort();
     
+    const userAnswers = selectedAnswers[questionIndex] || [];
+    const correctAnswers = quiz.questions[questionIndex].correctAnswers || [];
+  
     if (userAnswers.length !== correctAnswers.length) {
-        return false;
+      return false;
     }
-    
-    return userAnswers.every((val, index) => val === correctAnswers[index]);
-  }
+  
+    // Create sets for order-independent comparison
+    const userAnswersSet = new Set(userAnswers);
+    const correctAnswersSet = new Set(correctAnswers);
+  
+    if (userAnswersSet.size !== correctAnswersSet.size) {
+      return false; // Should be redundant due to length check, but safe
+    }
+  
+    for (const answer of userAnswersSet) {
+      if (!correctAnswersSet.has(answer)) {
+        return false;
+      }
+    }
+  
+    return true;
+  };
 
   const getCorrectAnswersText = (question: Question) => {
     if (!question.correctAnswers || question.correctAnswers.length === 0) {
