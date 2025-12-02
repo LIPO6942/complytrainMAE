@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Card,
@@ -18,6 +19,7 @@ import { useMemo }from 'react';
 import type { Course } from '@/lib/quiz-data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { staticCourses } from '@/lib/quiz-data';
+import { courseCategories } from '@/components/app/courses/edit-course-form';
 
 type UserProfile = {
     id: string;

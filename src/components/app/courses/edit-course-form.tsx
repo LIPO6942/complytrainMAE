@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useId } from 'react';
 import {
@@ -34,7 +35,7 @@ interface EditCourseFormProps {
   onFinished: () => void;
 }
 
-const courseCategories = [
+export const courseCategories = [
     "LAB/FT",
     "KYC",
     "RGPD",
