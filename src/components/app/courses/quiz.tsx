@@ -45,6 +45,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number[]>>({});
   const [showResults, setShowResults] = useState(false);
   const [finalScore, setFinalScore] = useState<number | null>(null);
+  const [submittedAnswers, setSubmittedAnswers] = useState<Record<number, number[]>>({});
   const [newBadgeEarned, setNewBadgeEarned] = useState(false);
   
   const hasAlreadyPassed = userProfile?.completedQuizzes?.includes(quizId);
@@ -61,18 +62,16 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   };
   
    useEffect(() => {
-    // Only reset if the quiz itself changes, not just on userProfile updates.
-    // If we are already showing results for the current quiz, don't reset.
     if (!showResults) {
         setShowResults(false);
         setFinalScore(null);
         setSelectedAnswers({});
+        setSubmittedAnswers({});
         setCurrentQuestionIndex(0);
     }
-  }, [quizId]); // Depend only on quizId to reset the state
+  }, [quizId]);
 
    useEffect(() => {
-    // This effect handles showing pre-existing results when the component first loads.
     if (hasAlreadyPassed && savedScore !== undefined && !showResults) {
         setShowResults(true);
         setFinalScore(savedScore);
@@ -179,32 +178,32 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     });
   };
 
-    const isCorrect = (questionIndex: number, submittedAnswers: Record<number, number[]>) => {
+    const isCorrect = (questionIndex: number, answersToCheck: Record<number, number[]>) => {
         const question = quiz?.questions[questionIndex];
         if (!question || !question.correctAnswers) return false;
         
-        const userAnswers = submittedAnswers[questionIndex] || [];
+        const userAnswers = answersToCheck[questionIndex] || [];
         const correctAnswers = question.correctAnswers;
     
         if (userAnswers.length !== correctAnswers.length) {
-        return false;
+          return false;
         }
     
         const userAnswersSet = new Set(userAnswers);
         for (const answer of correctAnswers) {
-        if (!userAnswersSet.has(answer)) {
+          if (!userAnswersSet.has(answer)) {
             return false;
-        }
+          }
         }
     
         return true;
     };
   
-    const getScore = (submittedAnswers: Record<number, number[]>) => {
+    const getScore = (answersToScore: Record<number, number[]>) => {
       if (!quiz || quiz.questions.length === 0) return 0;
       let correctCount = 0;
       quiz.questions.forEach((_, index) => {
-          if (isCorrect(index, submittedAnswers)) {
+          if (isCorrect(index, answersToScore)) {
               correctCount++;
           }
       });
@@ -224,6 +223,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     const finalSelectedAnswers = { ...selectedAnswers };
     const score = getScore(finalSelectedAnswers);
 
+    setSubmittedAnswers(finalSelectedAnswers); // Persist selected answers for results view
     setFinalScore(score);
     setShowResults(true);
     setNewBadgeEarned(false);
@@ -325,13 +325,13 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
                 {questions.map((question, qIndex) => (
                     <div key={qIndex} className="border-t pt-4">
                         <p className="font-medium flex items-start gap-2 mb-2">
-                            {isCorrect(qIndex, selectedAnswers) 
+                            {isCorrect(qIndex, submittedAnswers) 
                                 ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" /> 
                                 : <XCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                             }
                             <span>Question {qIndex + 1}: {question.text}</span>
                         </p>
-                        {!isCorrect(qIndex, selectedAnswers) && (
+                        {!isCorrect(qIndex, submittedAnswers) && (
                             <div className="mt-2 p-3 rounded-md text-sm font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 ml-7">
                                 La ou les bonne(s) réponse(s) était(ent) : {getCorrectAnswersText(question)}
                             </div>
