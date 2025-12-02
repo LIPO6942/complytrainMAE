@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
-import { allBadges } from '@/lib/data';
 import { CompletionChart } from '@/components/app/reporting/completion-chart';
 import { SuccessChart } from '@/components/app/reporting/success-chart';
 import { Heatmap } from '@/components/app/reporting/heatmap';
@@ -19,7 +18,6 @@ import { useMemo }from 'react';
 import type { Course } from '@/lib/quiz-data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { staticCourses } from '@/lib/quiz-data';
-import { courseCategories } from '@/components/app/courses/edit-course-form';
 
 type UserProfile = {
     id: string;
@@ -296,5 +294,3 @@ export default function ReportingPage() {
     </div>
   );
 }
-
-    
