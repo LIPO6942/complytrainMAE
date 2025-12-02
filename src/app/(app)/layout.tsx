@@ -41,7 +41,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <div className="flex flex-col w-full">
           <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
              <div className="flex items-center gap-2">
-                <SidebarTrigger className="md:hidden" />
+                <SidebarTrigger />
                 <h1 className="text-lg font-semibold md:text-2xl hidden sm:block">ComplyTrain</h1>
             </div>
             <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
