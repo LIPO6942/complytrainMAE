@@ -167,65 +167,59 @@ export default function ReportingPage() {
   }, [reportingUsers, departments, isAdmin, userProfile]);
 
   const heatmapDerivedData = useMemo(() => {
-    if (reportingUsers.length === 0) {
-        // Use the predefined list of categories for headers even if there are no users/scores.
-        return { heatmapTopics: courseCategories.sort(), heatmapData: [] };
-    }
-
-    // 1. Create a live map of quizId -> category from all available courses.
     const quizIdToCategory: Record<string, string> = {};
     allCourses.forEach(course => {
-        const quizId = course.quizId || course.quiz?.id;
-        if (quizId && course.category) {
-            quizIdToCategory[quizId] = course.category;
-        }
+      const quizId = course.quiz?.id || course.quizId;
+      if (quizId && course.category) {
+        quizIdToCategory[quizId] = course.category;
+      }
     });
-    
-    // 2. Identify all unique categories from the available courses to create the headers.
-    const allAvailableCategories = new Set<string>();
+  
+    // Dynamically get all unique categories from the courses and merge with predefined ones.
+    const allAvailableCategories = new Set(courseCategories);
     allCourses.forEach(course => {
-        if (course.category) {
-            allAvailableCategories.add(course.category);
-        }
+      if (course.category) {
+        allAvailableCategories.add(course.category);
+      }
     });
-    // Ensure all base categories are present, even if no course uses them yet.
-    courseCategories.forEach(cat => allAvailableCategories.add(cat));
-
+  
     const heatmapTopics = Array.from(allAvailableCategories).sort();
-
-    // 3. Generate heatmap data based on the dynamic mapping.
+    
+    if (reportingUsers.length === 0) {
+      return { heatmapTopics, heatmapData: [] };
+    }
+  
     const heatmapData = reportingUsers.map(user => {
-        const scoresByCategory: Record<string, { total: number; count: number }> = {};
-        heatmapTopics.forEach(topic => scoresByCategory[topic] = { total: 0, count: 0 });
-
-        if (user.scores) {
-            Object.entries(user.scores).forEach(([quizId, score]) => {
-                const category = quizIdToCategory[quizId];
-                if (category && heatmapTopics.includes(category)) {
-                    scoresByCategory[category].total += score;
-                    scoresByCategory[category].count++;
-                }
-            });
-        }
-
-        const userHeatmapRow: { user: string; [key: string]: string | number } = {
-            user: user.firstName || user.email,
-        };
-
-        heatmapTopics.forEach(topic => {
-            const categoryData = scoresByCategory[topic];
-            if (categoryData.count > 0) {
-                userHeatmapRow[topic] = Math.round(categoryData.total / categoryData.count);
-            } else {
-                userHeatmapRow[topic] = "N/A";
-            }
+      const scoresByCategory: Record<string, { total: number; count: number }> = {};
+      heatmapTopics.forEach(topic => scoresByCategory[topic] = { total: 0, count: 0 });
+  
+      if (user.scores) {
+        Object.entries(user.scores).forEach(([quizId, score]) => {
+          const category = quizIdToCategory[quizId];
+          if (category && scoresByCategory[category]) {
+            scoresByCategory[category].total += score;
+            scoresByCategory[category].count++;
+          }
         });
-        return userHeatmapRow;
+      }
+  
+      const userHeatmapRow: { user: string; [key: string]: string | number } = {
+        user: user.firstName || user.email,
+      };
+  
+      heatmapTopics.forEach(topic => {
+        const categoryData = scoresByCategory[topic];
+        userHeatmapRow[topic] = categoryData.count > 0 
+          ? Math.round(categoryData.total / categoryData.count) 
+          : "N/A";
+      });
+  
+      return userHeatmapRow;
     });
-
+  
     return { heatmapTopics, heatmapData };
-
   }, [reportingUsers, allCourses]);
+  
   
   // The overall loading state depends on whether the user is admin or not
   const isLoading = useMemo(() => {
@@ -305,3 +299,5 @@ export default function ReportingPage() {
     </div>
   );
 }
+
+    
