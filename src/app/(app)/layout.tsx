@@ -12,6 +12,7 @@ import { useUser } from '@/firebase';
 import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
 import { Sidebar, SidebarTrigger } from '@/components/ui/sidebar';
+import Link from 'next/link';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -42,7 +43,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
              <div className="flex items-center gap-2">
                 <SidebarTrigger />
-                <h1 className="text-lg font-semibold md:text-2xl hidden sm:block">ComplyTrain</h1>
+                <Link href="/dashboard">
+                  <h1 className="text-lg font-semibold md:text-2xl hidden sm:block">ComplyTrain</h1>
+                </Link>
             </div>
             <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
               <form className="ml-auto flex-1 sm:flex-initial">
