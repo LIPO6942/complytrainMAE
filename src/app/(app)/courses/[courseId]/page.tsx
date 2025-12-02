@@ -89,14 +89,13 @@ useEffect(() => {
         }
     };
     
-    // This is a backup for page unloads, but less reliable.
     window.addEventListener('beforeunload', handleUnload);
 
     return () => {
-        handleUnload(); // Call on component unmount (navigation)
+        // handleUnload is no longer called on unmount to prevent auth errors on logout
         window.removeEventListener('beforeunload', handleUnload);
     };
-  }, [user, firestore, courseId]); // Re-trigger on courseId change
+  }, [user, firestore, courseId]);
 
   const courseRef = useMemoFirebase(() => {
     if (!firestore || !courseId) return null;
@@ -304,6 +303,7 @@ useEffect(() => {
             isLocked={isQuizLocked}
             isStatic={isStatic}
             allCourses={allCourses}
+            startTime={startTimeRef.current}
         />
       </div>
     </div>

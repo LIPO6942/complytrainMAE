@@ -30,9 +30,10 @@ interface QuizProps {
     isLocked: boolean;
     isStatic?: boolean;
     allCourses: Course[];
+    startTime: number | null;
 }
 
-export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLocked, isStatic, allCourses }: QuizProps) {
+export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLocked, isStatic, allCourses, startTime }: QuizProps) {
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -183,26 +184,23 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     });
   };
 
-  const isCorrect = (questionIndex: number, answersToCheck: Record<number, number[]>) => {
-    const question = quiz?.questions[questionIndex];
+  const isCorrect = (question: Question, userAnswers: number[] | undefined) => {
     if (!question || !question.correctAnswers) return false;
-
-    const userAnswers = (answersToCheck[questionIndex] || []).sort();
-    const correctAnswers = [...question.correctAnswers].sort();
-
-    if (userAnswers.length !== correctAnswers.length) {
+    const sortedUserAnswers = [...(userAnswers || [])].sort();
+    const sortedCorrectAnswers = [...question.correctAnswers].sort();
+  
+    if (sortedUserAnswers.length !== sortedCorrectAnswers.length) {
       return false;
     }
     
-    // Compare sorted arrays element by element
-    return userAnswers.every((value, index) => value === correctAnswers[index]);
+    return sortedUserAnswers.every((value, index) => value === sortedCorrectAnswers[index]);
   };
   
   const getScore = (answersToScore: Record<number, number[]>) => {
       if (!quiz || quiz.questions.length === 0) return 0;
       let correctCount = 0;
-      quiz.questions.forEach((_, index) => {
-          if (isCorrect(index, answersToScore)) {
+      quiz.questions.forEach((question, index) => {
+          if (isCorrect(question, answersToScore[index])) {
               correctCount++;
           }
       });
@@ -230,6 +228,8 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     if (!user || !firestore || !quiz) return;
     
     const userRef = doc(firestore, 'users', user.uid);
+    const endTime = Date.now();
+    const timeDiffInSeconds = startTime ? Math.round((endTime - startTime) / 1000) : 0;
     
     try {
         await runTransaction(firestore, async (transaction) => {
@@ -246,7 +246,8 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
             const updates: Record<string, any> = { 
                 averageScore: newAverage,
                 quizAttempts: increment(1),
-                [`scores.${quizId}`]: score
+                [`scores.${quizId}`]: score,
+                totalTimeSpent: increment(timeDiffInSeconds),
             };
 
             const quizPassed = score >= 60;
@@ -322,7 +323,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
             <CardContent className="space-y-6 pt-6">
                 <h4 className="font-semibold text-lg">Résumé de la correction</h4>
                 {questions.map((question, qIndex) => {
-                    const questionCorrect = isCorrect(qIndex, submittedAnswers);
+                    const questionCorrect = isCorrect(question, submittedAnswers[qIndex]);
                     const userAnswersForQ = submittedAnswers[qIndex] || [];
                     const correctAnswersForQ = question.correctAnswers || [];
 
