@@ -54,18 +54,18 @@ export function AITutor() {
   }
 
   return (
-    <Card className="lg:col-span-7 flex flex-col">
+    <Card className="flex flex-col h-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bot className="text-primary" />
           <span>Tuteur IA en Conformité</span>
         </CardTitle>
         <CardDescription>
-          Posez n'importe quelle question relative à la conformité. Le tuteur IA opère selon des directives réglementaires strictes.
+          Posez n'importe quelle question relative à la conformité.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow flex flex-col gap-4">
-        <ScrollArea className="h-64 w-full pr-4">
+        <ScrollArea className="h-96 w-full pr-4">
           <div className="space-y-4">
             {messages.map((message, index) => (
               <div key={index} className={cn("flex items-start gap-3", message.role === 'user' ? 'justify-end' : 'justify-start')}>
