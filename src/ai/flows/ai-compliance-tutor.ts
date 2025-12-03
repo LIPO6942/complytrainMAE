@@ -16,12 +16,26 @@ const AiComplianceTutorInputSchema = z.object({
 export type AiComplianceTutorInput = z.infer<typeof AiComplianceTutorInputSchema>;
 
 const AiComplianceTutorOutputSchema = z.object({
-  answer: z.string().describe('The AI tutor answer to the compliance question.'),
+  summary: z.string().describe('A clear, bulleted summary of the answer.'),
+  recommendation: z.string().describe('A bulleted list of recommended actions.'),
+  references: z.string().describe('A bulleted list of references (internal doc, article, FATF).')
 });
 export type AiComplianceTutorOutput = z.infer<typeof AiComplianceTutorOutputSchema>;
 
-export async function aiComplianceTutor(input: AiComplianceTutorInput): Promise<AiComplianceTutorOutput> {
-  return aiComplianceTutorFlow(input);
+export async function aiComplianceTutor(input: AiComplianceTutorInput): Promise<{ answer: string }> {
+  const result = await aiComplianceTutorFlow(input);
+  // Format the structured output into a single Markdown string for display
+  const formattedAnswer = `
+**Résumé :**
+${result.summary}
+
+**Recommandation :**
+${result.recommendation}
+
+**Références :**
+${result.references}
+  `;
+  return { answer: formattedAnswer.trim() };
 }
 
 const prompt = ai.definePrompt({
@@ -36,25 +50,21 @@ const prompt = ai.definePrompt({
   En absence d’information interne, utilise les normes internationales (GAFI) et la réglementation tunisienne.
 
   **Objectif :**
-  Fournir des réponses précises, opérationnelles et applicables dans un contexte réel de conformité dans une compagnie d’assurance tunisienne. Sois aussi bref et direct que possible.
+  Fournir des réponses précises, opérationnelles et applicables dans un contexte réel de conformité dans une compagnie d’assurance tunisienne. Sois aussi bref et direct que possible. Utilise des listes à puces.
 
   **COMPORTEMENT ATTENDU**
 
-  Toujours structurer les réponses comme suit :
+  Toujours structurer les réponses en 3 parties distinctes. Utilise des listes à puces (-) pour chaque point.
 
-  - **Résumé clair**
-  - **Recommandation**
-  - **Références** (document interne / article / GAFI)
+  1.  **summary**: Résumé clair et concis en points clés.
+  2.  **recommendation**: Recommandations pratiques et actionnables.
+  3.  **references**: Références aux documents (document interne / article / GAFI).
 
   Toujours être formel, professionnel, concis et direct.
 
   Ne jamais inventer une règle interne. Si un document interne n'indique pas l'information → préciser “Non spécifié dans les documents fournis”.
 
   Utiliser le vocabulaire conformité / assurance : PPE, seuils AML, KYC, opérations inhabituelles, matrice de risque, diligence renforcée, justification économique, etc.
-
-  Fournir des exemples concrets lorsqu’ils aident la compréhension.
-
-  Toujours proposer une recommandation pratique (mail type, action à consigner, validation, escalade, etc.).
 
   **INSTRUCTION FINALE**
 
