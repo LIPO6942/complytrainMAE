@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRef, useState, useActionState } from 'react';
@@ -24,6 +25,12 @@ const initialState = {
   answer: null,
 };
 
+const suggestedQuestions = [
+    { key: 'kyc', text: "Expliquez-moi le processus KYC pour un nouveau client." },
+    { key: 'aml', text: "Que faire en cas de soupçon de blanchiment d'argent ?" },
+    { key: 'ppe', text: "Qu'est-ce qu'une Personne Politiquement Exposée (PPE) ?" },
+];
+
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
@@ -37,6 +44,7 @@ export function AITutor() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [state, formAction] = useActionState(askAIComplianceTutor, initialState);
   const formRef = useRef<HTMLFormElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { pending } = useFormStatus();
 
   const handleFormAction = async (formData: FormData) => {
@@ -52,6 +60,14 @@ export function AITutor() {
      setMessages((prev) => [...prev, { role: 'assistant', content: state.answer as string }]);
      state.answer = null; // Clear answer to prevent re-adding
   }
+  
+  const handleSuggestionClick = (question: string) => {
+    if (inputRef.current) {
+      const formData = new FormData();
+      formData.append('question', question);
+      handleFormAction(formData);
+    }
+  };
 
   return (
     <Card className="flex flex-col h-full">
@@ -97,10 +113,20 @@ export function AITutor() {
             )}
           </div>
         </ScrollArea>
+         <div className="pt-2 border-t">
+          <p className="text-xs text-muted-foreground mb-2">Ou essayez l'une de ces questions :</p>
+          <div className="flex flex-wrap gap-2">
+            {suggestedQuestions.map(q => (
+                <Button key={q.key} variant="outline" size="sm" onClick={() => handleSuggestionClick(q.text)}>
+                    {q.text}
+                </Button>
+            ))}
+          </div>
+        </div>
       </CardContent>
       <CardFooter>
         <form ref={formRef} action={handleFormAction} className="flex w-full items-center space-x-2">
-          <Input id="question" name="question" placeholder="Ex: Expliquez le processus KYC..." autoComplete="off" />
+          <Input ref={inputRef} id="question" name="question" placeholder="Ex: Expliquez le processus KYC..." autoComplete="off" />
           <SubmitButton />
         </form>
       </CardFooter>
