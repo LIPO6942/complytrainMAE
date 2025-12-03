@@ -67,17 +67,17 @@ export default function ReportingPage() {
   }, [firestore]);
   const { data: dynamicCourses, isLoading: isLoadingCourses } = useCollection<Course>(coursesQuery);
   
-  // Combine static and dynamic courses
+  // Combine static and dynamic courses to get a complete list
   const allCourses = useMemo(() => {
-    if (isLoadingCourses) return []; // Return empty array while loading
-    const courses = [...staticCourses];
+    const combinedCourses = new Map<string, Course>();
+    // Add all static courses first
+    staticCourses.forEach(course => combinedCourses.set(course.id, course));
+    // Overwrite with dynamic courses if they exist (updated versions)
     if (dynamicCourses) {
-      const staticIds = new Set(staticCourses.map(c => c.id));
-      const filteredDynamic = dynamicCourses.filter(c => !staticIds.has(c.id));
-      courses.push(...filteredDynamic);
+        dynamicCourses.forEach(course => combinedCourses.set(course.id, course));
     }
-    return courses;
-  }, [dynamicCourses, isLoadingCourses]);
+    return Array.from(combinedCourses.values());
+  }, [dynamicCourses]);
 
   // Determine the list of users to generate reports for.
   // Admins see all non-admin users. Regular users only see themselves.
