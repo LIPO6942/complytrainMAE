@@ -51,7 +51,8 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   
   const hasAlreadyPassed = userProfile?.completedQuizzes?.includes(quizId);
   const savedScore = userProfile?.scores?.[quizId];
-  
+  const savedAnswers = userProfile?.userAnswers?.[quizId];
+
   const handleNextCourse = () => {
     const currentIndex = allCourses.findIndex(c => c.id === courseId);
     if (currentIndex > -1 && currentIndex < allCourses.length - 1) {
@@ -78,11 +79,12 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     if (hasAlreadyPassed && savedScore !== undefined && !showResults) {
         setShowResults(true);
         setFinalScore(savedScore);
-        // We don't have the user's original answers, so we can't show them.
-        // This part could be enhanced by storing answers in Firestore if needed.
-        setSubmittedAnswers({});
+        // Load the previously saved answers for the results view
+        if (savedAnswers) {
+            setSubmittedAnswers(savedAnswers);
+        }
     }
-  }, [hasAlreadyPassed, savedScore, quizId]);
+  }, [hasAlreadyPassed, savedScore, savedAnswers, quizId]);
 
   if (isQuizLoading) {
     return (
@@ -249,6 +251,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
                 averageScore: newAverage,
                 quizAttempts: increment(1),
                 [`scores.${quizId}`]: score,
+                [`userAnswers.${quizId}`]: finalSelectedAnswers, // Save the answers
             };
 
             const quizPassed = score >= 60;

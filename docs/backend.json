@@ -77,6 +77,13 @@
           "additionalProperties": {
             "type": "number"
           }
+        },
+        "userAnswers": {
+          "type": "object",
+          "description": "A map of quiz IDs to the user's answers for that quiz.",
+          "additionalProperties": {
+            "type": "object"
+          }
         }
       },
       "required": ["id", "email", "role"]
