@@ -44,10 +44,20 @@ function SubmitButton() {
   );
 }
 
+function SuggestedQuestionButton({ question, isPending }: { question: string, isPending: boolean }) {
+    const { pending } = useFormStatus();
+    return (
+        <Button type="submit" variant="outline" size="sm" disabled={isPending || pending}>
+            {question}
+        </Button>
+    )
+}
+
 export function AITutor() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [state, formAction, isPending] = useActionState(askAIComplianceTutor, initialState);
   const formRef = useRef<HTMLFormElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const handleFormAction = async (formData: FormData) => {
     const question = formData.get('question') as string;
@@ -63,12 +73,18 @@ export function AITutor() {
        setMessages((prev) => [...prev, { role: 'assistant', content: state.answer as string }]);
     }
   }, [state.answer, messages]);
-  
-  const handleSuggestionClick = (question: string) => {
-    const formData = new FormData();
-    formData.append('question', question);
-    handleFormAction(formData);
-  };
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+        // This is a bit of a hack to scroll to the bottom.
+        // A better solution would involve a more robust scroll management.
+        setTimeout(() => {
+             if(scrollAreaRef.current) {
+                scrollAreaRef.current.children[1].scrollTop = scrollAreaRef.current.children[1].scrollHeight;
+             }
+        }, 100);
+    }
+  }, [messages, isPending]);
 
   return (
     <Card className="flex flex-col h-full">
@@ -82,7 +98,7 @@ export function AITutor() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow flex flex-col gap-4 overflow-hidden">
-        <ScrollArea className="flex-grow pr-4">
+        <ScrollArea className="flex-grow pr-4" ref={scrollAreaRef}>
           <div className="space-y-4">
             {messages.map((message, index) => (
               <div key={index} className={cn("flex items-start gap-3", message.role === 'user' ? 'justify-end' : 'justify-start')}>
@@ -101,7 +117,7 @@ export function AITutor() {
                 )}
               </div>
             ))}
-             {isPending && (
+             {isPending && messages[messages.length - 1]?.role === 'user' && (
                 <div className="flex items-start gap-3 justify-start">
                     <Avatar className="h-8 w-8">
                         <AvatarFallback><Bot size={20}/></AvatarFallback>
@@ -118,9 +134,10 @@ export function AITutor() {
           <p className="text-xs text-muted-foreground mb-2">Ou essayez l'une de ces questions :</p>
           <div className="flex flex-wrap gap-2">
             {suggestedQuestions.map(q => (
-                <Button key={q.key} variant="outline" size="sm" onClick={() => handleSuggestionClick(q.text)} disabled={isPending}>
-                    {q.text}
-                </Button>
+                <form key={q.key} action={handleFormAction}>
+                    <input type="hidden" name="question" value={q.text} />
+                    <SuggestedQuestionButton question={q.text} isPending={isPending} />
+                </form>
             ))}
           </div>
         </div>
