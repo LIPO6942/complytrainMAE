@@ -87,7 +87,7 @@ export function AITutor() {
   }, [messages, isPending]);
 
   return (
-    <Card className="flex flex-col h-full">
+    <Card className="flex flex-col">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bot className="text-primary" />
