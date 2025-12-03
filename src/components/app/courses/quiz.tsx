@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, runTransaction, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Lock, Award, ShieldQuestion, CheckCircle2, ArrowRight, XCircle, ArrowLeft } from 'lucide-react';
+import { Lock, Award, ShieldQuestion, CheckCircle2, ArrowRight, XCircle, ArrowLeft, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { QuizData, Question, Course } from '@/lib/quiz-data';
@@ -34,6 +34,8 @@ interface QuizProps {
     onQuizSubmit: () => void;
 }
 
+const TIME_PER_QUESTION = 60; // 60 seconds
+
 export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLocked, isStatic, allCourses, onQuizSubmit }: QuizProps) {
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
@@ -48,6 +50,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   const [finalScore, setFinalScore] = useState<number | null>(null);
   const [submittedAnswers, setSubmittedAnswers] = useState<Record<number, number[]>>({});
   const [newBadgeEarned, setNewBadgeEarned] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(TIME_PER_QUESTION);
   
   const handleNextCourse = () => {
     const currentIndex = allCourses.findIndex(c => c.id === courseId);
@@ -59,6 +62,33 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     }
   };
   
+  useEffect(() => {
+    if (showResults || isLocked || !quiz) {
+      return;
+    }
+
+    setTimeLeft(TIME_PER_QUESTION); // Reset timer for new question
+
+    const timer = setInterval(() => {
+      setTimeLeft(prevTime => {
+        if (prevTime <= 1) {
+          clearInterval(timer);
+          // Auto-advance to next question or submit
+          if (currentQuestionIndex < quiz.questions.length - 1) {
+            setCurrentQuestionIndex(i => i + 1);
+          } else {
+            handleSubmit();
+          }
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [currentQuestionIndex, showResults, isLocked, quiz]);
+
+
   useEffect(() => {
     if (showResults) {
       return;
@@ -89,7 +119,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
       setSubmittedAnswers({});
       setCurrentQuestionIndex(0);
     }
-  }, [quizId, userProfile]);
+  }, [quizId, userProfile, showResults]); // Added showResults to dependencies
 
   if (isQuizLoading) {
     return (
@@ -316,6 +346,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   const questions = quiz.questions;
   const currentQuestion = questions[currentQuestionIndex];
   const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
+  const timerProgress = (timeLeft / TIME_PER_QUESTION) * 100;
   
   // Renders the summary screen after submission
   if (showResults) {
@@ -392,7 +423,12 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
       <CardHeader>
         <CardTitle>{quiz.title}</CardTitle>
         <CardDescription>Question {currentQuestionIndex + 1} sur {questions.length}</CardDescription>
-        <Progress value={progressPercentage} className="mt-2" />
+        <Progress value={progressPercentage} className="mt-2 h-2" />
+        <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
+            <Clock className="h-4 w-4" />
+            <span>Temps restant: {timeLeft}s</span>
+        </div>
+        <Progress value={timerProgress} className="h-1" />
       </CardHeader>
       
       <CardContent className="space-y-4 min-h-[200px]">
