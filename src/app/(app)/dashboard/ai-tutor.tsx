@@ -1,16 +1,16 @@
 
 "use client";
 
-import { useRef, useState, useActionState } from 'react';
+import { useRef, useState, useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Bot, SendHorizonal, User, Zap } from 'lucide-react';
+import { Bot, SendHorizonal, User } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { askAIComplianceTutor } from '@/app/actions';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -19,7 +19,11 @@ interface Message {
   content: string;
 }
 
-const initialState = {
+const initialState: {
+  message: string | null,
+  errors: any | null,
+  answer: string | null,
+} = {
   message: null,
   errors: null,
   answer: null,
@@ -42,10 +46,8 @@ function SubmitButton() {
 
 export function AITutor() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [state, formAction] = useActionState(askAIComplianceTutor, initialState);
+  const [state, formAction, isPending] = useActionState(askAIComplianceTutor, initialState);
   const formRef = useRef<HTMLFormElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const { pending } = useFormStatus();
 
   const handleFormAction = async (formData: FormData) => {
     const question = formData.get('question') as string;
@@ -55,18 +57,17 @@ export function AITutor() {
       formRef.current?.reset();
     }
   };
-  
-  if (state.answer && messages[messages.length - 1]?.role !== 'assistant') {
-     setMessages((prev) => [...prev, { role: 'assistant', content: state.answer as string }]);
-     state.answer = null; // Clear answer to prevent re-adding
-  }
+
+  useEffect(() => {
+    if (state.answer && messages[messages.length - 1]?.role !== 'assistant') {
+       setMessages((prev) => [...prev, { role: 'assistant', content: state.answer as string }]);
+    }
+  }, [state.answer, messages]);
   
   const handleSuggestionClick = (question: string) => {
-    if (inputRef.current) {
-      const formData = new FormData();
-      formData.append('question', question);
-      handleFormAction(formData);
-    }
+    const formData = new FormData();
+    formData.append('question', question);
+    handleFormAction(formData);
   };
 
   return (
@@ -80,8 +81,8 @@ export function AITutor() {
           Posez n'importe quelle question relative à la conformité.
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col gap-4">
-        <ScrollArea className="h-96 w-full pr-4">
+      <CardContent className="flex-grow flex flex-col gap-4 overflow-hidden">
+        <ScrollArea className="flex-grow pr-4">
           <div className="space-y-4">
             {messages.map((message, index) => (
               <div key={index} className={cn("flex items-start gap-3", message.role === 'user' ? 'justify-end' : 'justify-start')}>
@@ -100,7 +101,7 @@ export function AITutor() {
                 )}
               </div>
             ))}
-             {pending && (
+             {isPending && (
                 <div className="flex items-start gap-3 justify-start">
                     <Avatar className="h-8 w-8">
                         <AvatarFallback><Bot size={20}/></AvatarFallback>
@@ -113,20 +114,20 @@ export function AITutor() {
             )}
           </div>
         </ScrollArea>
-         <div className="pt-2 border-t">
+         <div className="pt-4 border-t">
           <p className="text-xs text-muted-foreground mb-2">Ou essayez l'une de ces questions :</p>
           <div className="flex flex-wrap gap-2">
             {suggestedQuestions.map(q => (
-                <Button key={q.key} variant="outline" size="sm" onClick={() => handleSuggestionClick(q.text)}>
+                <Button key={q.key} variant="outline" size="sm" onClick={() => handleSuggestionClick(q.text)} disabled={isPending}>
                     {q.text}
                 </Button>
             ))}
           </div>
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="pt-4 border-t">
         <form ref={formRef} action={handleFormAction} className="flex w-full items-center space-x-2">
-          <Input ref={inputRef} id="question" name="question" placeholder="Ex: Expliquez le processus KYC..." autoComplete="off" />
+          <Input id="question" name="question" placeholder="Ex: Expliquez le processus KYC..." autoComplete="off" disabled={isPending}/>
           <SubmitButton />
         </form>
       </CardFooter>
