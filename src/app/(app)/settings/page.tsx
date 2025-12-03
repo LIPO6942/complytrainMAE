@@ -51,6 +51,18 @@ export default function SettingsPage() {
   const isAdmin = userProfile?.role === 'admin';
   const isSiegeUser = userProfile?.agencyCode === 'SIEGE';
   
+  const defaultPreferences = {
+    email: true,
+    newCourses: true,
+    courseUpdates: true,
+    quizReminders: true,
+  };
+
+  const notificationPreferences = useMemo(() => {
+      return { ...defaultPreferences, ...userProfile?.notificationPreferences };
+  }, [userProfile?.notificationPreferences]);
+
+
   useEffect(() => {
     if (userProfile) {
       setFirstName(userProfile.firstName || '');
@@ -85,6 +97,26 @@ export default function SettingsPage() {
         description: "Votre profil a été mis à jour.",
     });
   };
+
+  const handleNotificationChange = (key: string, value: boolean) => {
+    if (!user || !firestore) return;
+
+    const userRef = doc(firestore, 'users', user.uid);
+    const newPreferences = {
+        ...notificationPreferences,
+        [key]: value
+    };
+
+    updateDocumentNonBlocking(userRef, {
+        notificationPreferences: newPreferences
+    });
+    
+    toast({
+        title: 'Préférences mises à jour',
+        description: 'Vos paramètres de notification ont été enregistrés.',
+    });
+  };
+
 
   const handlePasswordSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -350,28 +382,40 @@ export default function SettingsPage() {
                         <p className="text-sm font-medium leading-none">Notifications par e-mail</p>
                         <p className="text-sm text-muted-foreground">Recevoir des e-mails pour les mises à jour importantes.</p>
                     </div>
-                    <Switch />
+                    <Switch 
+                        checked={notificationPreferences.email}
+                        onCheckedChange={(checked) => handleNotificationChange('email', checked)}
+                    />
                 </div>
                 <div className="flex items-center justify-between space-x-4 rounded-md border p-4">
                     <div className="flex-1 space-y-1">
                         <p className="text-sm font-medium leading-none">Nouveaux cours</p>
                         <p className="text-sm text-muted-foreground">Être notifié lorsqu'un nouveau cours est disponible.</p>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch
+                         checked={notificationPreferences.newCourses}
+                         onCheckedChange={(checked) => handleNotificationChange('newCourses', checked)}
+                    />
                 </div>
                 <div className="flex items-center justify-between space-x-4 rounded-md border p-4">
                     <div className="flex-1 space-y-1">
                         <p className="text-sm font-medium leading-none">Notification de mise à jour d’un cours</p>
                         <p className="text-sm text-muted-foreground">Être notifié lorsqu'un cours que vous suivez est mis à jour.</p>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch 
+                        checked={notificationPreferences.courseUpdates}
+                        onCheckedChange={(checked) => handleNotificationChange('courseUpdates', checked)}
+                    />
                 </div>
                 <div className="flex items-center justify-between space-x-4 rounded-md border p-4">
                     <div className="flex-1 space-y-1">
                         <p className="text-sm font-medium leading-none">Rappels de quiz</p>
                         <p className="text-sm text-muted-foreground">Recevoir des rappels pour les quiz non terminés.</p>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch
+                        checked={notificationPreferences.quizReminders}
+                        onCheckedChange={(checked) => handleNotificationChange('quizReminders', checked)}
+                    />
                 </div>
             </CardContent>
           </Card>

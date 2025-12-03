@@ -27,6 +27,12 @@ interface UserProfile {
   completedQuizzes?: string[];
   scores?: Record<string, number>;
   userAnswers?: Record<string, Record<number, number[]>>;
+  notificationPreferences?: {
+    email?: boolean;
+    newCourses?: boolean;
+    courseUpdates?: boolean;
+    quizReminders?: boolean;
+  };
 }
 
 interface FirebaseProviderProps {

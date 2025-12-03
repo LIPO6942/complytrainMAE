@@ -84,6 +84,16 @@
           "additionalProperties": {
             "type": "object"
           }
+        },
+        "notificationPreferences": {
+          "type": "object",
+          "description": "User's notification settings.",
+          "properties": {
+            "email": { "type": "boolean", "default": true },
+            "newCourses": { "type": "boolean", "default": true },
+            "courseUpdates": { "type": "boolean", "default": true },
+            "quizReminders": { "type": "boolean", "default": true }
+          }
         }
       },
       "required": ["id", "email", "role"]
