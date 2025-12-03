@@ -28,9 +28,9 @@ export default function DashboardPage() {
 
         <UserStats />
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2">
         <AITutor />
-        <div className="space-y-6 lg:col-span-2">
+        <div className="space-y-6">
             <PersonalizedRecommendations />
             <EarnedBadges />
         </div>
