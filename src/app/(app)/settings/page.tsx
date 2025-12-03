@@ -159,15 +159,18 @@ export default function SettingsPage() {
     }
 
     const userRef = doc(firestore, 'users', user.uid);
-    updateDocumentNonBlocking(userRef, {
+    // Use setDocumentNonBlocking with merge: true to ensure all progress fields are correctly reset or created.
+    // This fixes the bug where progress wasn't saved after a reset.
+    setDocumentNonBlocking(userRef, {
         completedQuizzes: [],
         scores: {},
+        userAnswers: {},
         quizzesPassed: 0,
         quizAttempts: 0,
         averageScore: 0,
         badges: [],
         totalTimeSpent: 0
-    });
+    }, { merge: true });
     
     toast({
         title: "Progression réinitialisée",
