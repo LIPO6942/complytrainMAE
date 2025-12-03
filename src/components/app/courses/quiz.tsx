@@ -66,7 +66,10 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
    useEffect(() => {
     if (!quizId) return;
 
-    // This logic runs once per quiz to decide the initial state.
+    // Do not reset the view if we are already showing results.
+    // This prevents the quiz from restarting right after submission.
+    if (showResults) return;
+
     const userHasPassed = userProfile?.completedQuizzes?.includes(quizId);
     const userSavedScore = userProfile?.scores?.[quizId];
     const userSavedAnswers = userProfile?.userAnswers?.[quizId];
@@ -84,7 +87,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
       setSubmittedAnswers({});
       setCurrentQuestionIndex(0);
     }
-  }, [quizId]);
+  }, [quizId, userProfile, showResults]);
 
   if (isQuizLoading) {
     return (
