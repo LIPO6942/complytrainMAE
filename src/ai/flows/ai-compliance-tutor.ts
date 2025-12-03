@@ -26,13 +26,13 @@ export async function aiComplianceTutor(input: AiComplianceTutorInput): Promise<
   const result = await aiComplianceTutorFlow(input);
   // Format the structured output into a single Markdown string for display
   const formattedAnswer = `
-**Résumé :**<br/>
+<b>Résumé :</b><br/>
 ${result.summary}
 <br/><br/>
-**Recommandation :**<br/>
+<b>Recommandation :</b><br/>
 ${result.recommendation}
 <br/><br/>
-**Références :**<br/>
+<b>Références :</b><br/>
 ${result.references}
   `;
   return { answer: formattedAnswer.trim().replace(/\n/g, '<br />') };
