@@ -167,7 +167,7 @@ export default function ReportingPage() {
   }, [reportingUsers, departments, isAdmin, userProfile]);
 
   const heatmapDerivedData = useMemo(() => {
-    // 1. Create a real-time map from quizId to its current category
+    // 1. Create a map from quizId to its category
     const quizIdToCategoryMap = new Map<string, string>();
     allCourses.forEach(course => {
       const quizId = course.quiz?.id || course.quizId;
@@ -176,40 +176,28 @@ export default function ReportingPage() {
       }
     });
 
-    // 2. Define the order and ensure all categories are present
-    const categoryOrder = courseCategories;
-    const allAvailableCategories = new Set(categoryOrder);
-    allCourses.forEach(course => {
-      if (course.category) {
-        allAvailableCategories.add(course.category);
-      }
-    });
-    // Sort based on predefined order, then alphabetically for new ones
-    const heatmapTopics = Array.from(allAvailableCategories).sort((a, b) => {
-        const indexA = categoryOrder.indexOf(a);
-        const indexB = categoryOrder.indexOf(b);
-        if (indexA > -1 && indexB > -1) return indexA - indexB;
-        if (indexA > -1) return -1;
-        if (indexB > -1) return 1;
-        return a.localeCompare(b);
-    });
+    // 2. Use the specified categories as the source of truth for the heatmap columns
+    const heatmapTopics = courseCategories;
 
     if (reportingUsers.length === 0) {
       return { heatmapTopics, heatmapData: [] };
     }
 
-    // 3. Process user scores with the real-time category map
+    // 3. Process user scores using the defined topics
     const heatmapData = reportingUsers.map(user => {
       const scoresByCategory: Record<string, { total: number; count: number }> = {};
-      heatmapTopics.forEach(topic => scoresByCategory[topic] = { total: 0, count: 0 });
+      // Initialize accumulator for each of the required topics
+      heatmapTopics.forEach(topic => {
+        scoresByCategory[topic] = { total: 0, count: 0 };
+      });
 
       if (user.scores) {
         Object.entries(user.scores).forEach(([quizId, score]) => {
-          // Use the real-time map to find the current category
-          const currentCategory = quizIdToCategoryMap.get(quizId);
-          if (currentCategory && scoresByCategory[currentCategory]) {
-            scoresByCategory[currentCategory].total += score;
-            scoresByCategory[currentCategory].count++;
+          const category = quizIdToCategoryMap.get(quizId);
+          // Only consider scores for quizzes that belong to one of the specified heatmap topics
+          if (category && heatmapTopics.includes(category)) {
+            scoresByCategory[category].total += score;
+            scoresByCategory[category].count++;
           }
         });
       }
