@@ -123,15 +123,12 @@ export default function CourseDetailPage() {
   
   // Consolidate quizId logic
   const quizId = useMemo(() => {
-    // Favor the quiz ID from the full currentCourse state if available
-    if(currentCourse?.quiz?.id) return currentCourse.quiz.id;
-    if(currentCourse?.quizId) return currentCourse.quizId;
-    
-    // Fallback to DB or static data if currentCourse isn't set yet
+    // This logic must be robust. Prioritize DB data, then static.
     if (courseFromDb) return courseFromDb.quizId;
     const staticCourse = staticCourses.find(c => c.id === courseId);
+    // Use optional chaining for safety
     return staticCourse?.quiz?.id || staticCourse?.quizId;
-  }, [currentCourse, courseFromDb, courseId]);
+  }, [courseFromDb, courseId]);
 
 
   const quizRef = useMemoFirebase(() => {
