@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import {
@@ -60,14 +61,13 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   };
   
    useEffect(() => {
-    // If the component is already showing results (e.g. after a submission),
-    // do not re-evaluate or reset. This prevents the results screen from flickering.
+    // Do not re-evaluate or reset if we are already showing results from the current session.
     if (showResults) {
       return;
     }
 
     if (!quizId || !userProfile) {
-       // If no quiz or no profile, ensure we are in a clean state
+       // If no quiz or no profile, ensure we are in a clean state and wait.
        setShowResults(false);
        setFinalScore(null);
        setSelectedAnswers({});
@@ -270,13 +270,12 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
             };
 
             const quizPassed = score >= 60;
-            // Get current completedQuizzes array, or initialize if it doesn't exist
             const completedQuizzes = userData.completedQuizzes || [];
             const alreadyPassed = completedQuizzes.includes(quizId);
 
             if (quizPassed && !alreadyPassed) {
                 updates.quizzesPassed = (userData.quizzesPassed || 0) + 1;
-                // Explicitly add the new quizId to the array
+                // Robustly update the completedQuizzes array
                 updates.completedQuizzes = [...completedQuizzes, quizId];
 
                 // Badge logic

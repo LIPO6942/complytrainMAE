@@ -122,7 +122,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   // Effect to subscribe to the user's profile document in Firestore
   useEffect(() => {
     if (!firestore || !userAuthState.user) {
-      // If no user, ensure profile is null
+      // If no user, ensure profile is null and stop.
       if (userAuthState.userProfile !== null) {
           setUserAuthState(prevState => ({ ...prevState, userProfile: null }));
       }
@@ -132,24 +132,25 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     const firebaseUser = userAuthState.user;
     const userDocRef = doc(firestore, 'users', firebaseUser.uid);
     
-    // This effect now only LISTENS for profile changes. Creation is handled at sign-up.
     const unsubscribeProfile = onSnapshot(
       userDocRef,
       (docSnap) => {
         if (docSnap.exists()) {
           setUserAuthState(prevState => ({ ...prevState, userProfile: docSnap.data() as UserProfile }));
         } else {
-          // This case might happen briefly between user creation and doc creation,
-          // or if the document is deleted.
+          // This handles the case where the user is authenticated but the profile document
+          // hasn't been created yet or was deleted.
           setUserAuthState(prevState => ({ ...prevState, userProfile: null }));
         }
       },
       (error) => {
+        console.error("FirebaseProvider: Error fetching user profile:", error);
         // If we can't read the profile, emit a permission error
         errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: userDocRef.path,
             operation: 'get'
         }));
+        setUserAuthState(prevState => ({ ...prevState, userProfile: null }));
       }
     );
 
