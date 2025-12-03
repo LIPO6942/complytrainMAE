@@ -3,7 +3,7 @@
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore, doc, onSnapshot, getDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { Firestore, doc, onSnapshot } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { errorEmitter } from './error-emitter';
@@ -121,8 +121,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   // Effect to subscribe to the user's profile document in Firestore
   useEffect(() => {
+    // If there is no authenticated user, there is no profile to fetch.
     if (!firestore || !userAuthState.user) {
-      // If no user, ensure profile is null and stop.
+      // Ensure profile is null if user logs out.
       if (userAuthState.userProfile !== null) {
           setUserAuthState(prevState => ({ ...prevState, userProfile: null }));
       }
@@ -132,20 +133,22 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     const firebaseUser = userAuthState.user;
     const userDocRef = doc(firestore, 'users', firebaseUser.uid);
     
+    // Set up the real-time listener.
     const unsubscribeProfile = onSnapshot(
       userDocRef,
       (docSnap) => {
         if (docSnap.exists()) {
+          // If the document exists, update the userProfile state.
           setUserAuthState(prevState => ({ ...prevState, userProfile: docSnap.data() as UserProfile }));
         } else {
-          // This handles the case where the user is authenticated but the profile document
-          // hasn't been created yet or was deleted.
+          // If the document does not exist (e.g., new user, or after a reset),
+          // set the userProfile to null.
           setUserAuthState(prevState => ({ ...prevState, userProfile: null }));
         }
       },
       (error) => {
+        // Handle errors, particularly permission errors.
         console.error("FirebaseProvider: Error fetching user profile:", error);
-        // If we can't read the profile, emit a permission error
         errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: userDocRef.path,
             operation: 'get'
@@ -154,6 +157,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       }
     );
 
+    // Clean up the listener when the component unmounts or the user changes.
     return () => unsubscribeProfile();
   }, [firestore, userAuthState.user]);
 

@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import {
@@ -13,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useUser, useFirestore } from '@/firebase';
-import { doc, arrayUnion, runTransaction, increment } from 'firebase/firestore';
+import { doc, runTransaction, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Lock, Award, ShieldQuestion, CheckCircle2, ArrowRight, XCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -40,7 +39,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   const { toast } = useToast();
   const router = useRouter();
 
-  // Use quiz.id as the primary source of truth, fallback to prop
   const quizId = quiz?.id || quizIdProp;
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -61,13 +59,13 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   };
   
    useEffect(() => {
-    // Do not re-evaluate or reset if we are already showing results from the current session.
+    // If we are already showing results from the CURRENT session, do not re-evaluate.
+    // This prevents the results screen from being overridden by the userProfile update.
     if (showResults) {
       return;
     }
-
+    
     if (!quizId || !userProfile) {
-       // If no quiz or no profile, ensure we are in a clean state and wait.
        setShowResults(false);
        setFinalScore(null);
        setSelectedAnswers({});
@@ -80,13 +78,13 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     const userSavedScore = userProfile.scores?.[quizId];
     const userSavedAnswers = userProfile.userAnswers?.[quizId];
     
-    if (userHasPassed && userSavedScore !== undefined && userSavedAnswers !== undefined) {
-      // If the user has already passed, show their results immediately.
+    if (userHasPassed && userSavedScore !== undefined && userSavedAnswers) {
+      // User has already passed this quiz. Show their results immediately.
       setShowResults(true);
       setFinalScore(userSavedScore);
       setSubmittedAnswers(userSavedAnswers);
     } else {
-      // If it's a new quiz attempt, reset the state.
+      // User is taking this quiz for the first time or retrying. Reset to the start.
       setShowResults(false);
       setFinalScore(null);
       setSelectedAnswers({});
@@ -227,13 +225,11 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
         return;
     }
 
-    // Give immediate feedback that submission is being processed
     toast({
         title: "Test soumis",
         description: "Vos réponses ont été enregistrées. Votre score est en cours de calcul.",
     });
 
-    // Save time spent before processing results
     if (onQuizSubmit) {
         onQuizSubmit();
     }
@@ -241,9 +237,9 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     const finalSelectedAnswers = { ...selectedAnswers };
     const score = getScore(finalSelectedAnswers);
 
-    setSubmittedAnswers(finalSelectedAnswers); // Persist selected answers for results view
+    setSubmittedAnswers(finalSelectedAnswers);
     setFinalScore(score);
-    setShowResults(true);
+    setShowResults(true); // Show results immediately
     setNewBadgeEarned(false);
     
     if (!user || !firestore || !quiz) return;
@@ -254,7 +250,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
         await runTransaction(firestore, async (transaction) => {
             const userDoc = await transaction.get(userRef);
             if (!userDoc.exists()) {
-                throw "Document does not exist!";
+                throw "Le document utilisateur n'existe pas !";
             }
             
             const userData = userDoc.data();
@@ -275,17 +271,19 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
 
             if (quizPassed && !alreadyPassed) {
                 updates.quizzesPassed = (userData.quizzesPassed || 0) + 1;
-                // Robustly update the completedQuizzes array
-                updates.completedQuizzes = [...completedQuizzes, quizId];
+                // **Robust Update Logic**
+                const newCompletedQuizzes = [...completedQuizzes, quizId];
+                updates.completedQuizzes = newCompletedQuizzes;
 
                 // Badge logic
-                const newPassedCount = updates.completedQuizzes.length;
+                const newPassedCount = newCompletedQuizzes.length;
                 if (newPassedCount > 0 && newPassedCount % 3 === 0) {
                     const earnedBadges = userData.badges || [];
                     const nextBadge = allBadges.find(b => !earnedBadges.includes(b.id));
 
                     if (nextBadge) {
-                        updates.badges = arrayUnion(nextBadge.id);
+                        // Use the new, robust way to update arrays
+                        updates.badges = [...(earnedBadges), nextBadge.id];
                          setTimeout(() => {
                            toast({
                                 title: "Badge débloqué !",
