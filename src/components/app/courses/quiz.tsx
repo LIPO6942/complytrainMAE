@@ -64,12 +64,18 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   };
   
    useEffect(() => {
-    // This effect now correctly handles displaying previous results or resetting for a new quiz.
-    if (hasAlreadyPassed && savedScore !== undefined && savedAnswers !== undefined) {
+    if (!quizId) return;
+
+    // This logic runs once per quiz to decide the initial state.
+    const userHasPassed = userProfile?.completedQuizzes?.includes(quizId);
+    const userSavedScore = userProfile?.scores?.[quizId];
+    const userSavedAnswers = userProfile?.userAnswers?.[quizId];
+    
+    if (userHasPassed && userSavedScore !== undefined && userSavedAnswers !== undefined) {
       // If the user has already passed, show their results immediately.
       setShowResults(true);
-      setFinalScore(savedScore);
-      setSubmittedAnswers(savedAnswers);
+      setFinalScore(userSavedScore);
+      setSubmittedAnswers(userSavedAnswers);
     } else {
       // If it's a new quiz attempt, reset the state.
       setShowResults(false);
@@ -78,7 +84,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
       setSubmittedAnswers({});
       setCurrentQuestionIndex(0);
     }
-  }, [quizId, hasAlreadyPassed, savedScore, savedAnswers, userProfile]);
+  }, [quizId]);
 
   if (isQuizLoading) {
     return (
