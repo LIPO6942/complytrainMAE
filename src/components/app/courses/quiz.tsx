@@ -60,9 +60,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   };
   
    useEffect(() => {
-    // If we are already showing the results screen after a submission,
-    // do not re-evaluate. This prevents the component from resetting
-    // when the userProfile updates right after a submission.
     if (showResults) {
       return;
     }
@@ -86,7 +83,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
       setSubmittedAnswers({});
       setCurrentQuestionIndex(0);
     }
-  }, [quizId, userProfile]);
+  }, [quizId, userProfile, showResults]);
 
   if (isQuizLoading) {
     return (
@@ -266,20 +263,27 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
                 updates.quizzesPassed = newPassedCount;
                 updates.completedQuizzes = arrayUnion(quizId);
 
+                // Delay the toast to let the UI update first
+                setTimeout(() => {
+                    toast({
+                        title: "Test Réussi !",
+                        description: "Votre progression a été sauvegardée. La carte du cours sera mise à jour."
+                    });
+                }, 500);
+
                 if (newPassedCount > 0 && newPassedCount % 3 === 0) {
                     const earnedBadges = userData.badges || [];
                     const nextBadge = allBadges.find(b => !earnedBadges.includes(b.id));
 
                     if (nextBadge) {
                         updates.badges = arrayUnion(nextBadge.id);
-
                          setTimeout(() => {
                            toast({
                                 title: "Badge débloqué !",
                                 description: `Félicitations, vous avez gagné le badge "${nextBadge.name}" !`,
                             });
                             setNewBadgeEarned(true);
-                         }, 500);
+                         }, 1000);
                     }
                 }
             }

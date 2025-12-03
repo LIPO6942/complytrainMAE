@@ -45,7 +45,8 @@ export default function CoursesPage() {
     
     const visibleStaticCourses = uniqueStaticCourses.filter(c => !hiddenStaticCourses.includes(c.id));
     
-    return [...visibleStaticCourses, ...(dynamicCourses || [])];
+    const combined = [...visibleStaticCourses, ...(dynamicCourses || [])];
+    return combined.sort((a,b) => a.title.localeCompare(b.title));
   }, [dynamicCourses, hiddenStaticCourses]);
 
 
