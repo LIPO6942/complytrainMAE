@@ -60,17 +60,25 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   };
   
    useEffect(() => {
-    // If we are already showing results (e.g. after a submission), don't re-evaluate.
-    // This prevents the results screen from being overridden by this effect.
+    // If the component is already showing results (e.g. after a submission),
+    // do not re-evaluate or reset. This prevents the results screen from flickering.
     if (showResults) {
       return;
     }
-    
-    if (!quizId) return;
 
-    const userHasPassed = userProfile?.completedQuizzes?.includes(quizId);
-    const userSavedScore = userProfile?.scores?.[quizId];
-    const userSavedAnswers = userProfile?.userAnswers?.[quizId];
+    if (!quizId || !userProfile) {
+       // If no quiz or no profile, ensure we are in a clean state
+       setShowResults(false);
+       setFinalScore(null);
+       setSelectedAnswers({});
+       setSubmittedAnswers({});
+       setCurrentQuestionIndex(0);
+       return;
+    };
+
+    const userHasPassed = userProfile.completedQuizzes?.includes(quizId);
+    const userSavedScore = userProfile.scores?.[quizId];
+    const userSavedAnswers = userProfile.userAnswers?.[quizId];
     
     if (userHasPassed && userSavedScore !== undefined && userSavedAnswers !== undefined) {
       // If the user has already passed, show their results immediately.
@@ -258,20 +266,21 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
                 averageScore: newAverage,
                 quizAttempts: increment(1),
                 [`scores.${quizId}`]: score,
-                [`userAnswers.${quizId}`]: finalSelectedAnswers, // Save the answers
+                [`userAnswers.${quizId}`]: finalSelectedAnswers,
             };
 
             const quizPassed = score >= 60;
-            const alreadyPassed = userData.completedQuizzes?.includes(quizId);
+            // Get current completedQuizzes array, or initialize if it doesn't exist
+            const completedQuizzes = userData.completedQuizzes || [];
+            const alreadyPassed = completedQuizzes.includes(quizId);
 
             if (quizPassed && !alreadyPassed) {
-                const currentPassedCount = userData.quizzesPassed || 0;
-                const newPassedCount = currentPassedCount + 1;
-                
-                updates.quizzesPassed = newPassedCount;
-                updates.completedQuizzes = arrayUnion(quizId);
+                updates.quizzesPassed = (userData.quizzesPassed || 0) + 1;
+                // Explicitly add the new quizId to the array
+                updates.completedQuizzes = [...completedQuizzes, quizId];
 
-
+                // Badge logic
+                const newPassedCount = updates.completedQuizzes.length;
                 if (newPassedCount > 0 && newPassedCount % 3 === 0) {
                     const earnedBadges = userData.badges || [];
                     const nextBadge = allBadges.find(b => !earnedBadges.includes(b.id));
