@@ -30,14 +30,17 @@ import {
 } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { allDepartments, allBadges } from '@/lib/data';
-import { Users, BookCheck, Clock, Award } from 'lucide-react';
+import { Users, BookCheck, Clock, Award, Star } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { PerformanceScoreChart } from '@/components/app/admin/performance-score-chart';
+
 
 type UserProfile = {
   id: string;
   departmentId?: string;
   quizzesPassed?: number;
   totalTimeSpent?: number;
+  averageScore?: number;
   badges?: string[];
   role?: string;
 }
@@ -53,6 +56,22 @@ const formatTimeInHours = (seconds: number): string => {
     return `${minutes}m`;
   };
 
+const TARGET_TIME_SPENT_SECONDS = 10 * 3600; // Target engagement time: 10 hours
+
+const calculatePerformanceScore = (user: UserProfile, totalCourses: number) => {
+    const completionPercentage = totalCourses > 0 ? ((user.quizzesPassed || 0) / totalCourses) * 100 : 0;
+    const quizScorePercentage = user.averageScore || 0;
+    const engagementPercentage = Math.min(100, ((user.totalTimeSpent || 0) / TARGET_TIME_SPENT_SECONDS) * 100);
+
+    const weightedScore =
+      (completionPercentage * 0.30) +
+      (quizScorePercentage * 0.25) +
+      (engagementPercentage * 0.45);
+
+    return Math.round(weightedScore);
+};
+
+
 export default function AdminDashboardPage() {
   const { userProfile, isUserLoading: isAuthLoading } = useUser();
   const firestore = useFirestore();
@@ -62,7 +81,6 @@ export default function AdminDashboardPage() {
   }, [isAuthLoading, userProfile]);
 
   const usersQuery = useMemoFirebase(() => {
-    // Only create the query if the user is a confirmed admin.
     if (!firestore || !isAdmin) {
       return null;
     }
@@ -88,6 +106,7 @@ export default function AdminDashboardPage() {
       totalCompletion: 0,
       totalTimeSpent: 0,
       totalBadges: 0,
+      totalPerformanceScore: 0,
     }));
 
     const statsMap = new Map(statsByDept.map(s => [s.id, s]));
@@ -103,6 +122,7 @@ export default function AdminDashboardPage() {
           }
           stat.totalTimeSpent += user.totalTimeSpent || 0;
           stat.totalBadges += user.badges?.length || 0;
+          stat.totalPerformanceScore += calculatePerformanceScore(user, totalCourses);
         }
       }
     });
@@ -112,6 +132,7 @@ export default function AdminDashboardPage() {
         avgCompletion: stat.userCount > 0 ? Math.round(stat.totalCompletion / stat.userCount) : 0,
         avgTimePerUser: stat.userCount > 0 ? formatTimeInHours(stat.totalTimeSpent / stat.userCount) : '0m',
         totalTimeHours: stat.totalTimeSpent / 3600,
+        avgPerformanceScore: stat.userCount > 0 ? Math.round(stat.totalPerformanceScore / stat.userCount) : 0,
       })).filter(stat => stat.userCount > 0);
   }, [nonAdminUsers]);
   
@@ -224,45 +245,35 @@ export default function AdminDashboardPage() {
         </div>
 
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <Card>
-            <CardHeader>
-                <CardTitle>Taux de complétion par département</CardTitle>
-                <CardDescription>Pourcentage moyen de cours terminés par les utilisateurs de chaque département.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={departmentStats}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} fontSize={12} />
-                        <YAxis unit="%" />
-                        <Tooltip formatter={(value: number) => `${value}%`} />
-                        <Legend />
-                        <Bar dataKey="avgCompletion" fill="var(--color-chart-1)" name="Complétion" />
-                    </BarChart>
-                </ResponsiveContainer>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader>
-                <CardTitle>Temps de formation par département (en heures)</CardTitle>
-                <CardDescription>Temps total consacré à la formation par les utilisateurs de chaque département.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={departmentStats}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" angle={
--45} textAnchor="end" height={80} interval={0} fontSize={12} />
-                        <YAxis unit="h" />
-                        <Tooltip formatter={(value: number) => `${value.toFixed(1)}h`} />
-                        <Legend />
-                        <Bar dataKey="totalTimeHours" fill="var(--color-chart-2)" name="Heures" />
-                    </BarChart>
-                </ResponsiveContainer>
-            </CardContent>
-        </Card>
-      </div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Score de Performance par Département</CardTitle>
+                    <CardDescription>Score pondéré (complétion, quiz, engagement) par département.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <PerformanceScoreChart data={departmentStats} />
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Taux de complétion par département</CardTitle>
+                    <CardDescription>Pourcentage moyen de cours terminés par les utilisateurs de chaque département.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={departmentStats}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} fontSize={12} />
+                            <YAxis unit="%" />
+                            <Tooltip formatter={(value: number) => `${value}%`} />
+                            <Legend />
+                            <Bar dataKey="avgCompletion" fill="var(--color-chart-1)" name="Complétion" />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </CardContent>
+            </Card>
+        </div>
 
       <Card>
         <CardHeader>
@@ -277,9 +288,10 @@ export default function AdminDashboardPage() {
               <TableRow>
                 <TableHead>Département / Délégation</TableHead>
                 <TableHead className="text-center">Utilisateurs</TableHead>
-                <TableHead className="w-[200px]">Complétion</TableHead>
-                <TableHead className="text-center">Temps Moyen / Utilisateur</TableHead>
-                <TableHead className="text-right">Badges Obtenus</TableHead>
+                <TableHead className="w-[150px]">Complétion</TableHead>
+                <TableHead className="text-center">Temps Moyen</TableHead>
+                <TableHead className="text-right">Badges</TableHead>
+                <TableHead className="text-right w-[150px]">Score Perf.</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -295,6 +307,12 @@ export default function AdminDashboardPage() {
                         </TableCell>
                         <TableCell className="text-center">{dept.avgTimePerUser}</TableCell>
                         <TableCell className="text-right">{dept.totalBadges}</TableCell>
+                        <TableCell className="text-right">
+                             <div className="flex items-center justify-end gap-2">
+                                <span className="text-sm font-bold">{dept.avgPerformanceScore}</span>
+                                <Star className="h-4 w-4 text-yellow-500" />
+                            </div>
+                        </TableCell>
                     </TableRow>
                 ))}
             </TableBody>
@@ -304,3 +322,5 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    
