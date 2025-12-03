@@ -49,10 +49,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   const [submittedAnswers, setSubmittedAnswers] = useState<Record<number, number[]>>({});
   const [newBadgeEarned, setNewBadgeEarned] = useState(false);
   
-  const hasAlreadyPassed = userProfile?.completedQuizzes?.includes(quizId);
-  const savedScore = userProfile?.scores?.[quizId];
-  const savedAnswers = userProfile?.userAnswers?.[quizId];
-
   const handleNextCourse = () => {
     const currentIndex = allCourses.findIndex(c => c.id === courseId);
     if (currentIndex > -1 && currentIndex < allCourses.length - 1) {
@@ -64,11 +60,14 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   };
   
    useEffect(() => {
+    // If we are already showing the results screen after a submission,
+    // do not re-evaluate. This prevents the component from resetting
+    // when the userProfile updates right after a submission.
+    if (showResults) {
+      return;
+    }
+    
     if (!quizId) return;
-
-    // Do not reset the view if we are already showing results.
-    // This prevents the quiz from restarting right after submission.
-    if (showResults) return;
 
     const userHasPassed = userProfile?.completedQuizzes?.includes(quizId);
     const userSavedScore = userProfile?.scores?.[quizId];
@@ -87,7 +86,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
       setSubmittedAnswers({});
       setCurrentQuestionIndex(0);
     }
-  }, [quizId, userProfile, showResults]);
+  }, [quizId, userProfile]);
 
   if (isQuizLoading) {
     return (
