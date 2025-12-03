@@ -107,8 +107,12 @@ export function AITutor() {
                      <AvatarFallback><Bot size={20}/></AvatarFallback>
                   </Avatar>
                 )}
-                <div className={cn("rounded-lg px-3 py-2 max-w-[80%]", message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
-                  <p className="text-sm">{message.content}</p>
+                <div className={cn("prose prose-sm dark:prose-invert rounded-lg px-3 py-2 max-w-[80%]", message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
+                  {message.role === 'assistant' ? (
+                    <div dangerouslySetInnerHTML={{ __html: message.content }} />
+                  ) : (
+                    <p>{message.content}</p>
+                  )}
                 </div>
                  {message.role === 'user' && (
                   <Avatar className="h-8 w-8">

@@ -26,16 +26,16 @@ export async function aiComplianceTutor(input: AiComplianceTutorInput): Promise<
   const result = await aiComplianceTutorFlow(input);
   // Format the structured output into a single Markdown string for display
   const formattedAnswer = `
-**Résumé :**
+**Résumé :**<br/>
 ${result.summary}
-
-**Recommandation :**
+<br/><br/>
+**Recommandation :**<br/>
 ${result.recommendation}
-
-**Références :**
+<br/><br/>
+**Références :**<br/>
 ${result.references}
   `;
-  return { answer: formattedAnswer.trim() };
+  return { answer: formattedAnswer.trim().replace(/\n/g, '<br />') };
 }
 
 const prompt = ai.definePrompt({
