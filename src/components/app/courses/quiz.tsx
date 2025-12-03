@@ -64,27 +64,21 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   };
   
    useEffect(() => {
-    // Reset state when the quiz changes (e.g., navigating to a new course)
-    // but not when results are shown for the same quiz.
-    setShowResults(false);
-    setFinalScore(null);
-    setSelectedAnswers({});
-    setSubmittedAnswers({});
-    setCurrentQuestionIndex(0);
-  }, [quizId]);
-
-   useEffect(() => {
-    // If the user has already passed this quiz, show their results immediately.
-    // This should only run once when the component loads or the user profile changes.
-    if (hasAlreadyPassed && savedScore !== undefined && !showResults) {
-        setShowResults(true);
-        setFinalScore(savedScore);
-        // Load the previously saved answers for the results view
-        if (savedAnswers) {
-            setSubmittedAnswers(savedAnswers);
-        }
+    // This effect now correctly handles displaying previous results or resetting for a new quiz.
+    if (hasAlreadyPassed && savedScore !== undefined && savedAnswers !== undefined) {
+      // If the user has already passed, show their results immediately.
+      setShowResults(true);
+      setFinalScore(savedScore);
+      setSubmittedAnswers(savedAnswers);
+    } else {
+      // If it's a new quiz attempt, reset the state.
+      setShowResults(false);
+      setFinalScore(null);
+      setSelectedAnswers({});
+      setSubmittedAnswers({});
+      setCurrentQuestionIndex(0);
     }
-  }, [hasAlreadyPassed, savedScore, savedAnswers, quizId]);
+  }, [quizId, hasAlreadyPassed, savedScore, savedAnswers]);
 
   if (isQuizLoading) {
     return (

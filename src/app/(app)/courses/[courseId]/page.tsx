@@ -74,6 +74,15 @@ export default function CourseDetailPage() {
     }
 };
 
+    // Consolidate quizId logic
+    const quizId = useMemo(() => {
+        // This logic must be robust. Prioritize DB data, then static.
+        if (courseFromDb) return courseFromDb.quizId;
+        const staticCourse = staticCourses.find(c => c.id === courseId);
+        // Use optional chaining for safety
+        return staticCourse?.quiz?.id || staticCourse?.quizId;
+    }, [courseFromDb, courseId]);
+
   useEffect(() => {
     lastSaveTimeRef.current = Date.now();
 
@@ -93,7 +102,7 @@ export default function CourseDetailPage() {
             clearInterval(intervalIdRef.current);
         }
     };
-  }, [courseId, user, firestore]);
+  }, [quizId, user, firestore]);
 
   // --- Fetch all courses for "Next Course" navigation ---
   const coursesQuery = useMemoFirebase(() => {
@@ -120,15 +129,6 @@ export default function CourseDetailPage() {
   }, [firestore, courseId]);
 
   const { data: courseFromDb, isLoading: isCourseLoading } = useDoc<Course>(courseRef);
-  
-  // Consolidate quizId logic
-  const quizId = useMemo(() => {
-    // This logic must be robust. Prioritize DB data, then static.
-    if (courseFromDb) return courseFromDb.quizId;
-    const staticCourse = staticCourses.find(c => c.id === courseId);
-    // Use optional chaining for safety
-    return staticCourse?.quiz?.id || staticCourse?.quizId;
-  }, [courseFromDb, courseId]);
 
 
   const quizRef = useMemoFirebase(() => {
