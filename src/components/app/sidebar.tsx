@@ -32,6 +32,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useUser } from '@/firebase';
 import { Badge } from '../ui/badge';
+import { useState } from 'react';
 
 const menuItems = [
   { href: '/dashboard', label: 'Tableau de bord', icon: Home },
@@ -53,12 +54,17 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { userProfile } = useUser();
   const isAdmin = userProfile?.role === 'admin';
+  const [notificationCount, setNotificationCount] = useState(3);
 
   const isActive = (href: string) => {
     return pathname === href;
   };
 
-  const notificationCount = 3;
+  const handleNotificationOpenChange = (open: boolean) => {
+    if (open) {
+      setNotificationCount(0);
+    }
+  };
 
   return (
     <Sidebar>
@@ -124,7 +130,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="p-2">
         <SidebarMenu>
-          <DropdownMenu>
+          <DropdownMenu onOpenChange={handleNotificationOpenChange}>
             <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
                     <Bell />
