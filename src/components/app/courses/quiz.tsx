@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import {
@@ -58,9 +59,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     }
   };
   
-   useEffect(() => {
-    // If we are already showing results from the CURRENT session, do not re-evaluate.
-    // This prevents the results screen from being overridden by the userProfile update.
+  useEffect(() => {
     if (showResults) {
       return;
     }
@@ -74,12 +73,11 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
        return;
     };
 
-    const userHasPassed = userProfile.completedQuizzes?.includes(quizId);
     const userSavedScore = userProfile.scores?.[quizId];
     const userSavedAnswers = userProfile.userAnswers?.[quizId];
     
-    if (userHasPassed && userSavedScore !== undefined && userSavedAnswers) {
-      // User has already passed this quiz. Show their results immediately.
+    if (typeof userSavedScore === 'number' && userSavedAnswers) {
+      // User has already attempted this quiz. Show their results immediately.
       setShowResults(true);
       setFinalScore(userSavedScore);
       setSubmittedAnswers(userSavedAnswers);
@@ -271,7 +269,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
 
             if (quizPassed && !alreadyPassed) {
                 updates.quizzesPassed = (userData.quizzesPassed || 0) + 1;
-                // **Robust Update Logic**
                 const newCompletedQuizzes = [...completedQuizzes, quizId];
                 updates.completedQuizzes = newCompletedQuizzes;
 
@@ -282,7 +279,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
                     const nextBadge = allBadges.find(b => !earnedBadges.includes(b.id));
 
                     if (nextBadge) {
-                        // Use the new, robust way to update arrays
                         updates.badges = [...(earnedBadges), nextBadge.id];
                          setTimeout(() => {
                            toast({

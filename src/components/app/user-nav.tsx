@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Avatar,
@@ -25,7 +26,9 @@ export function UserNav() {
   const auth = useAuth();
 
   const handleSignOut = async () => {
-    await signOut(auth);
+    if (auth) {
+      await signOut(auth);
+    }
   };
 
   const getInitials = (email: string | null | undefined) => {

@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { collection } from 'firebase/firestore';
 import { DeleteCourseDialog } from '@/components/app/courses/delete-course-dialog';
 import { Button } from '@/components/ui/button';
-import { Trash2, CheckCircle } from 'lucide-react';
+import { Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { AddCourseDialog } from '@/components/app/courses/add-course-dialog';
 import { staticCourses, type Course } from '@/lib/quiz-data';
 import { getGoogleDriveImageUrl } from '@/lib/utils';
@@ -82,15 +82,25 @@ export default function CoursesPage() {
                     const imageUrl = getImageUrl(course.image);
                     const isStatic = 'isStatic' in course && course.isStatic;
                     const quizId = course.quiz?.id || course.quizId;
-                    const hasPassed = userProfile?.completedQuizzes?.includes(quizId as string);
+                    
+                    const score = userProfile?.scores?.[quizId as string];
+                    const hasAttempted = typeof score === 'number';
+                    const hasPassed = hasAttempted && score >= 60;
+                    
+                    const borderClass = hasAttempted 
+                        ? (hasPassed ? "border-green-600/50" : "border-red-600/50") 
+                        : "";
 
                     return (
-                      <Card key={course.id} className={cn("flex flex-col w-full group/card relative transition-all", hasPassed && "border-green-600/50")}>
-                           {hasPassed && (
-                            <div className="absolute top-2 left-2 z-10 p-1.5 bg-green-600 text-white rounded-full">
-                                <CheckCircle className="h-4 w-4" />
-                            </div>
-                          )}
+                      <Card key={course.id} className={cn("flex flex-col w-full group/card relative transition-all", borderClass)}>
+                           {hasAttempted && (
+                                <div className={cn(
+                                    "absolute top-2 left-2 z-10 p-1.5 text-white rounded-full",
+                                    hasPassed ? "bg-green-600" : "bg-red-600"
+                                )}>
+                                    {hasPassed ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                                </div>
+                            )}
                           <Link href={`/courses/${course.id}`} className="flex flex-col w-full h-full hover:border-primary transition-colors">
                             <CardHeader>
                             <div className="relative h-40 w-full mb-4">
@@ -102,7 +112,7 @@ export default function CoursesPage() {
                                     className="rounded-lg object-cover"
                                 />
                                 )}
-                                {hasPassed && (
+                                {hasAttempted && (
                                     <div className="absolute inset-0 bg-background/50 rounded-lg"></div>
                                 )}
                             </div>
