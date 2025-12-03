@@ -14,7 +14,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Badge } from '@/components/ui/badge';
 import { Quiz } from '@/components/app/courses/quiz';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Pencil, BookOpenCheck } from 'lucide-react';
 import { EditCourseForm } from '@/components/app/courses/edit-course-form';
@@ -41,6 +41,7 @@ function VideoPlayer({ url }: { url: string }) {
 
 export default function CourseDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const courseId = params.courseId as string;
   const firestore = useFirestore();
   const { user, userProfile } = useUser();
@@ -87,6 +88,11 @@ export default function CourseDetailPage() {
         });
         lastSaveTimeRef.current = now; // Reset timer after saving
     }
+  };
+
+  const handleQuizSubmit = () => {
+    saveTimeSpent();
+    router.refresh();
   };
 
   useEffect(() => {
@@ -310,7 +316,7 @@ export default function CourseDetailPage() {
             isLocked={isQuizLocked}
             isStatic={isStatic}
             allCourses={allCourses}
-            onQuizSubmit={saveTimeSpent}
+            onQuizSubmit={handleQuizSubmit}
         />
       </div>
     </div>
