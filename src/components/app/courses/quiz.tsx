@@ -78,7 +78,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
       setSubmittedAnswers({});
       setCurrentQuestionIndex(0);
     }
-  }, [quizId, hasAlreadyPassed, savedScore, savedAnswers]);
+  }, [quizId, hasAlreadyPassed, savedScore, savedAnswers, userProfile]);
 
   if (isQuizLoading) {
     return (
