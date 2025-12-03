@@ -39,6 +39,11 @@ export const courseCategories = [
     "LAB/FT",
     "KYC",
     "RGPD",
+    "Fraude",
+    "Sanctions Internationales",
+    "Conformité Assurance",
+    "Quiz Thématique",
+    "QCM (réponse multiple)"
 ];
 
 const quizTypes = [

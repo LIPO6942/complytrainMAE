@@ -167,56 +167,67 @@ export default function ReportingPage() {
   }, [reportingUsers, departments, isAdmin, userProfile]);
 
   const heatmapDerivedData = useMemo(() => {
-    const quizIdToCategory: Record<string, string> = {};
+    // 1. Create a real-time map from quizId to its current category
+    const quizIdToCategoryMap = new Map<string, string>();
     allCourses.forEach(course => {
       const quizId = course.quiz?.id || course.quizId;
       if (quizId && course.category) {
-        quizIdToCategory[quizId] = course.category;
+        quizIdToCategoryMap.set(quizId, course.category);
       }
     });
-  
-    // Dynamically get all unique categories from the courses and merge with predefined ones.
-    const allAvailableCategories = new Set(courseCategories);
+
+    // 2. Define the order and ensure all categories are present
+    const categoryOrder = courseCategories;
+    const allAvailableCategories = new Set(categoryOrder);
     allCourses.forEach(course => {
       if (course.category) {
         allAvailableCategories.add(course.category);
       }
     });
-  
-    const heatmapTopics = Array.from(allAvailableCategories).sort();
-    
+    // Sort based on predefined order, then alphabetically for new ones
+    const heatmapTopics = Array.from(allAvailableCategories).sort((a, b) => {
+        const indexA = categoryOrder.indexOf(a);
+        const indexB = categoryOrder.indexOf(b);
+        if (indexA > -1 && indexB > -1) return indexA - indexB;
+        if (indexA > -1) return -1;
+        if (indexB > -1) return 1;
+        return a.localeCompare(b);
+    });
+
     if (reportingUsers.length === 0) {
       return { heatmapTopics, heatmapData: [] };
     }
-  
+
+    // 3. Process user scores with the real-time category map
     const heatmapData = reportingUsers.map(user => {
       const scoresByCategory: Record<string, { total: number; count: number }> = {};
       heatmapTopics.forEach(topic => scoresByCategory[topic] = { total: 0, count: 0 });
-  
+
       if (user.scores) {
         Object.entries(user.scores).forEach(([quizId, score]) => {
-          const category = quizIdToCategory[quizId];
-          if (category && scoresByCategory[category]) {
-            scoresByCategory[category].total += score;
-            scoresByCategory[category].count++;
+          // Use the real-time map to find the current category
+          const currentCategory = quizIdToCategoryMap.get(quizId);
+          if (currentCategory && scoresByCategory[currentCategory]) {
+            scoresByCategory[currentCategory].total += score;
+            scoresByCategory[currentCategory].count++;
           }
         });
       }
-  
+
       const userHeatmapRow: { user: string; [key: string]: string | number } = {
         user: user.firstName || user.email,
       };
-  
+
       heatmapTopics.forEach(topic => {
         const categoryData = scoresByCategory[topic];
         userHeatmapRow[topic] = categoryData.count > 0 
           ? Math.round(categoryData.total / categoryData.count) 
           : "N/A";
       });
-  
+
       return userHeatmapRow;
     });
-  
+
     return { heatmapTopics, heatmapData };
   }, [reportingUsers, allCourses]);
   
