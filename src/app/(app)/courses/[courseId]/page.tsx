@@ -55,9 +55,24 @@ export default function CourseDetailPage() {
   // Time tracking logic
   const lastSaveTimeRef = useRef<number>(Date.now());
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const courseRef = useMemoFirebase(() => {
+    if (!firestore || !courseId) return null;
+    return doc(firestore, 'courses', courseId);
+  }, [firestore, courseId]);
+
+  const { data: courseFromDb, isLoading: isCourseLoading } = useDoc<Course>(courseRef);
+
+  // Consolidate quizId logic
+  const quizId = useMemo(() => {
+      // This logic must be robust. Prioritize DB data, then static.
+      if (courseFromDb) return courseFromDb.quizId;
+      const staticCourse = staticCourses.find(c => c.id === courseId);
+      // Use optional chaining for safety
+      return staticCourse?.quiz?.id || staticCourse?.quizId;
+  }, [courseFromDb, courseId]);
 
   const saveTimeSpent = () => {
-    // Critical check: Ensure user and firestore objects are available.
     if (!user || !firestore) {
       return;
     }
@@ -72,32 +87,21 @@ export default function CourseDetailPage() {
         });
         lastSaveTimeRef.current = now; // Reset timer after saving
     }
-};
-
-    // Consolidate quizId logic
-    const quizId = useMemo(() => {
-        // This logic must be robust. Prioritize DB data, then static.
-        if (courseFromDb) return courseFromDb.quizId;
-        const staticCourse = staticCourses.find(c => c.id === courseId);
-        // Use optional chaining for safety
-        return staticCourse?.quiz?.id || staticCourse?.quizId;
-    }, [courseFromDb, courseId]);
+  };
 
   useEffect(() => {
     lastSaveTimeRef.current = Date.now();
 
-    // Clear any existing interval
     if (intervalIdRef.current) {
         clearInterval(intervalIdRef.current);
     }
     
-    // Save progress every 60 seconds
     intervalIdRef.current = setInterval(() => {
         saveTimeSpent();
     }, 60000); 
     
-    // Cleanup interval on component unmount
     return () => {
+        saveTimeSpent();
         if (intervalIdRef.current) {
             clearInterval(intervalIdRef.current);
         }
@@ -120,16 +124,6 @@ export default function CourseDetailPage() {
     }
   }, [dynamicCourses, isLoadingCourses]);
   // --- End of fetching all courses ---
-
-
-  const courseRef = useMemoFirebase(() => {
-    if (!firestore || !courseId) return null;
-    // We always check firestore first
-    return doc(firestore, 'courses', courseId);
-  }, [firestore, courseId]);
-
-  const { data: courseFromDb, isLoading: isCourseLoading } = useDoc<Course>(courseRef);
-
 
   const quizRef = useMemoFirebase(() => {
     if (!firestore || !courseId || !quizId || !courseFromDb) return null;
