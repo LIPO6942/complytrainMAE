@@ -51,16 +51,16 @@ export default function SettingsPage() {
   const isAdmin = userProfile?.role === 'admin';
   const isSiegeUser = userProfile?.agencyCode === 'SIEGE';
   
-  const defaultPreferences = {
+  const defaultPreferences = useMemo(() => ({
     email: true,
     newCourses: true,
     courseUpdates: true,
     quizReminders: true,
-  };
+  }), []);
 
   const notificationPreferences = useMemo(() => {
       return { ...defaultPreferences, ...userProfile?.notificationPreferences };
-  }, [userProfile?.notificationPreferences]);
+  }, [userProfile?.notificationPreferences, defaultPreferences]);
 
 
   useEffect(() => {
@@ -98,17 +98,16 @@ export default function SettingsPage() {
     });
   };
 
-  const handleNotificationChange = (key: string, value: boolean) => {
+  const handleNotificationChange = (key: keyof typeof defaultPreferences, value: boolean) => {
     if (!user || !firestore) return;
 
     const userRef = doc(firestore, 'users', user.uid);
-    const newPreferences = {
-        ...notificationPreferences,
-        [key]: value
-    };
+    
+    // We construct the update path using dot notation for Firestore
+    const updatePath = `notificationPreferences.${key}`;
 
     updateDocumentNonBlocking(userRef, {
-        notificationPreferences: newPreferences
+        [updatePath]: value
     });
     
     toast({
@@ -452,5 +451,7 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
 
     
