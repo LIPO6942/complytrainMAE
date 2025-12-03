@@ -60,6 +60,8 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
   };
   
    useEffect(() => {
+    // If we are already showing results (e.g. after a submission), don't re-evaluate.
+    // This prevents the results screen from being overridden by this effect.
     if (showResults) {
       return;
     }
@@ -83,7 +85,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
       setSubmittedAnswers({});
       setCurrentQuestionIndex(0);
     }
-  }, [quizId, userProfile, showResults]);
+  }, [quizId, userProfile]);
 
   if (isQuizLoading) {
     return (
@@ -217,6 +219,12 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
         return;
     }
 
+    // Give immediate feedback that submission is being processed
+    toast({
+        title: "Test soumis",
+        description: "Vos réponses ont été enregistrées. Votre score est en cours de calcul.",
+    });
+
     // Save time spent before processing results
     if (onQuizSubmit) {
         onQuizSubmit();
@@ -263,13 +271,6 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
                 updates.quizzesPassed = newPassedCount;
                 updates.completedQuizzes = arrayUnion(quizId);
 
-                // Delay the toast to let the UI update first
-                setTimeout(() => {
-                    toast({
-                        title: "Test Réussi !",
-                        description: "Votre progression a été sauvegardée. La carte du cours sera mise à jour."
-                    });
-                }, 500);
 
                 if (newPassedCount > 0 && newPassedCount % 3 === 0) {
                     const earnedBadges = userData.badges || [];
@@ -293,7 +294,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     } catch (e) {
         console.error("Transaction failed: ", e);
         toast({
-            title: "Erreur",
+            title: "Erreur de sauvegarde",
             description: "Impossible de sauvegarder votre score. Veuillez réessayer.",
             variant: "destructive"
         });
