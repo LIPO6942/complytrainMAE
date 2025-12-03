@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Card,
@@ -360,6 +361,13 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex items-center justify-between space-x-4 rounded-md border p-4">
                     <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium leading-none">Notification de mise à jour d’un cours</p>
+                        <p className="text-sm text-muted-foreground">Être notifié lorsqu'un cours que vous suivez est mis à jour.</p>
+                    </div>
+                    <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between space-x-4 rounded-md border p-4">
+                    <div className="flex-1 space-y-1">
                         <p className="text-sm font-medium leading-none">Rappels de quiz</p>
                         <p className="text-sm text-muted-foreground">Recevoir des rappels pour les quiz non terminés.</p>
                     </div>
@@ -400,3 +408,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
