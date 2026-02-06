@@ -5,7 +5,6 @@ import React, { DependencyList, createContext, useContext, ReactNode, useMemo, u
 import { FirebaseApp } from 'firebase/app';
 import { Firestore, doc, onSnapshot } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { errorEmitter } from './error-emitter';
 import { FirestorePermissionError } from './errors';
 
@@ -131,14 +130,14 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     if (!firestore || !userAuthState.user) {
       // Ensure profile is null if user logs out.
       if (userAuthState.userProfile !== null) {
-          setUserAuthState(prevState => ({ ...prevState, userProfile: null }));
+        setUserAuthState(prevState => ({ ...prevState, userProfile: null }));
       }
       return;
     }
-    
+
     const firebaseUser = userAuthState.user;
     const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-    
+
     // Set up the real-time listener.
     const unsubscribeProfile = onSnapshot(
       userDocRef,
@@ -156,8 +155,8 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         // Handle errors, particularly permission errors.
         console.error("FirebaseProvider: Error fetching user profile:", error);
         errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: userDocRef.path,
-            operation: 'get'
+          path: userDocRef.path,
+          operation: 'get'
         }));
         setUserAuthState(prevState => ({ ...prevState, userProfile: null }));
       }
@@ -185,7 +184,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   return (
     <FirebaseContext.Provider value={contextValue}>
-      <FirebaseErrorListener />
       {children}
     </FirebaseContext.Provider>
   );
@@ -235,13 +233,13 @@ export const useFirebaseApp = (): FirebaseApp => {
   return firebaseApp;
 };
 
-type MemoFirebase <T> = T & {__memo?: boolean};
+type MemoFirebase<T> = T & { __memo?: boolean };
 
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | (MemoFirebase<T>) {
   const memoized = useMemo(factory, deps);
-  
-  if(typeof memoized !== 'object' || memoized === null) return memoized;
+
+  if (typeof memoized !== 'object' || memoized === null) return memoized;
   (memoized as MemoFirebase<T>).__memo = true;
-  
+
   return memoized;
 }
