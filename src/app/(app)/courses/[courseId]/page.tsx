@@ -123,7 +123,7 @@ export default function CourseDetailPage() {
   }, [saveTimeSpent]);
 
   // --- Fetch all courses for "Next Course" navigation ---
-  const coursesQuery = useMemoFirebase(() => {
+  const coursesQuery = useMemo(() => {
     if (!firestore) return null;
     return collection(firestore, 'courses');
   }, [firestore]);
@@ -139,7 +139,7 @@ export default function CourseDetailPage() {
   }, [dynamicCourses, isLoadingCourses]);
   // --- End of fetching all courses ---
 
-  const quizRef = useMemoFirebase(() => {
+  const quizRef = useMemo(() => {
     if (!firestore || !courseId || !quizId || !courseFromDb) return null;
     // If the course is static, we don't fetch its quiz from DB
     if (!courseFromDb && staticCourses.some(c => c.id === courseId)) return null;
