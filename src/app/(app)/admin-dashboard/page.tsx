@@ -1,7 +1,7 @@
 
 'use client';
 import { useMemo } from 'react';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useUser } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import {
   Card,
@@ -11,22 +11,22 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
 import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { allDepartments, allBadges } from '@/lib/data';
@@ -47,28 +47,28 @@ type UserProfile = {
 
 // Helper to format time from seconds to a readable string like '120h 30m'
 const formatTimeInHours = (seconds: number): string => {
-    if (isNaN(seconds) || seconds < 0) return "0h";
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    if (hours > 0) {
-      return `${hours}h ${minutes > 0 ? `${minutes}m` : ''}`.trim();
-    }
-    return `${minutes}m`;
-  };
+  if (isNaN(seconds) || seconds < 0) return "0h";
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (hours > 0) {
+    return `${hours}h ${minutes > 0 ? `${minutes}m` : ''}`.trim();
+  }
+  return `${minutes}m`;
+};
 
 const TARGET_TIME_SPENT_SECONDS = 10 * 3600; // Target engagement time: 10 hours
 
 const calculatePerformanceScore = (user: UserProfile, totalCourses: number) => {
-    const completionPercentage = totalCourses > 0 ? ((user.quizzesPassed || 0) / totalCourses) * 100 : 0;
-    const quizScorePercentage = user.averageScore || 0;
-    const engagementPercentage = Math.min(100, ((user.totalTimeSpent || 0) / TARGET_TIME_SPENT_SECONDS) * 100);
+  const completionPercentage = totalCourses > 0 ? ((user.quizzesPassed || 0) / totalCourses) * 100 : 0;
+  const quizScorePercentage = user.averageScore || 0;
+  const engagementPercentage = Math.min(100, ((user.totalTimeSpent || 0) / TARGET_TIME_SPENT_SECONDS) * 100);
 
-    const weightedScore =
-      (completionPercentage * 0.30) +
-      (quizScorePercentage * 0.25) +
-      (engagementPercentage * 0.45);
+  const weightedScore =
+    (completionPercentage * 0.30) +
+    (quizScorePercentage * 0.25) +
+    (engagementPercentage * 0.45);
 
-    return Math.round(weightedScore);
+  return Math.round(weightedScore);
 };
 
 
@@ -80,7 +80,7 @@ export default function AdminDashboardPage() {
     return !isAuthLoading && userProfile?.role === 'admin';
   }, [isAuthLoading, userProfile]);
 
-  const usersQuery = useMemoFirebase(() => {
+  const usersQuery = useMemo(() => {
     if (!firestore || !isAdmin) {
       return null;
     }
@@ -118,7 +118,7 @@ export default function AdminDashboardPage() {
           stat.userCount++;
           const userCompletion = user.quizzesPassed || 0;
           if (totalCourses > 0) {
-              stat.totalCompletion += (userCompletion / totalCourses) * 100;
+            stat.totalCompletion += (userCompletion / totalCourses) * 100;
           }
           stat.totalTimeSpent += user.totalTimeSpent || 0;
           stat.totalBadges += user.badges?.length || 0;
@@ -126,16 +126,16 @@ export default function AdminDashboardPage() {
         }
       }
     });
-    
+
     return Array.from(statsMap.values()).map(stat => ({
-        ...stat,
-        avgCompletion: stat.userCount > 0 ? Math.round(stat.totalCompletion / stat.userCount) : 0,
-        avgTimePerUser: stat.userCount > 0 ? formatTimeInHours(stat.totalTimeSpent / stat.userCount) : '0m',
-        totalTimeHours: stat.totalTimeSpent / 3600,
-        avgPerformanceScore: stat.userCount > 0 ? Math.round(stat.totalPerformanceScore / stat.userCount) : 0,
-      })).filter(stat => stat.userCount > 0);
+      ...stat,
+      avgCompletion: stat.userCount > 0 ? Math.round(stat.totalCompletion / stat.userCount) : 0,
+      avgTimePerUser: stat.userCount > 0 ? formatTimeInHours(stat.totalTimeSpent / stat.userCount) : '0m',
+      totalTimeHours: stat.totalTimeSpent / 3600,
+      avgPerformanceScore: stat.userCount > 0 ? Math.round(stat.totalPerformanceScore / stat.userCount) : 0,
+    })).filter(stat => stat.userCount > 0);
   }, [nonAdminUsers]);
-  
+
   const overallStats = useMemo(() => {
     if (!nonAdminUsers) return { totalUsers: 0, avgCompletion: 0, totalTime: '0h', totalBadges: 0 };
 
@@ -145,12 +145,12 @@ export default function AdminDashboardPage() {
     let totalBadgesSum = 0;
 
     nonAdminUsers.forEach(user => {
-        const userCompletion = user.quizzesPassed || 0;
-        if (totalCourses > 0) {
-            totalCompletionSum += (userCompletion / totalCourses) * 100;
-        }
-        totalTimeSum += user.totalTimeSpent || 0;
-        totalBadgesSum += user.badges?.length || 0;
+      const userCompletion = user.quizzesPassed || 0;
+      if (totalCourses > 0) {
+        totalCompletionSum += (userCompletion / totalCourses) * 100;
+      }
+      totalTimeSum += user.totalTimeSpent || 0;
+      totalBadgesSum += user.badges?.length || 0;
     });
 
     return {
@@ -165,17 +165,17 @@ export default function AdminDashboardPage() {
 
   if (isAuthLoading) {
     return (
-        <div className="space-y-6">
-            <Skeleton className="h-8 w-1/3" />
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-28" />)}
-            </div>
-            <div className="grid gap-6 md:grid-cols-2">
-                 <Skeleton className="h-80" />
-                 <Skeleton className="h-80" />
-            </div>
-            <Skeleton className="h-96" />
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-1/3" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28" />)}
         </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Skeleton className="h-80" />
+          <Skeleton className="h-80" />
+        </div>
+        <Skeleton className="h-96" />
+      </div>
     )
   }
 
@@ -203,77 +203,77 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Utilisateurs Actifs</CardTitle>
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{overallStats.totalUsers}</div>
-                    <p className="text-xs text-muted-foreground">
-                        (Administrateurs exclus)
-                    </p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Complétion Moyenne</CardTitle>
-                    <BookCheck className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{overallStats.avgCompletion}%</div>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Temps de Formation Total</CardTitle>
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{overallStats.totalTime}</div>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Badges Obtenus</CardTitle>
-                    <Award className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{overallStats.totalBadges}</div>
-                </CardContent>
-            </Card>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Utilisateurs Actifs</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{overallStats.totalUsers}</div>
+            <p className="text-xs text-muted-foreground">
+              (Administrateurs exclus)
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Complétion Moyenne</CardTitle>
+            <BookCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{overallStats.avgCompletion}%</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Temps de Formation Total</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{overallStats.totalTime}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Badges Obtenus</CardTitle>
+            <Award className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{overallStats.totalBadges}</div>
+          </CardContent>
+        </Card>
+      </div>
 
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Score de Performance par Département</CardTitle>
-                    <CardDescription>Score pondéré (complétion, quiz, engagement) par département.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <PerformanceScoreChart data={departmentStats} />
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Taux de complétion par département</CardTitle>
-                    <CardDescription>Pourcentage moyen de cours terminés par les utilisateurs de chaque département.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={departmentStats}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} fontSize={12} />
-                            <YAxis unit="%" />
-                            <Tooltip formatter={(value: number) => `${value}%`} />
-                            <Legend />
-                            <Bar dataKey="avgCompletion" fill="var(--color-chart-1)" name="Complétion" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </CardContent>
-            </Card>
-        </div>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Score de Performance par Département</CardTitle>
+            <CardDescription>Score pondéré (complétion, quiz, engagement) par département.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PerformanceScoreChart data={departmentStats} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Taux de complétion par département</CardTitle>
+            <CardDescription>Pourcentage moyen de cours terminés par les utilisateurs de chaque département.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={departmentStats}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} fontSize={12} />
+                <YAxis unit="%" />
+                <Tooltip formatter={(value: number) => `${value}%`} />
+                <Legend />
+                <Bar dataKey="avgCompletion" fill="var(--color-chart-1)" name="Complétion" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
 
       <Card>
         <CardHeader>
@@ -295,26 +295,26 @@ export default function AdminDashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-                {departmentStats.map((dept) => (
-                    <TableRow key={dept.id}>
-                        <TableCell className="font-medium">{dept.name}</TableCell>
-                        <TableCell className="text-center">{dept.userCount}</TableCell>
-                        <TableCell>
-                            <div className="flex items-center gap-2">
-                                <Progress value={dept.avgCompletion} className="h-2" />
-                                <span className="text-xs font-semibold">{dept.avgCompletion}%</span>
-                            </div>
-                        </TableCell>
-                        <TableCell className="text-center">{dept.avgTimePerUser}</TableCell>
-                        <TableCell className="text-right">{dept.totalBadges}</TableCell>
-                        <TableCell className="text-right">
-                             <div className="flex items-center justify-end gap-2">
-                                <span className="text-sm font-bold">{dept.avgPerformanceScore}</span>
-                                <Star className="h-4 w-4 text-yellow-500" />
-                            </div>
-                        </TableCell>
-                    </TableRow>
-                ))}
+              {departmentStats.map((dept) => (
+                <TableRow key={dept.id}>
+                  <TableCell className="font-medium">{dept.name}</TableCell>
+                  <TableCell className="text-center">{dept.userCount}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Progress value={dept.avgCompletion} className="h-2" />
+                      <span className="text-xs font-semibold">{dept.avgCompletion}%</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">{dept.avgTimePerUser}</TableCell>
+                  <TableCell className="text-right">{dept.totalBadges}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="text-sm font-bold">{dept.avgPerformanceScore}</span>
+                      <Star className="h-4 w-4 text-yellow-500" />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </CardContent>
@@ -323,4 +323,3 @@ export default function AdminDashboardPage() {
   );
 }
 
-    

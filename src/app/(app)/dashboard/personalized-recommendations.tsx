@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { personalizedRiskRecommendations, type PersonalizedRiskRecommendationsOutput } from '@/ai/flows/personalized-risk-recommendations';
 import { BookMarked, Target, AlertTriangle, ArrowRight } from 'lucide-react';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useCollection } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { collection } from 'firebase/firestore';
 import { staticCourses, type Course } from '@/lib/quiz-data';
@@ -27,7 +27,7 @@ export function PersonalizedRecommendations() {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch dynamic courses
-  const coursesQuery = useMemoFirebase(() => {
+  const coursesQuery = useMemo(() => {
     if (!firestore) return null;
     return collection(firestore, 'courses');
   }, [firestore]);
@@ -52,7 +52,7 @@ export function PersonalizedRecommendations() {
       if (isUserLoading || isLoadingCourses) {
         return;
       }
-      
+
       // If no profile or no courses, stop.
       if (!userProfile || allCourses.length === 0) {
         setIsLoading(false);
@@ -61,7 +61,7 @@ export function PersonalizedRecommendations() {
 
       setIsLoading(true);
       setError(null);
-      
+
       const riskProfileParts = [
         `Département: ${userProfile.departmentId || 'Non assigné'}`,
         `Score moyen: ${userProfile.averageScore?.toFixed(0) ?? 'N/A'}%`,
@@ -76,9 +76,9 @@ export function PersonalizedRecommendations() {
         });
 
         if (result && result.recommendations) {
-            setRecommendations(result.recommendations);
+          setRecommendations(result.recommendations);
         } else {
-            setRecommendations([]);
+          setRecommendations([]);
         }
       } catch (e) {
         console.error("Failed to fetch personalized recommendations:", e);
@@ -106,11 +106,11 @@ export function PersonalizedRecommendations() {
       </CardHeader>
       <CardContent>
         {showSkeleton && (
-            <div className="space-y-3">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-            </div>
+          <div className="space-y-3">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
         )}
         {!showSkeleton && error && (
           <div className="flex flex-col items-center justify-center text-center text-muted-foreground bg-muted/50 p-4 rounded-lg">
@@ -135,7 +135,7 @@ export function PersonalizedRecommendations() {
           </div>
         )}
         {!showSkeleton && !error && recommendations.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center p-4">Aucune recommandation pour le moment.</p>
+          <p className="text-sm text-muted-foreground text-center p-4">Aucune recommandation pour le moment.</p>
         )}
       </CardContent>
     </Card>

@@ -1,20 +1,20 @@
 'use client';
-import { useCollection, useFirestore, useUser, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useUser, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from '@/components/ui/table';
 import {
     Select,
@@ -22,7 +22,7 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-  } from "@/components/ui/select"
+} from "@/components/ui/select"
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -59,20 +59,20 @@ export default function UsersPage() {
     const isAdmin = userProfile?.role === 'admin';
     const [editingAgencyCodes, setEditingAgencyCodes] = useState<Record<string, string>>({});
 
-    const usersQuery = useMemoFirebase(() => {
+    const usersQuery = useMemo(() => {
         if (!firestore || !isAdmin) return null;
         return collection(firestore, 'users');
     }, [firestore, isAdmin]);
 
     const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
 
-    const invitationsQuery = useMemoFirebase(() => {
+    const invitationsQuery = useMemo(() => {
         if (!firestore || !isAdmin) return null;
         return collection(firestore, 'invitations');
     }, [firestore, isAdmin]);
 
     const { data: invitations, isLoading: isLoadingInvitations } = useCollection<Invitation>(invitationsQuery);
-    
+
     const allUsersAndInvites = useMemo(() => {
         const combined = new Map<string, any>();
         const registeredEmails = new Set<string>();
@@ -80,17 +80,17 @@ export default function UsersPage() {
         // Add registered users first, they have priority
         (users || []).forEach(user => {
             if (user.email) {
-              combined.set(user.email, {
-                  id: user.id,
-                  email: user.email,
-                  role: user.role,
-                  departmentId: user.departmentId,
-                  agencyCode: user.agencyCode,
-                  status: 'registered',
-                  lastSignInTime: user.lastSignInTime,
-                  isRegistered: true,
-              });
-              registeredEmails.add(user.email);
+                combined.set(user.email, {
+                    id: user.id,
+                    email: user.email,
+                    role: user.role,
+                    departmentId: user.departmentId,
+                    agencyCode: user.agencyCode,
+                    status: 'registered',
+                    lastSignInTime: user.lastSignInTime,
+                    isRegistered: true,
+                });
+                registeredEmails.add(user.email);
             }
         });
 
@@ -121,7 +121,7 @@ export default function UsersPage() {
         if (!firestore) return;
         const userRef = doc(firestore, 'users', userId);
         const payload: { [key: string]: any } = { [field]: value };
-        
+
         // If changing to a siege department, clear the agency code.
         if (field === 'departmentId' && siegeDepartmentIds.has(value)) {
             payload.agencyCode = '';
@@ -187,20 +187,20 @@ export default function UsersPage() {
                 <AddUserDialog />
             </CardHeader>
             <CardContent>
-                 <Table>
+                <Table>
                     <TableHeader>
                         <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Statut</TableHead>
-                        <TableHead>Dernière connexion</TableHead>
-                        <TableHead>Département / Délégation</TableHead>
-                        <TableHead>Code Agence</TableHead>
-                        <TableHead className="text-right">Rôle</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Statut</TableHead>
+                            <TableHead>Dernière connexion</TableHead>
+                            <TableHead>Département / Délégation</TableHead>
+                            <TableHead>Code Agence</TableHead>
+                            <TableHead className="text-right">Rôle</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {isLoading && Array.from({ length: 3 }).map((_, i) => (
-                             <TableRow key={i}>
+                            <TableRow key={i}>
                                 <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
                                 <TableCell><Skeleton className="h-6 w-[100px]" /></TableCell>
                                 <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
@@ -214,73 +214,74 @@ export default function UsersPage() {
                             const canEditAgencyCode = user.isRegistered && !isSiegeDept;
 
                             return (
-                            <TableRow key={user.id}>
-                                <TableCell className="font-medium">{user.email}</TableCell>
-                                <TableCell>
-                                    {user.isRegistered ? (
-                                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                                            Inscrit
-                                        </Badge>
-                                    ) : (
-                                         <Badge variant="outline">
-                                            En attente
-                                        </Badge>
-                                    )}
-                                </TableCell>
-                                <TableCell className="text-muted-foreground">
-                                    {user.isRegistered && user.lastSignInTime 
-                                        ? formatDistanceToNow(new Date(user.lastSignInTime), { addSuffix: true, locale: fr }) 
-                                        : '—'}
-                                </TableCell>
-                                <TableCell>
-                                     <Select 
-                                        value={user.departmentId} 
-                                        onValueChange={(newDeptId: string) => handleFieldChange(user.id, 'departmentId', newDeptId)}
-                                        disabled={!user.isRegistered}
-                                    >
-                                        <SelectTrigger className="w-[220px]">
-                                            <SelectValue placeholder="Non assigné" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {allDepartments.map(dept => (
-                                                <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </TableCell>
-                                <TableCell>
-                                     {canEditAgencyCode ? (
-                                        <Input
-                                            type="text"
-                                            value={editingAgencyCodes[user.id] ?? user.agencyCode ?? ''}
-                                            onChange={(e) => handleAgencyCodeChange(user.id, e.target.value)}
-                                            onBlur={() => handleAgencyCodeBlur(user.id)}
-                                            className="h-9 w-[100px]"
-                                            placeholder="Code..."
-                                        />
-                                    ) : (
-                                        <span className="text-muted-foreground">{isSiegeDept ? 'N/A' : '—'}</span>
-                                    )}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <Select 
-                                        defaultValue={user.role} 
-                                        onValueChange={(newRole: 'admin' | 'user') => handleFieldChange(user.id, 'role', newRole)}
-                                        disabled={!user.isRegistered || user.id === userProfile?.id}
-                                    >
-                                        <SelectTrigger className="w-[120px] ml-auto">
-                                            <SelectValue placeholder="Changer de rôle" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="user">Utilisateur</SelectItem>
-                                            <SelectItem value="admin">Admin</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </TableCell>
-                            </TableRow>
-                        )})}
+                                <TableRow key={user.id}>
+                                    <TableCell className="font-medium">{user.email}</TableCell>
+                                    <TableCell>
+                                        {user.isRegistered ? (
+                                            <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                                                Inscrit
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="outline">
+                                                En attente
+                                            </Badge>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground">
+                                        {user.isRegistered && user.lastSignInTime
+                                            ? formatDistanceToNow(new Date(user.lastSignInTime), { addSuffix: true, locale: fr })
+                                            : '—'}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Select
+                                            value={user.departmentId}
+                                            onValueChange={(newDeptId: string) => handleFieldChange(user.id, 'departmentId', newDeptId)}
+                                            disabled={!user.isRegistered}
+                                        >
+                                            <SelectTrigger className="w-[220px]">
+                                                <SelectValue placeholder="Non assigné" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {allDepartments.map(dept => (
+                                                    <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </TableCell>
+                                    <TableCell>
+                                        {canEditAgencyCode ? (
+                                            <Input
+                                                type="text"
+                                                value={editingAgencyCodes[user.id] ?? user.agencyCode ?? ''}
+                                                onChange={(e) => handleAgencyCodeChange(user.id, e.target.value)}
+                                                onBlur={() => handleAgencyCodeBlur(user.id)}
+                                                className="h-9 w-[100px]"
+                                                placeholder="Code..."
+                                            />
+                                        ) : (
+                                            <span className="text-muted-foreground">{isSiegeDept ? 'N/A' : '—'}</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Select
+                                            defaultValue={user.role}
+                                            onValueChange={(newRole: 'admin' | 'user') => handleFieldChange(user.id, 'role', newRole)}
+                                            disabled={!user.isRegistered || user.id === userProfile?.id}
+                                        >
+                                            <SelectTrigger className="w-[120px] ml-auto">
+                                                <SelectValue placeholder="Changer de rôle" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="user">Utilisateur</SelectItem>
+                                                <SelectItem value="admin">Admin</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })}
                     </TableBody>
-                 </Table>
+                </Table>
             </CardContent>
         </Card>
     )

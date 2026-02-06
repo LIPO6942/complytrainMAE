@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useDoc, useFirestore, useUser, useMemoFirebase, useCollection, updateDocumentNonBlocking } from '@/firebase';
+import { useDoc, useFirestore, useUser, useCollection, updateDocumentNonBlocking } from '@/firebase';
 import { doc, collection, increment } from 'firebase/firestore';
 import {
   Card,
@@ -57,7 +57,7 @@ export default function CourseDetailPage() {
   const lastSaveTimeRef = useRef<number>(Date.now());
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
-  const courseRef = useMemoFirebase(() => {
+  const courseRef = useMemo(() => {
     if (!firestore || !courseId) return null;
     return doc(firestore, 'courses', courseId);
   }, [firestore, courseId]);

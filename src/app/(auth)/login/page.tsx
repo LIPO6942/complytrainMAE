@@ -10,7 +10,10 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth, useUser, errorEmitter, FirestorePermissionError, getSdks } from '@/firebase';
+import { useAuth, useUser } from '@/firebase/provider';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { getSdks } from '@/firebase/init';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
 import { redirect } from 'next/navigation';
 import { setDoc, doc, getFirestore, collection, query, where, getDocs, writeBatch, runTransaction } from 'firebase/firestore';
@@ -20,15 +23,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 
 function AuthButton({ isSignUp }: { isSignUp: boolean }) {
-  const { pending } = useFormStatus();
-  const icon = isSignUp ? <UserPlus className="mr-2" /> : <LogIn className="mr-2" />;
-  const text = isSignUp ? (pending ? "Création du compte..." : "S'inscrire") : (pending ? 'Connexion...' : 'Se connecter');
-  return (
-    <Button className="w-full" type="submit" aria-disabled={pending} disabled={pending}>
-      {icon}
-      {text}
-    </Button>
-  );
+    const { pending } = useFormStatus();
+    const icon = isSignUp ? <UserPlus className="mr-2" /> : <LogIn className="mr-2" />;
+    const text = isSignUp ? (pending ? "Création du compte..." : "S'inscrire") : (pending ? 'Connexion...' : 'Se connecter');
+    return (
+        <Button className="w-full" type="submit" aria-disabled={pending} disabled={pending}>
+            {icon}
+            {text}
+        </Button>
+    );
 }
 
 function AnonymousLoginButton() {
@@ -55,7 +58,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
     const auth = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
     const [isSiege, setIsSiege] = useState(false);
-    
+
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if (!auth) return;
@@ -76,12 +79,12 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
 
                 // We need to re-initialize auth inside the transaction to get the current user.
                 const { firestore: dbForTransaction } = getSdks(auth.app);
-                
+
                 try {
-                   await runTransaction(dbForTransaction, async (transaction) => {
+                    await runTransaction(dbForTransaction, async (transaction) => {
                         const invitationsRef = collection(db, 'invitations');
                         const q = query(invitationsRef, where("email", "==", email), where("status", "==", "pending"));
-                        
+
                         // Execute the query to find a pending invitation.
                         const querySnapshot = await getDocs(q);
 
@@ -93,7 +96,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                             const invitationDoc = querySnapshot.docs[0];
                             userRole = invitationDoc.data().role;
                             userDepartmentId = invitationDoc.data().departmentId || departmentId;
-                            
+
                             // Mark invitation as completed within the transaction
                             transaction.update(invitationDoc.ref, { status: "completed" });
                         }
@@ -109,10 +112,10 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                             agencyCode: userAgencyCode,
                             createdAt: new Date().toISOString()
                         };
-                        
+
                         // Create the user profile document within the transaction
                         transaction.set(userRef, userProfileData);
-                   });
+                    });
                 } catch (transactionError: any) {
                     // This is where we catch Firestore permission errors from the transaction
                     if (transactionError.code === 'permission-denied') {
@@ -124,7 +127,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                         });
                         errorEmitter.emit('permission-error', permissionError);
                         // We throw the original error to stop execution
-                        throw transactionError; 
+                        throw transactionError;
                     }
                     // Re-throw other transaction errors
                     throw transactionError;
@@ -135,9 +138,9 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                 const user = userCredential.user;
                 const userRef = doc(db, 'users', user.uid);
                 // On sign-in, ensure email is present and update last sign in time
-                await setDoc(userRef, { 
+                await setDoc(userRef, {
                     email: user.email, // Ensure email is present
-                    lastSignInTime: new Date().toISOString() 
+                    lastSignInTime: new Date().toISOString()
                 }, { merge: true });
             }
         } catch (error: any) {
@@ -158,9 +161,9 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                     setErrorMessage('Le mot de passe doit comporter au moins 6 caractères.');
                     break;
                 case 'auth/invalid-credential':
-                     setErrorMessage('Les informations d\'identification sont invalides.');
-                     break;
-                 case 'permission-denied':
+                    setErrorMessage('Les informations d\'identification sont invalides.');
+                    break;
+                case 'permission-denied':
                     // This is for the case where the permission error was re-thrown
                     // The actual error is handled by the listener, so we just give a generic message here
                     setErrorMessage("Une erreur de permission s'est produite lors de la création de votre profil.");
@@ -175,7 +178,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
     return (
         <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
-                 {isSignUp && (
+                {isSignUp && (
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="firstName">Prénom</Label>
@@ -217,7 +220,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                             </Label>
                         </div>
                         {isSiege ? (
-                             <div className="space-y-2">
+                            <div className="space-y-2">
                                 <Label htmlFor="departmentId">Département du Siège</Label>
                                 <Select name="departmentId">
                                     <SelectTrigger>
@@ -256,7 +259,7 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                                 </div>
                             </>
                         )}
-                        
+
                     </>
                 )}
                 {errorMessage && (
@@ -291,31 +294,31 @@ export default function LoginPage() {
             </div>
         );
     }
-  return (
-    <main className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <div className="flex justify-center items-center gap-4 mb-4">
-            <Logo className="h-10 w-10" />
-          </div>
-          <CardTitle className="text-2xl">ComplyTrain</CardTitle>
-          <CardDescription>
-            Accédez à votre tableau de bord de conformité.
-          </CardDescription>
-        </CardHeader>
-        <Tabs defaultValue="signup" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Se connecter</TabsTrigger>
-                <TabsTrigger value="signup">S'inscrire</TabsTrigger>
-            </TabsList>
-            <TabsContent value="signin">
-                <AuthForm isSignUp={false} />
-            </TabsContent>
-            <TabsContent value="signup">
-                <AuthForm isSignUp={true} />
-            </TabsContent>
-        </Tabs>
-      </Card>
-    </main>
-  );
+    return (
+        <main className="flex items-center justify-center min-h-screen bg-background">
+            <Card className="w-full max-w-sm">
+                <CardHeader className="text-center">
+                    <div className="flex justify-center items-center gap-4 mb-4">
+                        <Logo className="h-10 w-10" />
+                    </div>
+                    <CardTitle className="text-2xl">ComplyTrain</CardTitle>
+                    <CardDescription>
+                        Accédez à votre tableau de bord de conformité.
+                    </CardDescription>
+                </CardHeader>
+                <Tabs defaultValue="signup" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="signin">Se connecter</TabsTrigger>
+                        <TabsTrigger value="signup">S'inscrire</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="signin">
+                        <AuthForm isSignUp={false} />
+                    </TabsContent>
+                    <TabsContent value="signup">
+                        <AuthForm isSignUp={true} />
+                    </TabsContent>
+                </Tabs>
+            </Card>
+        </main>
+    );
 }

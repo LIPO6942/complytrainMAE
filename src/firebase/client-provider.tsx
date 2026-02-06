@@ -20,6 +20,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       auth={auth}
       firestore={firestore}
     >
+      <FirebaseErrorListener />
       {children}
     </FirebaseProvider>
   );

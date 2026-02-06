@@ -12,9 +12,9 @@ import { FileDown } from 'lucide-react';
 import { CompletionChart } from '@/components/app/reporting/completion-chart';
 import { SuccessChart } from '@/components/app/reporting/success-chart';
 import { Heatmap } from '@/components/app/reporting/heatmap';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { useCollection, useFirestore, useUser } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { useMemo }from 'react';
+import { useMemo } from 'react';
 import type { Course } from '@/lib/quiz-data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { staticCourses } from '@/lib/quiz-data';
@@ -22,51 +22,51 @@ import { courseCategories } from '@/components/app/courses/edit-course-form';
 
 
 type UserProfile = {
-    id: string;
-    email: string;
-    firstName?: string;
-    lastName?: string;
-    badges?: string[];
-    departmentId?: string;
-    scores?: Record<string, number>;
-    role?: string;
-    quizzesPassed?: number;
-    averageScore?: number;
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  badges?: string[];
+  departmentId?: string;
+  scores?: Record<string, number>;
+  role?: string;
+  quizzesPassed?: number;
+  averageScore?: number;
 }
 
 type Department = {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 
 
 export default function ReportingPage() {
   const firestore = useFirestore();
   const { userProfile, isUserLoading: isAuthLoading } = useUser();
-  
+
   const isAdmin = useMemo(() => !isAuthLoading && userProfile?.role === 'admin', [isAuthLoading, userProfile]);
 
   // --- Firestore Data Hooks ---
-  const usersQuery = useMemoFirebase(() => {
+  const usersQuery = useMemo(() => {
     // IMPORTANT: Only fetch all users if the current user is a confirmed admin
     if (!firestore || !isAdmin) return null;
     return collection(firestore, 'users');
   }, [firestore, isAdmin]);
-  
+
   const { data: allUsers, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
 
-  const departmentsQuery = useMemoFirebase(() => {
+  const departmentsQuery = useMemo(() => {
     if (!firestore) return null;
     return collection(firestore, 'departments');
   }, [firestore]);
   const { data: departments, isLoading: isLoadingDepartments } = useCollection<Department>(departmentsQuery);
-  
-  const coursesQuery = useMemoFirebase(() => {
+
+  const coursesQuery = useMemo(() => {
     if (!firestore) return null;
     return collection(firestore, 'courses');
   }, [firestore]);
   const { data: dynamicCourses, isLoading: isLoadingCourses } = useCollection<Course>(coursesQuery);
-  
+
   // Combine static and dynamic courses to get a complete list
   const allCourses = useMemo(() => {
     const combinedCourses = new Map<string, Course>();
@@ -74,7 +74,7 @@ export default function ReportingPage() {
     staticCourses.forEach(course => combinedCourses.set(course.id, course));
     // Overwrite with dynamic courses if they exist (updated versions)
     if (dynamicCourses) {
-        dynamicCourses.forEach(course => combinedCourses.set(course.id, course));
+      dynamicCourses.forEach(course => combinedCourses.set(course.id, course));
     }
     return Array.from(combinedCourses.values());
   }, [dynamicCourses]);
@@ -84,7 +84,7 @@ export default function ReportingPage() {
   const reportingUsers = useMemo(() => {
     if (isAuthLoading) return [];
     if (isAdmin) {
-        return allUsers?.filter(u => u.role !== 'admin') || [];
+      return allUsers?.filter(u => u.role !== 'admin') || [];
     }
     return userProfile ? [userProfile as UserProfile] : [];
   }, [isAdmin, allUsers, userProfile, isAuthLoading]);
@@ -96,17 +96,17 @@ export default function ReportingPage() {
 
     const totalPossibleQuizzes = allCourses.filter(c => c.quizId || c.quiz).length;
     if (totalPossibleQuizzes === 0) return [];
-    
+
     // For admin, calculate average completion
     if (isAdmin) {
-        const totalPassedQuizzes = reportingUsers.reduce((acc, user) => acc + (user.quizzesPassed || 0), 0);
-        const totalPossibleForAllUsers = reportingUsers.length * totalPossibleQuizzes;
-        if (totalPossibleForAllUsers === 0) return [];
-        const completionPercentage = Math.round((totalPassedQuizzes / totalPossibleForAllUsers) * 100);
-        return [
-            { name: 'Complété', value: completionPercentage, fill: 'var(--color-chart-1)' },
-            { name: 'À faire', value: 100 - completionPercentage, fill: 'hsl(var(--muted))' }
-        ];
+      const totalPassedQuizzes = reportingUsers.reduce((acc, user) => acc + (user.quizzesPassed || 0), 0);
+      const totalPossibleForAllUsers = reportingUsers.length * totalPossibleQuizzes;
+      if (totalPossibleForAllUsers === 0) return [];
+      const completionPercentage = Math.round((totalPassedQuizzes / totalPossibleForAllUsers) * 100);
+      return [
+        { name: 'Complété', value: completionPercentage, fill: 'var(--color-chart-1)' },
+        { name: 'À faire', value: 100 - completionPercentage, fill: 'hsl(var(--muted))' }
+      ];
     }
 
     // For single user
@@ -119,50 +119,50 @@ export default function ReportingPage() {
       { name: 'À faire', value: 100 - completionPercentage, fill: 'hsl(var(--muted))' }
     ];
   }, [reportingUsers, isAdmin, allCourses]);
-  
+
   const successData = useMemo(() => {
     if (reportingUsers.length === 0 || !departments) return [];
 
     // For single user view
     if (!isAdmin && userProfile) {
-        const avgScore = Math.round(userProfile.averageScore || 0);
-        if (avgScore > 0) {
-            return [{
-                name: "Mon score moyen",
-                value: avgScore,
-                fill: `var(--color-chart-1)`,
-            }];
-        }
-        return [];
+      const avgScore = Math.round(userProfile.averageScore || 0);
+      if (avgScore > 0) {
+        return [{
+          name: "Mon score moyen",
+          value: avgScore,
+          fill: `var(--color-chart-1)`,
+        }];
+      }
+      return [];
     }
 
     // For admin view
     const deptScores: Record<string, { totalScore: number; count: number }> = {};
-    
+
     reportingUsers.forEach(user => {
-        if (user.departmentId && user.scores) {
-            if (!deptScores[user.departmentId]) {
-                deptScores[user.departmentId] = { totalScore: 0, count: 0 };
-            }
-            Object.values(user.scores).forEach(score => {
-                deptScores[user.departmentId].totalScore += score;
-                deptScores[user.departmentId].count++;
-            });
+      if (user.departmentId && user.scores) {
+        if (!deptScores[user.departmentId]) {
+          deptScores[user.departmentId] = { totalScore: 0, count: 0 };
         }
+        Object.values(user.scores).forEach(score => {
+          deptScores[user.departmentId].totalScore += score;
+          deptScores[user.departmentId].count++;
+        });
+      }
     });
 
     const chartColors = ['chart-1', 'chart-2', 'chart-3', 'chart-4', 'chart-5'];
-    
+
     return departments
-        .filter(dept => deptScores[dept.id] && deptScores[dept.id].count > 0)
-        .map((dept, index) => {
-            const avgScore = Math.round(deptScores[dept.id].totalScore / deptScores[dept.id].count);
-            return {
-                name: dept.name,
-                value: avgScore,
-                fill: `var(--color-${chartColors[index % chartColors.length]})`,
-            };
-        });
+      .filter(dept => deptScores[dept.id] && deptScores[dept.id].count > 0)
+      .map((dept, index) => {
+        const avgScore = Math.round(deptScores[dept.id].totalScore / deptScores[dept.id].count);
+        return {
+          name: dept.name,
+          value: avgScore,
+          fill: `var(--color-${chartColors[index % chartColors.length]})`,
+        };
+      });
 
   }, [reportingUsers, departments, isAdmin, userProfile]);
 
@@ -202,14 +202,14 @@ export default function ReportingPage() {
         });
       }
 
-      const userHeatmapRow: { user: string; [key: string]: string | number } = {
+      const userHeatmapRow: { user: string;[key: string]: string | number } = {
         user: user.firstName || user.email,
       };
 
       heatmapTopics.forEach(topic => {
         const categoryData = scoresByCategory[topic];
-        userHeatmapRow[topic] = categoryData.count > 0 
-          ? Math.round(categoryData.total / categoryData.count) 
+        userHeatmapRow[topic] = categoryData.count > 0
+          ? Math.round(categoryData.total / categoryData.count)
           : "N/A";
       });
 
@@ -218,13 +218,13 @@ export default function ReportingPage() {
 
     return { heatmapTopics, heatmapData };
   }, [reportingUsers, allCourses]);
-  
-  
+
+
   // The overall loading state depends on whether the user is admin or not
   const isLoading = useMemo(() => {
     if (isAuthLoading) return true;
     if (isAdmin) {
-        return isLoadingUsers || isLoadingDepartments || isLoadingCourses;
+      return isLoadingUsers || isLoadingDepartments || isLoadingCourses;
     }
     // For non-admins, we don't depend on isLoadingUsers
     return isAuthLoading || isLoadingDepartments || isLoadingCourses;
@@ -232,14 +232,14 @@ export default function ReportingPage() {
 
   if (isLoading) {
     return (
-        <div className="space-y-6">
-            <Skeleton className="h-10 w-1/3" />
-             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
-                <Skeleton className="h-80 lg:col-span-3" />
-                <Skeleton className="h-80 lg:col-span-2" />
-            </div>
-            <Skeleton className="h-96" />
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-1/3" />
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+          <Skeleton className="h-80 lg:col-span-3" />
+          <Skeleton className="h-80 lg:col-span-2" />
         </div>
+        <Skeleton className="h-96" />
+      </div>
     )
   }
 
@@ -249,8 +249,8 @@ export default function ReportingPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Rapports et analyses</h1>
           <p className="text-muted-foreground">
-            {isAdmin 
-              ? "Analyse en temps réel de la formation à la conformité de votre organisation." 
+            {isAdmin
+              ? "Analyse en temps réel de la formation à la conformité de votre organisation."
               : "Analyse en temps réel de votre progression de formation."
             }
           </p>
@@ -286,7 +286,7 @@ export default function ReportingPage() {
           </CardContent>
         </Card>
       </div>
-       <Card>
+      <Card>
         <CardHeader>
           <CardTitle>Carte thermique des risques de conformité</CardTitle>
           <CardDescription>Scores par utilisateur et par sujet réglementaire. Les scores les plus bas indiquent un risque plus élevé.</CardDescription>
