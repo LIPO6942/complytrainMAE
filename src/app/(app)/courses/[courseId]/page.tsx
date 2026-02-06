@@ -73,22 +73,24 @@ export default function CourseDetailPage() {
     return staticCourse?.quiz?.id || staticCourse?.quizId;
   }, [courseFromDb, courseId]);
 
+  /* Fix: Stabilize saveTimeSpent by removing full user object dependency */
   const saveTimeSpent = useCallback(() => {
-    if (!user || !firestore) {
+    if (!user?.uid || !firestore) {
       return;
     }
 
     const now = Date.now();
     const timeDiffInSeconds = Math.round((now - lastSaveTimeRef.current) / 1000);
 
-    if (timeDiffInSeconds > 0) {
+    /* Only update if meaningful time passed (e.g. > 1s) to avoid spamming writes on quick re-renders */
+    if (timeDiffInSeconds > 1) {
       const userRef = doc(firestore, 'users', user.uid);
       updateDocumentNonBlocking(userRef, {
         totalTimeSpent: increment(timeDiffInSeconds)
       });
       lastSaveTimeRef.current = now; // Reset timer after saving
     }
-  }, [user, firestore]);
+  }, [user?.uid, firestore]);
 
   const handleQuizSubmit = useCallback(() => {
     saveTimeSpent();
@@ -96,23 +98,29 @@ export default function CourseDetailPage() {
   }, [saveTimeSpent, router]);
 
   useEffect(() => {
+    // Initialize timer reference
     lastSaveTimeRef.current = Date.now();
 
+    // Clear any existing interval
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
     }
 
+    // Set new interval
     intervalIdRef.current = setInterval(() => {
       saveTimeSpent();
     }, 60000);
 
     return () => {
+      // Save on unmount
       saveTimeSpent();
       if (intervalIdRef.current) {
         clearInterval(intervalIdRef.current);
       }
     };
-  }, [quizId, user, firestore, saveTimeSpent]);
+    /* Remove 'user' and 'quizId' from dependencies to prevent timer resets on unrelated prop changes. 
+       We only need to restart if saveTimeSpent (which depends on user.uid) changes. */
+  }, [saveTimeSpent]);
 
   // --- Fetch all courses for "Next Course" navigation ---
   const coursesQuery = useMemoFirebase(() => {
@@ -265,7 +273,7 @@ export default function CourseDetailPage() {
             <GoogleDrivePdfViewer url={currentCourse.pdfUrl} />
           )}
 
-          {currentCourse.markdownContent && currentCourse.markdownContent.trim() !== '' && (
+          {currentCourse.markdownContent && typeof currentCourse.markdownContent === 'string' && currentCourse.markdownContent.trim() !== '' && (
             <Card>
               <CardHeader>
                 <CardTitle>Contenu du cours</CardTitle>
