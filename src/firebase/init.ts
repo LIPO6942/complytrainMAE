@@ -28,11 +28,19 @@ export function initializeFirebase() {
             if (process.env.NODE_ENV === "production") {
                 console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
             }
-            if (!firebaseConfig) {
-                console.error('Firebase config is missing!');
-                throw new Error('Firebase config is missing');
+
+            // Validate firebaseConfig
+            if (!firebaseConfig || !firebaseConfig.projectId || !firebaseConfig.apiKey) {
+                console.error('Firebase config is invalid or missing required fields!', firebaseConfig);
+                throw new Error('Firebase config is invalid or missing required fields (projectId, apiKey)');
             }
-            firebaseApp = initializeApp(firebaseConfig);
+
+            try {
+                firebaseApp = initializeApp(firebaseConfig);
+            } catch (initError) {
+                console.error('Failed to initialize Firebase with config object:', initError);
+                throw initError;
+            }
         }
 
         return getSdks(firebaseApp);

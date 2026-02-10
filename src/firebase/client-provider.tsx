@@ -10,15 +10,21 @@ interface FirebaseClientProviderProps {
 }
 
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  const { firebaseApp, auth, firestore } = useMemo(() => {
-    return initializeFirebase();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  const firebaseServices = useMemo(() => {
+    try {
+      return initializeFirebase();
+    } catch (error) {
+      console.error("Critical error during Firebase initialization:", error);
+      // Return nulls so the provider can handle the "services not available" state
+      return { firebaseApp: null, auth: null, firestore: null };
+    }
+  }, []);
 
   return (
     <FirebaseProvider
-      firebaseApp={firebaseApp}
-      auth={auth}
-      firestore={firestore}
+      firebaseApp={firebaseServices.firebaseApp as any}
+      auth={firebaseServices.auth as any}
+      firestore={firebaseServices.firestore as any}
     >
       <FirebaseErrorListener />
       {children}
