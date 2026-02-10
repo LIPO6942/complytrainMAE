@@ -1,5 +1,8 @@
 'use client';
-import { useCollection, useFirestore, useUser, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { useFirestore } from '@/firebase/provider';
+import { useUser } from '@/firebase/auth/use-user';
+import { setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, doc } from 'firebase/firestore';
 import {
     Card,

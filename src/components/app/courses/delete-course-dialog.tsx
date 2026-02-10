@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
-import { useFirestore, deleteDocumentNonBlocking } from '@/firebase';
+import { useFirestore } from '@/firebase/provider';
+import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -33,16 +34,16 @@ export function DeleteCourseDialog({ courseId, isStatic, onDeleted, trigger }: D
     if (onDeleted) {
       onDeleted(courseId);
     }
-    
+
     if (isStatic) {
-        toast({
-            title: 'Cours masqué',
-            description: 'Le cours statique a été masqué de la vue.',
-        });
-        if (!onDeleted) {
-             router.push('/courses');
-        }
-        return;
+      toast({
+        title: 'Cours masqué',
+        description: 'Le cours statique a été masqué de la vue.',
+      });
+      if (!onDeleted) {
+        router.push('/courses');
+      }
+      return;
     }
 
     if (!firestore) return;
@@ -54,9 +55,9 @@ export function DeleteCourseDialog({ courseId, isStatic, onDeleted, trigger }: D
       title: 'Cours supprimé',
       description: 'Le cours a été supprimé avec succès.',
     });
-    
+
     if (!onDeleted) {
-        router.push('/courses');
+      router.push('/courses');
     }
   };
 
@@ -76,9 +77,9 @@ export function DeleteCourseDialog({ courseId, isStatic, onDeleted, trigger }: D
         <AlertDialogHeader>
           <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce cours ?</AlertDialogTitle>
           <AlertDialogDescription>
-            {isStatic 
-                ? "Cette action masquera ce cours statique de la liste. Il réapparaîtra au prochain rechargement de la page."
-                : "Cette action est irréversible. Le cours sera définitivement supprimé de la base de données."
+            {isStatic
+              ? "Cette action masquera ce cours statique de la liste. Il réapparaîtra au prochain rechargement de la page."
+              : "Cette action est irréversible. Le cours sera définitivement supprimé de la base de données."
             }
           </AlertDialogDescription>
         </AlertDialogHeader>

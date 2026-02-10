@@ -30,7 +30,7 @@ import {
 import { Logo } from '@/components/icons';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { useUser } from '@/firebase';
+import { useUser } from '@/firebase/auth/use-user';
 import { Badge } from '../ui/badge';
 import { useState } from 'react';
 
@@ -42,12 +42,12 @@ const menuItems = [
 ];
 
 const adminMenuItems = [
-    { href: '/users', label: 'Utilisateurs', icon: Users },
-    { href: '/admin-dashboard', label: 'Dashboard Admin', icon: LayoutDashboard },
+  { href: '/users', label: 'Utilisateurs', icon: Users },
+  { href: '/admin-dashboard', label: 'Dashboard Admin', icon: LayoutDashboard },
 ]
 
 const bottomMenuItems = [
-    { href: '/settings', label: 'Paramètres', icon: Settings },
+  { href: '/settings', label: 'Paramètres', icon: Settings },
 ]
 
 export function AppSidebar() {
@@ -93,7 +93,7 @@ export function AppSidebar() {
             </SidebarMenuItem>
           ))}
           {isAdmin && adminMenuItems.map((item) => (
-             <SidebarMenuItem key={item.label}>
+            <SidebarMenuItem key={item.label}>
               <Link href={item.href} passHref>
                 <SidebarMenuButton
                   asChild
@@ -110,53 +110,53 @@ export function AppSidebar() {
           ))}
         </SidebarMenu>
         <SidebarMenu className="p-2 mt-auto">
-             {bottomMenuItems.map((item) => (
-                <SidebarMenuItem key={item.label}>
-                <Link href={item.href} passHref>
-                    <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.href)}
-                    tooltip={item.label}
-                    >
-                    <span className="flex items-center gap-2">
-                        <item.icon />
-                        <span>{item.label}</span>
-                    </span>
-                    </SidebarMenuButton>
-                </Link>
-                </SidebarMenuItem>
-            ))}
+          {bottomMenuItems.map((item) => (
+            <SidebarMenuItem key={item.label}>
+              <Link href={item.href} passHref>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive(item.href)}
+                  tooltip={item.label}
+                >
+                  <span className="flex items-center gap-2">
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          ))}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-2">
         <SidebarMenu>
           <DropdownMenu onOpenChange={handleNotificationOpenChange}>
             <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                    <Bell />
-                    <span>Notifications</span>
-                    {notificationCount > 0 && (
-                        <div className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-xs font-medium text-destructive-foreground">
-                            {notificationCount}
-                        </div>
-                    )}
-                </SidebarMenuButton>
+              <SidebarMenuButton>
+                <Bell />
+                <span>Notifications</span>
+                {notificationCount > 0 && (
+                  <div className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-xs font-medium text-destructive-foreground">
+                    {notificationCount}
+                  </div>
+                )}
+              </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="right" align="start" className="w-80">
-                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="flex-col items-start gap-1">
-                    <p className='font-semibold'>Nouveau cours disponible</p>
-                    <p className='text-muted-foreground text-xs'>Le cours "KYC Avancé" a été ajouté.</p>
-                </DropdownMenuItem>
-                 <DropdownMenuItem className="flex-col items-start gap-1">
-                    <p className='font-semibold'>Mise à jour de cours</p>
-                    <p className='text-muted-foreground text-xs'>Le contenu de "Fondements LAB/FT" a été mis à jour.</p>
-                </DropdownMenuItem>
-                 <DropdownMenuItem className="flex-col items-start gap-1">
-                    <p className='font-semibold'>Rappel de quiz</p>
-                    <p className='text-muted-foreground text-xs'>N'oubliez pas de terminer le quiz pour "Guide Pratique KYC".</p>
-                </DropdownMenuItem>
+              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="flex-col items-start gap-1">
+                <p className='font-semibold'>Nouveau cours disponible</p>
+                <p className='text-muted-foreground text-xs'>Le cours "KYC Avancé" a été ajouté.</p>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex-col items-start gap-1">
+                <p className='font-semibold'>Mise à jour de cours</p>
+                <p className='text-muted-foreground text-xs'>Le contenu de "Fondements LAB/FT" a été mis à jour.</p>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex-col items-start gap-1">
+                <p className='font-semibold'>Rappel de quiz</p>
+                <p className='text-muted-foreground text-xs'>N'oubliez pas de terminer le quiz pour "Guide Pratique KYC".</p>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </SidebarMenu>

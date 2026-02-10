@@ -7,7 +7,9 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { useUser, useFirestore, useCollection } from '@/firebase';
+import { useUser } from '@/firebase/auth/use-user';
+import { useFirestore } from '@/firebase/provider';
+import { useCollection } from '@/firebase/firestore/use-collection';
 import { allBadges } from '@/lib/data';
 import { Clock, Target, CheckCircle, TrendingUp, HelpCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';

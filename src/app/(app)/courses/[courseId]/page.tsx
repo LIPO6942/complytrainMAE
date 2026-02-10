@@ -1,6 +1,10 @@
 'use client';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useDoc, useFirestore, useUser, useCollection, updateDocumentNonBlocking } from '@/firebase';
+import { useDoc } from '@/firebase/firestore/use-doc';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { useFirestore } from '@/firebase/provider';
+import { useUser } from '@/firebase/auth/use-user';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc, collection, increment } from 'firebase/firestore';
 import {
   Card,

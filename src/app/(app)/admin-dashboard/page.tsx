@@ -1,7 +1,9 @@
 
 'use client';
 import { useMemo } from 'react';
-import { useCollection, useFirestore, useUser } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { useFirestore } from '@/firebase/provider';
+import { useUser } from '@/firebase/auth/use-user';
 import { collection } from 'firebase/firestore';
 import {
   Card,

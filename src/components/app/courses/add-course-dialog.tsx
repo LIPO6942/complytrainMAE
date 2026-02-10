@@ -22,43 +22,43 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore } from '@/firebase';
+import { useFirestore } from '@/firebase/provider';
 import { collection, writeBatch, doc } from 'firebase/firestore';
 import { PlusCircle } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const courseCategories = [
-    "LAB/FT",
-    "KYC",
-    "Fraude",
-    "RGPD",
-    "Sanctions Internationales",
-    "Conformité Assurance",
-    "Quiz Thématique",
-    "QCM (réponse multiple)"
+  "LAB/FT",
+  "KYC",
+  "Fraude",
+  "RGPD",
+  "Sanctions Internationales",
+  "Conformité Assurance",
+  "Quiz Thématique",
+  "QCM (réponse multiple)"
 ];
 
 export function AddCourseDialog() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const [open, setOpen] = useState(false);
-  
+
   const [formData, setFormData] = useState({
-      title: 'Nouveau Quiz Thématique',
-      description: 'Un nouveau quiz thématique prêt à être configuré.',
-      category: 'Quiz Thématique',
-      image: PlaceHolderImages.find(img => img.id === 'course-new')?.imageUrl || '',
-      quizTitle: 'Quiz sur le blanchiment d\'argent',
-      quizQuestionText: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LAB) ?'
+    title: 'Nouveau Quiz Thématique',
+    description: 'Un nouveau quiz thématique prêt à être configuré.',
+    category: 'Quiz Thématique',
+    image: PlaceHolderImages.find(img => img.id === 'course-new')?.imageUrl || '',
+    quizTitle: 'Quiz sur le blanchiment d\'argent',
+    quizQuestionText: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LAB) ?'
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { name, value } = e.target;
-      setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
-      setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleAddCourse = async () => {
@@ -70,60 +70,60 @@ export function AddCourseDialog() {
       });
       return;
     }
-    
+
     try {
-        const newCourseDocRef = doc(collection(firestore, 'courses'));
-        const newQuizDocRef = doc(collection(firestore, 'courses', newCourseDocRef.id, 'quizzes'));
+      const newCourseDocRef = doc(collection(firestore, 'courses'));
+      const newQuizDocRef = doc(collection(firestore, 'courses', newCourseDocRef.id, 'quizzes'));
 
-        const batch = writeBatch(firestore);
+      const batch = writeBatch(firestore);
 
-        batch.set(newCourseDocRef, {
-            id: newCourseDocRef.id,
-            title: formData.title,
-            description: formData.description,
-            category: formData.category,
-            image: formData.image,
-            quizId: newQuizDocRef.id,
-            videoUrl: '',
-            pdfUrl: '',
-            markdownContent: '',
-        });
+      batch.set(newCourseDocRef, {
+        id: newCourseDocRef.id,
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        image: formData.image,
+        quizId: newQuizDocRef.id,
+        videoUrl: '',
+        pdfUrl: '',
+        markdownContent: '',
+      });
 
-        batch.set(newQuizDocRef, {
-             id: newQuizDocRef.id,
-             title: formData.quizTitle,
-             questions: [{
-                 text: formData.quizQuestionText,
-                 options: ['Marketing sur les réseaux sociaux', 'Intégration des employés', 'Déclaration de transaction suspecte (DTS)'],
-                 correctAnswers: [2]
-             }]
-        });
+      batch.set(newQuizDocRef, {
+        id: newQuizDocRef.id,
+        title: formData.quizTitle,
+        questions: [{
+          text: formData.quizQuestionText,
+          options: ['Marketing sur les réseaux sociaux', 'Intégration des employés', 'Déclaration de transaction suspecte (DTS)'],
+          correctAnswers: [2]
+        }]
+      });
 
-        await batch.commit();
+      await batch.commit();
 
-        toast({
-          title: 'Cours ajouté',
-          description: `Le cours "${formData.title}" a été créé avec son quiz.`,
-        });
+      toast({
+        title: 'Cours ajouté',
+        description: `Le cours "${formData.title}" a été créé avec son quiz.`,
+      });
 
-        // Reset form and close dialog
-        setFormData({
-            title: 'Nouveau Quiz Thématique',
-            description: 'Un nouveau quiz thématique prêt à être configuré.',
-            category: 'Quiz Thématique',
-            image: PlaceHolderImages.find(img => img.id === 'course-new')?.imageUrl || '',
-            quizTitle: 'Quiz sur le blanchiment d\'argent',
-            quizQuestionText: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LAB) ?'
-        });
-        setOpen(false);
+      // Reset form and close dialog
+      setFormData({
+        title: 'Nouveau Quiz Thématique',
+        description: 'Un nouveau quiz thématique prêt à être configuré.',
+        category: 'Quiz Thématique',
+        image: PlaceHolderImages.find(img => img.id === 'course-new')?.imageUrl || '',
+        quizTitle: 'Quiz sur le blanchiment d\'argent',
+        quizQuestionText: 'Laquelle des propositions suivantes est une étape clé de la lutte contre le blanchiment d’argent (LAB) ?'
+      });
+      setOpen(false);
 
     } catch (error) {
-         console.error("Error creating course and quiz:", error);
-         toast({
-            variant: "destructive",
-            title: "Erreur lors de la création",
-            description: "Une erreur s'est produite. Veuillez réessayer."
-         });
+      console.error("Error creating course and quiz:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur lors de la création",
+        description: "Une erreur s'est produite. Veuillez réessayer."
+      });
     }
 
   };
@@ -152,19 +152,19 @@ export function AddCourseDialog() {
             <Label htmlFor="description">Description du cours</Label>
             <Textarea id="description" name="description" value={formData.description} onChange={handleChange} />
           </div>
-           <div className="space-y-2">
+          <div className="space-y-2">
             <Label htmlFor="category">Catégorie</Label>
             <Select value={formData.category} onValueChange={(value) => handleSelectChange('category', value)}>
-                <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une catégorie" />
-                </SelectTrigger>
-                <SelectContent>
-                    {courseCategories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                            {cat}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                {courseCategories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
@@ -173,11 +173,11 @@ export function AddCourseDialog() {
           </div>
           <hr className="my-4" />
           <h3 className="font-semibold text-lg">Quiz Initial</h3>
-           <div className="space-y-2">
+          <div className="space-y-2">
             <Label htmlFor="quizTitle">Titre du Quiz</Label>
             <Input id="quizTitle" name="quizTitle" value={formData.quizTitle} onChange={handleChange} />
           </div>
-           <div className="space-y-2">
+          <div className="space-y-2">
             <Label htmlFor="quizQuestionText">Première Question</Label>
             <Textarea id="quizQuestionText" name="quizQuestionText" value={formData.quizQuestionText} onChange={handleChange} />
           </div>
@@ -193,4 +193,4 @@ export function AddCourseDialog() {
   );
 }
 
-    
+

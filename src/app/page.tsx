@@ -1,5 +1,5 @@
 'use client';
-import { useUser } from '@/firebase';
+import { useUser } from '@/firebase/auth/use-user';
 import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -17,8 +17,8 @@ export default function Home() {
   }, [user, isUserLoading]);
 
   return (
-     <div className="flex items-center justify-center min-h-screen">
-        <p>Chargement...</p>
+    <div className="flex items-center justify-center min-h-screen">
+      <p>Chargement...</p>
     </div>
   );
 }

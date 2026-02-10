@@ -10,7 +10,9 @@ import {
 } from '@/components/ui/card';
 import { personalizedRiskRecommendations, type PersonalizedRiskRecommendationsOutput } from '@/ai/flows/personalized-risk-recommendations';
 import { BookMarked, Target, AlertTriangle, ArrowRight } from 'lucide-react';
-import { useUser, useFirestore, useCollection } from '@/firebase';
+import { useUser } from '@/firebase/auth/use-user';
+import { useFirestore } from '@/firebase/provider';
+import { useCollection } from '@/firebase/firestore/use-collection';
 import { Skeleton } from '@/components/ui/skeleton';
 import { collection } from 'firebase/firestore';
 import { staticCourses, type Course } from '@/lib/quiz-data';

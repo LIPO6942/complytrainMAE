@@ -16,7 +16,8 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useUser, useAuth } from '@/firebase';
+import { useUser } from '@/firebase/auth/use-user';
+import { useAuth } from '@/firebase/provider';
 import { signOut } from 'firebase/auth';
 import Link from 'next/link';
 
@@ -64,9 +65,9 @@ export function UserNav() {
               {user?.email}
             </p>
             {userProfile?.role && (
-                <p className="text-xs leading-none text-muted-foreground capitalize pt-1">
-                    Rôle: {userProfile.role}
-                </p>
+              <p className="text-xs leading-none text-muted-foreground capitalize pt-1">
+                Rôle: {userProfile.role}
+              </p>
             )}
           </div>
         </DropdownMenuLabel>

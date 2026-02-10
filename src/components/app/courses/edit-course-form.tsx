@@ -13,7 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { useFirestore, type WithId } from '@/firebase';
+import { useFirestore } from '@/firebase/provider';
+import { type WithId } from '@/firebase/firestore/use-collection';
 import { doc, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import type { Course, QuizData, Question } from '@/lib/quiz-data';
@@ -36,23 +37,23 @@ interface EditCourseFormProps {
 }
 
 export const courseCategories = [
-    "LAB/FT",
-    "KYC",
-    "RGPD",
+  "LAB/FT",
+  "KYC",
+  "RGPD",
 ];
 
 const quizTypes = [
-    "QCM (réponse multiple)",
-    "Quiz",
-    "Vrai / Faux",
-    "Classement (Ranking)"
+  "QCM (réponse multiple)",
+  "Quiz",
+  "Vrai / Faux",
+  "Classement (Ranking)"
 ]
 
 export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCourseFormProps) {
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
-  
+
   const [formData, setFormData] = useState({
     title: course.title,
     description: course.description,
@@ -75,9 +76,9 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  
+
   const handleSelectChange = (name: string, value: string) => {
-      setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleQuizTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,14 +92,14 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
     newQuestions[qIndex].text = text;
     setQuizData({ ...quizData, questions: newQuestions });
   };
-  
+
   const handleOptionChange = (qIndex: number, oIndex: number, text: string) => {
     if (!quizData) return;
     const newQuestions = [...quizData.questions];
     newQuestions[qIndex].options[oIndex] = text;
     setQuizData({ ...quizData, questions: newQuestions });
   };
-  
+
   const handleCorrectAnswerChange = (qIndex: number, oIndex: number, checked: boolean) => {
     if (!quizData) return;
     const newQuestions = [...quizData.questions];
@@ -111,16 +112,16 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
     } else {
       correctAnswers = correctAnswers.filter(ans => ans !== oIndex);
     }
-    newQuestions[qIndex].correctAnswers = correctAnswers.sort((a,b) => a - b);
+    newQuestions[qIndex].correctAnswers = correctAnswers.sort((a, b) => a - b);
     setQuizData({ ...quizData, questions: newQuestions });
   };
 
   const addQuestion = () => {
     if (!quizData) return;
     const newQuestion: Question = {
-        text: "Nouvelle question",
-        options: ["Option A", "Option B", "Option C"],
-        correctAnswers: [0]
+      text: "Nouvelle question",
+      options: ["Option A", "Option B", "Option C"],
+      correctAnswers: [0]
     };
     setQuizData({ ...quizData, questions: [...quizData.questions, newQuestion] });
   };
@@ -132,19 +133,19 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
   };
 
   const addOption = (qIndex: number) => {
-      if (!quizData) return;
-      const newQuestions = [...quizData.questions];
-      newQuestions[qIndex].options.push("Nouvelle option");
-      setQuizData({ ...quizData, questions: newQuestions });
+    if (!quizData) return;
+    const newQuestions = [...quizData.questions];
+    newQuestions[qIndex].options.push("Nouvelle option");
+    setQuizData({ ...quizData, questions: newQuestions });
   };
 
   const removeOption = (qIndex: number, oIndex: number) => {
-      if (!quizData) return;
-      const newQuestions = [...quizData.questions];
-      newQuestions[qIndex].options = newQuestions[qIndex].options.filter((_, index) => index !== oIndex);
-      // Also remove from correct answers if it was one
-      newQuestions[qIndex].correctAnswers = (newQuestions[qIndex].correctAnswers || []).filter(ans => ans !== oIndex);
-      setQuizData({ ...quizData, questions: newQuestions });
+    if (!quizData) return;
+    const newQuestions = [...quizData.questions];
+    newQuestions[qIndex].options = newQuestions[qIndex].options.filter((_, index) => index !== oIndex);
+    // Also remove from correct answers if it was one
+    newQuestions[qIndex].correctAnswers = (newQuestions[qIndex].correctAnswers || []).filter(ans => ans !== oIndex);
+    setQuizData({ ...quizData, questions: newQuestions });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -152,50 +153,50 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
     if (!firestore) return;
 
     try {
-        const batch = writeBatch(firestore);
+      const batch = writeBatch(firestore);
 
-        const courseRef = doc(firestore, 'courses', course.id);
-        const coursePayload: Course = {
-            ...course,
-            ...formData,
-            id: course.id,
-            quizId: quiz?.id || course.quizId,
-            isStatic: false, 
-        };
-        delete coursePayload.quiz;
-        batch.set(courseRef, coursePayload, { merge: true });
+      const courseRef = doc(firestore, 'courses', course.id);
+      const coursePayload: Course = {
+        ...course,
+        ...formData,
+        id: course.id,
+        quizId: quiz?.id || course.quizId,
+        isStatic: false,
+      };
+      delete coursePayload.quiz;
+      batch.set(courseRef, coursePayload, { merge: true });
 
-        if (quizData) {
-            const quizId = course.quizId || quiz?.id;
-            if (!quizId) throw new Error("ID de quiz manquant");
+      if (quizData) {
+        const quizId = course.quizId || quiz?.id;
+        if (!quizId) throw new Error("ID de quiz manquant");
 
-            const quizRef = doc(firestore, 'courses', course.id, 'quizzes', quizId);
-            batch.set(quizRef, {...quizData, type: quizType}, { merge: true });
-        }
-        
-        await batch.commit();
+        const quizRef = doc(firestore, 'courses', course.id, 'quizzes', quizId);
+        batch.set(quizRef, { ...quizData, type: quizType }, { merge: true });
+      }
 
-        toast({
-            title: 'Cours mis à jour',
-            description: 'Les modifications ont été enregistrées avec succès.',
-        });
+      await batch.commit();
 
-        onFinished();
+      toast({
+        title: 'Cours mis à jour',
+        description: 'Les modifications ont été enregistrées avec succès.',
+      });
 
-        if (isStatic) {
-            router.refresh(); 
-        }
+      onFinished();
+
+      if (isStatic) {
+        router.refresh();
+      }
 
     } catch (error) {
-        console.error("Error updating course:", error);
-        toast({
-            title: 'Erreur',
-            description: "Une erreur s'est produite lors de la mise à jour.",
-            variant: "destructive"
-        });
+      console.error("Error updating course:", error);
+      toast({
+        title: 'Erreur',
+        description: "Une erreur s'est produite lors de la mise à jour.",
+        variant: "destructive"
+      });
     }
   };
-  
+
   const formId = useId();
 
   return (
@@ -213,19 +214,19 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
             <Label htmlFor="title">Titre du cours</Label>
             <Input id="title" name="title" value={formData.title} onChange={handleCourseChange} />
           </div>
-           <div className="space-y-2">
+          <div className="space-y-2">
             <Label htmlFor="category">Catégorie</Label>
             <Select value={formData.category} onValueChange={(value) => handleSelectChange('category', value)}>
-                <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une catégorie" />
-                </SelectTrigger>
-                <SelectContent>
-                    {courseCategories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                            {cat}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                {courseCategories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
@@ -253,86 +254,85 @@ export function EditCourseForm({ course, quiz, isStatic, onFinished }: EditCours
 
       {quizData && (
         <Card>
-            <CardHeader>
-                <CardTitle>Modifier le Quiz</CardTitle>
-                <CardDescription>Modifiez les questions, les options et les réponses correctes pour ce quiz.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                 <div className="space-y-2">
-                    <Label htmlFor="quizType">Type de test</Label>
-                    <Select value={quizType} onValueChange={setQuizType}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner un type de test" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {quizTypes.map((type) => (
-                                <SelectItem key={type} value={type}>
-                                    {type}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="quizTitle">Titre du Quiz</Label>
-                    <Input id="quizTitle" value={quizData.title} onChange={handleQuizTitleChange} />
-                </div>
-                {quizData.questions.map((question, qIndex) => (
-                    <div key={`${formId}-q-${qIndex}`} className="space-y-4 border p-4 rounded-lg bg-muted/20 relative">
-                        <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => removeQuestion(qIndex)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-
-                        <div className="space-y-2">
-                            <Label htmlFor={`q-text-${qIndex}`}>Question {qIndex + 1}</Label>
-                            <Textarea id={`q-text-${qIndex}`} value={question.text} onChange={(e) => handleQuestionChange(qIndex, e.target.value)} />
-                        </div>
-                        
-                        <div className="space-y-2">
-                            <Label>Options et Réponses Correctes</Label>
-                            {question.options.map((option, oIndex) => (
-                                <div key={`${formId}-q-${qIndex}-o-${oIndex}`} className="flex items-center gap-2">
-                                    <Checkbox 
-                                        id={`q-${qIndex}-correct-${oIndex}`}
-                                        checked={(question.correctAnswers || []).includes(oIndex)}
-                                        onCheckedChange={(checked) => handleCorrectAnswerChange(qIndex, oIndex, checked as boolean)}
-                                    />
-                                    <Input 
-                                        value={option}
-                                        onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
-                                        className="flex-grow"
-                                    />
-                                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeOption(qIndex, oIndex)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))}
-                             <Button type="button" variant="outline" size="sm" onClick={() => addOption(qIndex)}>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Ajouter une option
-                            </Button>
-                        </div>
-                    </div>
-                ))}
-
-                <Button type="button" variant="secondary" className="w-full" onClick={addQuestion}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Ajouter une question au Quiz
+          <CardHeader>
+            <CardTitle>Modifier le Quiz</CardTitle>
+            <CardDescription>Modifiez les questions, les options et les réponses correctes pour ce quiz.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="quizType">Type de test</Label>
+              <Select value={quizType} onValueChange={setQuizType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un type de test" />
+                </SelectTrigger>
+                <SelectContent>
+                  {quizTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="quizTitle">Titre du Quiz</Label>
+              <Input id="quizTitle" value={quizData.title} onChange={handleQuizTitleChange} />
+            </div>
+            {quizData.questions.map((question, qIndex) => (
+              <div key={`${formId}-q-${qIndex}`} className="space-y-4 border p-4 rounded-lg bg-muted/20 relative">
+                <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => removeQuestion(qIndex)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
-            </CardContent>
+
+                <div className="space-y-2">
+                  <Label htmlFor={`q-text-${qIndex}`}>Question {qIndex + 1}</Label>
+                  <Textarea id={`q-text-${qIndex}`} value={question.text} onChange={(e) => handleQuestionChange(qIndex, e.target.value)} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Options et Réponses Correctes</Label>
+                  {question.options.map((option, oIndex) => (
+                    <div key={`${formId}-q-${qIndex}-o-${oIndex}`} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`q-${qIndex}-correct-${oIndex}`}
+                        checked={(question.correctAnswers || []).includes(oIndex)}
+                        onCheckedChange={(checked) => handleCorrectAnswerChange(qIndex, oIndex, checked as boolean)}
+                      />
+                      <Input
+                        value={option}
+                        onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
+                        className="flex-grow"
+                      />
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeOption(qIndex, oIndex)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" size="sm" onClick={() => addOption(qIndex)}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Ajouter une option
+                  </Button>
+                </div>
+              </div>
+            ))}
+
+            <Button type="button" variant="secondary" className="w-full" onClick={addQuestion}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Ajouter une question au Quiz
+            </Button>
+          </CardContent>
         </Card>
       )}
 
-       <Card>
-            <CardFooter className="gap-2 justify-end p-6">
-                <Button type="button" variant="outline" onClick={onFinished}>
-                    Annuler
-                </Button>
-                <Button type="submit">Enregistrer Toutes les Modifications</Button>
-            </CardFooter>
+      <Card>
+        <CardFooter className="gap-2 justify-end p-6">
+          <Button type="button" variant="outline" onClick={onFinished}>
+            Annuler
+          </Button>
+          <Button type="submit">Enregistrer Toutes les Modifications</Button>
+        </CardFooter>
       </Card>
     </form>
   );
 }
 
-    
