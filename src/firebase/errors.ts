@@ -77,16 +77,21 @@ function buildAuthObject(currentUser: User | null): FirebaseAuthObject | null {
 function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   let authObject: FirebaseAuthObject | null = null;
   try {
-    // Safely attempt to get the current user.
-    const firebaseAuth = getAuth();
-    const currentUser = firebaseAuth.currentUser;
-    if (currentUser) {
-      authObject = buildAuthObject(currentUser);
+    // Safely attempt to get the current user. 
+    // We check if an app exists first to avoid "No Firebase App '[DEFAULT]' has been created"
+    const { getApps, getApp } = require('firebase/app');
+    if (getApps().length > 0) {
+      const firebaseAuth = getAuth(getApp());
+      const currentUser = firebaseAuth.currentUser;
+      if (currentUser) {
+        authObject = buildAuthObject(currentUser);
+      }
     }
-  } catch {
-    // This will catch errors if the Firebase app is not yet initialized.
-    // In this case, we'll proceed without auth information.
+  } catch (err: any) {
+    // This will catch errors if the Firebase app is not yet initialized or if getAuth fails
+    console.warn('[FirestorePermissionError] Could not build auth context:', err.message);
   }
+
 
   return {
     auth: authObject,

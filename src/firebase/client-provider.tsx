@@ -2,7 +2,7 @@
 
 import React, { useMemo, type ReactNode } from 'react';
 import { FirebaseProvider } from '@/firebase/provider';
-import { initializeFirebase } from '@/firebase/init';
+import { initializeFirebase } from './init';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseClientProviderProps {
@@ -13,8 +13,11 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
   const firebaseServices = useMemo(() => {
     try {
       return initializeFirebase();
-    } catch (error) {
-      console.error("Critical error during Firebase initialization:", error);
+    } catch (error: any) {
+      console.error("[Firebase Provider] Critical error during Firebase initialization:", error);
+      if (error.stack) {
+        console.error("[Firebase Provider] Error stack:", error.stack);
+      }
       // Return nulls so the provider can handle the "services not available" state
       return { firebaseApp: null, auth: null, firestore: null };
     }
