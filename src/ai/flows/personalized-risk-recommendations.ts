@@ -83,8 +83,8 @@ const personalizedRiskRecommendationsFlow = ai.defineFlow(
     }
 
     try {
-      if (!process.env.GOOGLE_GENAI_API_KEY) {
-        console.error('[AI Flow] GOOGLE_GENAI_API_KEY is missing');
+      if (!process.env.GROQ_API_KEY) {
+        console.error('[AI Flow] GROQ_API_KEY is missing');
         return { recommendations: [] }; // Fallback to empty instead of crashing
       }
       const { output } = await prompt(input);
