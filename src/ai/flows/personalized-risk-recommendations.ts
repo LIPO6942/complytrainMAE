@@ -83,6 +83,10 @@ const personalizedRiskRecommendationsFlow = ai.defineFlow(
     }
 
     try {
+      if (!process.env.GOOGLE_GENAI_API_KEY) {
+        console.error('[AI Flow] GOOGLE_GENAI_API_KEY is missing');
+        return { recommendations: [] }; // Fallback to empty instead of crashing
+      }
       const { output } = await prompt(input);
       if (!output) {
         throw new Error('AI output is null or undefined');
@@ -90,8 +94,8 @@ const personalizedRiskRecommendationsFlow = ai.defineFlow(
       return output;
     } catch (error: any) {
       console.error('[AI Flow] Error in personalizedRiskRecommendationsFlow:', error);
-      // Re-throw with more context to help diagnose environment issues
-      throw new Error(`Failed to generate AI recommendations: ${error.message}. Please check if GOOGLE_GENAI_API_KEY is configured.`);
+      // Return empty instead of throwing to avoid 500 on the page if AI fails
+      return { recommendations: [] };
     }
   }
 );
