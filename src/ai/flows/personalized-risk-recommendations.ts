@@ -8,8 +8,8 @@
  * - PersonalizedRiskRecommendationsOutput - The return type for the personalizedRiskRecommendations function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const RecommendationSchema = z.object({
   courseId: z.string().describe("L'ID unique du cours recommandé."),
@@ -51,8 +51,8 @@ export async function personalizedRiskRecommendations(
 
 const prompt = ai.definePrompt({
   name: 'personalizedRiskRecommendationsPrompt',
-  input: {schema: PersonalizedRiskRecommendationsInputSchema},
-  output: {schema: PersonalizedRiskRecommendationsOutputSchema},
+  input: { schema: PersonalizedRiskRecommendationsInputSchema },
+  output: { schema: PersonalizedRiskRecommendationsOutputSchema },
   prompt: `Vous êtes un tuteur IA en conformité. Votre rôle est de fournir des recommandations de cours personnalisées pour combler les faiblesses spécifiques d'un apprenant.
 
 Profil de risque de l'apprenant (en français) :
@@ -81,7 +81,18 @@ const personalizedRiskRecommendationsFlow = ai.defineFlow(
     if (!input.courses || input.courses.length === 0) {
       return { recommendations: [] };
     }
-    const {output} = await prompt(input);
-    return output!;
+
+    try {
+      const { output } = await prompt(input);
+      if (!output) {
+        throw new Error('AI output is null or undefined');
+      }
+      return output;
+    } catch (error: any) {
+      console.error('[AI Flow] Error in personalizedRiskRecommendationsFlow:', error);
+      // Re-throw with more context to help diagnose environment issues
+      throw new Error(`Failed to generate AI recommendations: ${error.message}. Please check if GOOGLE_GENAI_API_KEY is configured.`);
+    }
   }
 );
+
