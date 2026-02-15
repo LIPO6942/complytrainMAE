@@ -96,75 +96,7 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     }
   }, [quizId, userProfile, showResults]); // Added showResults to dependencies
 
-  if (isQuizLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-        </CardContent>
-      </Card>
-    );
-  }
 
-  if (isLocked) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Quiz Verrouillé</CardTitle>
-          <CardDescription>Testez vos connaissances sur ce module.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="relative flex flex-col items-center justify-center p-8 text-center bg-muted/30 rounded-lg">
-            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 rounded-lg"></div>
-            <div className="relative z-20 flex flex-col items-center">
-              <Lock className="w-12 h-12 text-primary mb-4" />
-              <h3 className="text-xl font-semibold">Quiz Verrouillé</h3>
-              <p className="text-muted-foreground mt-2 max-w-xs">
-                Veuillez cocher la case de confirmation après avoir étudié le contenu du cours pour déverrouiller ce quiz.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const isAdmin = userProfile?.role === 'admin';
-  if (!quiz && isAdmin && !isStatic) {
-    return (
-      <Card className="text-center">
-        <CardHeader>
-          <CardTitle>Aucun quiz trouvé</CardTitle>
-          <CardDescription>Ce cours n'a pas encore de quiz. Vous pouvez en créer un dans l'écran de modification.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-            <ShieldQuestion className="w-12 h-12" />
-            <p>Cliquez sur "Modifier" en haut de la page pour ajouter un quiz.</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!quiz) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Quiz</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">Aucun quiz disponible pour ce cours.</p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   const renderResultHeader = (score: number, newBadge: boolean) => {
     if (score >= 60) {
@@ -333,6 +265,76 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
 
     return () => clearInterval(timer);
   }, [currentQuestionIndex, showResults, isLocked, quiz, handleSubmit]);
+
+  if (isQuizLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-8 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isLocked) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Quiz Verrouillé</CardTitle>
+          <CardDescription>Testez vos connaissances sur ce module.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="relative flex flex-col items-center justify-center p-8 text-center bg-muted/30 rounded-lg">
+            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 rounded-lg"></div>
+            <div className="relative z-20 flex flex-col items-center">
+              <Lock className="w-12 h-12 text-primary mb-4" />
+              <h3 className="text-xl font-semibold">Quiz Verrouillé</h3>
+              <p className="text-muted-foreground mt-2 max-w-xs">
+                Veuillez cocher la case de confirmation après avoir étudié le contenu du cours pour déverrouiller ce quiz.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const isAdmin = userProfile?.role === 'admin';
+  if (!quiz && isAdmin && !isStatic) {
+    return (
+      <Card className="text-center">
+        <CardHeader>
+          <CardTitle>Aucun quiz trouvé</CardTitle>
+          <CardDescription>Ce cours n'a pas encore de quiz. Vous pouvez en créer un dans l'écran de modification.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+            <ShieldQuestion className="w-12 h-12" />
+            <p>Cliquez sur "Modifier" en haut de la page pour ajouter un quiz.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!quiz) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Quiz</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">Aucun quiz disponible pour ce cours.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const getCorrectAnswersText = (question: Question) => {
     if (!question.correctAnswers || question.correctAnswers.length === 0) {
