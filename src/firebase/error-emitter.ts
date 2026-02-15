@@ -6,7 +6,7 @@
  */
 
 // Export a dummy object to satisfy any remaining references
-export var errorEmitter = {
+export const errorEmitter = {
   on: () => { },
   off: () => { },
   emit: () => { },

@@ -1,7 +1,2 @@
-'use client';
-
-/**
- * Re-export the standalone error class to maintain compatibility
- * while breaking the circular dependency chains.
- */
-export { FirestorePermissionError } from './firestore-permission-error';
+// This file is intentionally empty to prevent circular dependencies.
+// export { FirestorePermissionError } from './firestore-permission-error';
