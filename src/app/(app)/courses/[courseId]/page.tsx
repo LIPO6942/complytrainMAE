@@ -200,7 +200,8 @@ export default function CourseDetailPage() {
   const hasContent = currentCourse && (currentCourse.videoUrl || currentCourse.pdfUrl || currentCourse.markdownContent);
 
   const isQuizLocked = hasContent && !isContentReviewed && !isAdmin;
-  const isContentLockedForUser = isContentReviewed && !isAdmin && !hasPassedQuiz;
+  // const isContentLockedForUser = isContentReviewed && !isAdmin && !hasPassedQuiz;
+  const isContentLockedForUser = false; // Keep content visible (Open Book)
 
   if (isLoading) {
     return (
