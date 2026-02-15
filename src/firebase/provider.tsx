@@ -6,7 +6,7 @@ import { FirebaseApp } from 'firebase/app';
 import { Firestore, doc, onSnapshot } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 // import { errorEmitter } from './error-emitter';
-import { FirestorePermissionError } from './errors';
+import { FirestorePermissionError } from './firestore-permission-error';
 
 // Define a type for the user profile data from Firestore
 interface UserProfile {

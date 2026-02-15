@@ -9,7 +9,7 @@ import {
   DocumentSnapshot,
 } from 'firebase/firestore';
 // import { errorEmitter } from '../error-emitter';
-import { FirestorePermissionError } from '../errors';
+import { FirestorePermissionError } from '../firestore-permission-error';
 
 /** Utility type to add an 'id' field to a given type T. */
 type WithId<T> = T & { id: string };
