@@ -8,7 +8,7 @@ import {
   FirestoreError,
   DocumentSnapshot,
 } from 'firebase/firestore';
-import { errorEmitter } from '../error-emitter';
+// import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError } from '../errors';
 
 /** Utility type to add an 'id' field to a given type T. */
@@ -82,7 +82,8 @@ export function useDoc<T = any>(
         setIsLoading(false)
 
         // trigger global error propagation
-        errorEmitter.emit('permission-error', contextualError);
+        // errorEmitter.emit('permission-error', contextualError);
+        console.error('[useDoc] Permission error:', contextualError);
       }
     );
 

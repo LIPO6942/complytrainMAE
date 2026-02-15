@@ -9,7 +9,7 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
-import { errorEmitter } from '../error-emitter';
+// import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError } from '../errors';
 
 /** Utility type to add an 'id' field to a given type T. */
@@ -101,7 +101,8 @@ export function useCollection<T = any>(
         setIsLoading(false)
 
         // trigger global error propagation
-        errorEmitter.emit('permission-error', contextualError);
+        // errorEmitter.emit('permission-error', contextualError);
+        console.error('[useCollection] Permission error:', contextualError);
       }
     );
 
