@@ -240,31 +240,32 @@ export function Quiz({ quiz, isQuizLoading, courseId, quizId: quizIdProp, isLock
     }
   }, [quizId, toast, onQuizSubmit, selectedAnswers, getScore, user, firestore, quiz]);
 
+  // 1. Reset timer when question changes
   useEffect(() => {
-    if (showResults || isLocked || !quiz) {
-      return;
-    }
+    setTimeLeft(TIME_PER_QUESTION);
+  }, [currentQuestionIndex]);
 
-    setTimeLeft(TIME_PER_QUESTION); // Reset timer for new question
+  // 2. Decrement timer
+  useEffect(() => {
+    if (showResults || isLocked || !quiz) return;
 
     const timer = setInterval(() => {
-      setTimeLeft(prevTime => {
-        if (prevTime <= 1) {
-          clearInterval(timer);
-          // Auto-advance to next question or submit
-          if (currentQuestionIndex < quiz.questions.length - 1) {
-            setCurrentQuestionIndex(i => i + 1);
-          } else {
-            handleSubmit();
-          }
-          return 0;
-        }
-        return prevTime - 1;
-      });
+      setTimeLeft(prev => Math.max(0, prev - 1));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [currentQuestionIndex, showResults, isLocked, quiz, handleSubmit]);
+  }, [showResults, isLocked, quiz]);
+
+  // 3. Handle Time Up
+  useEffect(() => {
+    if (timeLeft === 0 && !showResults && !isLocked && quiz) {
+      if (currentQuestionIndex < quiz.questions.length - 1) {
+        setCurrentQuestionIndex(prev => prev + 1);
+      } else {
+        handleSubmit();
+      }
+    }
+  }, [timeLeft, currentQuestionIndex, quiz, handleSubmit, showResults, isLocked]);
 
   if (isQuizLoading) {
     return (
