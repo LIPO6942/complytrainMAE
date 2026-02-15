@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '@/firebase/provider';
 import { useUser } from '@/firebase/auth/use-user';
 // import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { FirestorePermissionError } from '@/firebase/firestore-permission-error';
 import { getSdks } from '@/firebase/init';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
 import { redirect } from 'next/navigation';
