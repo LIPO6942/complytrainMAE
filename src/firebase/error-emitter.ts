@@ -1,43 +1,42 @@
 'use client';
 
-import type { FirestorePermissionError } from './errors';
-
-export interface AppEvents {
-  'permission-error': FirestorePermissionError;
-}
-
-type Callback<T> = (data: T) => void;
-
 /**
- * A strongly-typed pub/sub event emitter.
+ * A ultra-simple, dependency-free event emitter.
+ * Uses var and functional approach to bypass Temporal Dead Zone issues in production builds.
  */
-class Emitter<T extends Record<string, any>> {
-  private events: { [K in keyof T]?: Array<Callback<T[K]>> } = {};
 
-  on<K extends keyof T>(eventName: K, callback: Callback<T[K]>) {
-    if (!this.events[eventName]) {
-      this.events[eventName] = [];
-    }
-    this.events[eventName]?.push(callback);
-  }
+// Function declarations are hoisted
+function createInternalEmitter() {
+  var events: Record<string, Array<(data: any) => void>> = {};
 
-  off<K extends keyof T>(eventName: K, callback: Callback<T[K]>) {
-    if (!this.events[eventName]) {
-      return;
+  return {
+    on: function (eventName: string, callback: (data: any) => void) {
+      if (!events[eventName]) events[eventName] = [];
+      events[eventName].push(callback);
+    },
+    off: function (eventName: string, callback: (data: any) => void) {
+      if (!events[eventName]) return;
+      events[eventName] = events[eventName].filter(function (cb) { return cb !== callback; });
+    },
+    emit: function (eventName: string, data: any) {
+      if (!events[eventName]) return;
+      events[eventName].forEach(function (cb) {
+        try {
+          cb(data);
+        } catch (e) {
+          console.error('[Emitter] Error in callback:', e);
+        }
+      });
     }
-    this.events[eventName] = this.events[eventName]?.filter(cb => cb !== callback);
-  }
-
-  emit<K extends keyof T>(eventName: K, data: T[K]) {
-    if (!this.events[eventName]) {
-      return;
-    }
-    this.events[eventName]?.forEach(callback => callback(data));
-  }
+  };
 }
 
-// Create the singleton instance. 
-// We use a constant that is definitely initialized before any exports are called.
-const internalEmitter = new Emitter<AppEvents>();
+// Global-ish instance
+var _instance = typeof window !== 'undefined' ? (window as any).__ERROR_EMITTER__ : null;
+if (!_instance) {
+  _instance = createInternalEmitter();
+  if (typeof window !== 'undefined') (window as any).__ERROR_EMITTER__ = _instance;
+}
 
-export const errorEmitter = internalEmitter;
+// Export using var to avoid TDZ (Temporal Dead Zone)
+export var errorEmitter = _instance;
