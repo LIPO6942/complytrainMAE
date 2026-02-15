@@ -12,7 +12,7 @@ import { Logo } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '@/firebase/provider';
 import { useUser } from '@/firebase/auth/use-user';
-import { errorEmitter } from '@/firebase/error-emitter';
+// import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { getSdks } from '@/firebase/init';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
@@ -121,12 +121,13 @@ function AuthForm({ isSignUp }: { isSignUp: boolean }) {
                     // This is where we catch Firestore permission errors from the transaction
                     if (transactionError.code === 'permission-denied') {
                         const userRef = doc(db, "users", user.uid);
-                        const permissionError = new FirestorePermissionError({
-                            path: userRef.path, // We assume the error is on user creation
+                        const permissionError = new (FirestorePermissionError as any)({
+                            path: userRef.path,
                             operation: 'create',
-                            requestResourceData: { role: 'user' } // Simplified data for context
+                            requestResourceData: { role: 'user' }
                         });
-                        errorEmitter.emit('permission-error', permissionError);
+                        // errorEmitter.emit('permission-error', permissionError);
+                        console.error('[Login] Permission error:', permissionError);
                         // We throw the original error to stop execution
                         throw transactionError;
                     }
