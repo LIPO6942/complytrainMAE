@@ -38,7 +38,7 @@ export default function CoursesPage() {
     return collection(firestore, 'courses');
   }, [firestore]);
 
-  const { data: dynamicCourses, isLoading } = useCollection(coursesQuery);
+  const { data: dynamicCourses, isLoading, error } = useCollection(coursesQuery);
 
   const allCourses = useMemo(() => {
     const dynamicCourseIds = new Set(dynamicCourses?.map(c => c.id) || []);
@@ -78,6 +78,12 @@ export default function CoursesPage() {
         {isAdmin && <AddCourseDialog />}
       </div>
       {isLoading && <p>Chargement des cours...</p>}
+      {error && (
+        <div className="text-red-500 mb-4 p-4 border border-red-200 rounded-md bg-red-50">
+          <p>Erreur lors du chargement des cours : {(error as Error).message}</p>
+          <p className="text-sm mt-1">Veuillez vérifier votre connexion ou contcater le support.</p>
+        </div>
+      )}
       {!isLoading && allCourses && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {allCourses.map((course) => {

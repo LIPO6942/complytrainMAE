@@ -66,7 +66,7 @@ export default function CourseDetailPage() {
     return doc(firestore, 'courses', courseId);
   }, [firestore, courseId]);
 
-  const { data: courseFromDb, isLoading: isCourseLoading } = useDoc<Course>(courseRef);
+  const { data: courseFromDb, isLoading: isCourseLoading, error: courseError } = useDoc<Course>(courseRef);
 
   // Consolidate quizId logic
   const quizId = useMemo(() => {
@@ -215,6 +215,19 @@ export default function CourseDetailPage() {
         </div>
       </div>
     )
+  }
+
+  if (courseError) {
+    return (
+      <div className="p-8">
+        <div className="text-red-500 mb-4 p-4 border border-red-200 rounded-md bg-red-50">
+          <h2 className="text-lg font-bold">Erreur</h2>
+          <p>Impossible de charger le cours : {(courseError as Error).message}</p>
+          <p className="text-sm mt-1">Si le problème persiste, veuillez contacter le support.</p>
+        </div>
+        <Button onClick={() => router.push('/courses')}>Retour aux cours</Button>
+      </div>
+    );
   }
 
   if (!currentCourse) {
