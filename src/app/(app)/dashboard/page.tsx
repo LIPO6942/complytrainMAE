@@ -8,10 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-// import { AITutor } from './ai-tutor';
+import { AITutor } from './ai-tutor';
 import { EarnedBadges } from './earned-badges';
 import { useUser } from '@/firebase/auth/use-user';
-// import { PersonalizedRecommendations } from './personalized-recommendations';
+import { PersonalizedRecommendations } from './personalized-recommendations';
 import { UserStats } from './user-stats';
 
 export default function DashboardPage() {
@@ -29,11 +29,11 @@ export default function DashboardPage() {
 
       <UserStats />
 
-      {/* <PersonalizedRecommendations /> */}
+      <PersonalizedRecommendations />
 
       <EarnedBadges />
 
-      {/* <AITutor /> */}
+      <AITutor />
     </div>
   );
 }
