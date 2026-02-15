@@ -1,6 +1,7 @@
 'use server';
 
 import { aiComplianceTutor } from '@/ai/flows/ai-compliance-tutor';
+import { personalizedRiskRecommendations, type PersonalizedRiskRecommendationsInput } from '@/ai/flows/personalized-risk-recommendations';
 import { z } from 'zod';
 
 const AskAIComplianceTutorSchema = z.object({
@@ -27,11 +28,29 @@ export async function askAIComplianceTutor(prevState: State, formData: FormData)
       message: 'La validation a échoué. Veuillez vérifier votre saisie.',
     };
   }
-  
+
   try {
     const result = await aiComplianceTutor({ question: validatedFields.data.question });
     return { answer: result.answer, message: "Succès" };
   } catch (error) {
     return { message: 'Une erreur s\'est produite lors de la récupération de la réponse.' };
+  }
+}
+
+// --- Personalized Risk Recommendations ---
+export type { PersonalizedRiskRecommendationsInput };
+export type PersonalizedRiskRecommendationsResult = {
+  recommendations: { courseId: string; title: string }[];
+};
+
+export async function getPersonalizedRecommendations(
+  input: PersonalizedRiskRecommendationsInput
+): Promise<PersonalizedRiskRecommendationsResult> {
+  try {
+    const result = await personalizedRiskRecommendations(input);
+    return result ?? { recommendations: [] };
+  } catch (error) {
+    console.error('[Server Action] Error getting personalized recommendations:', error);
+    return { recommendations: [] };
   }
 }

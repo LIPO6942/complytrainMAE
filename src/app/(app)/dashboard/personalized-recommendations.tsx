@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { personalizedRiskRecommendations, type PersonalizedRiskRecommendationsOutput } from '@/ai/flows/personalized-risk-recommendations';
+import { getPersonalizedRecommendations, type PersonalizedRiskRecommendationsInput, type PersonalizedRiskRecommendationsResult } from '@/app/actions';
 import { BookMarked, Target, AlertTriangle, ArrowRight } from 'lucide-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore } from '@/firebase/provider';
@@ -18,7 +18,7 @@ import { collection } from 'firebase/firestore';
 import { staticCourses, type Course } from '@/lib/quiz-data';
 import { Button } from '@/components/ui/button';
 
-type Recommendation = PersonalizedRiskRecommendationsOutput['recommendations'][0];
+type Recommendation = PersonalizedRiskRecommendationsResult['recommendations'][0];
 
 export function PersonalizedRecommendations() {
   const { userProfile, isUserLoading } = useUser();
@@ -72,7 +72,7 @@ export function PersonalizedRecommendations() {
       const riskProfile = riskProfileParts.join(', ');
 
       try {
-        const result = await personalizedRiskRecommendations({
+        const result = await getPersonalizedRecommendations({
           riskProfile,
           courses: allCourses,
         });
