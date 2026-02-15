@@ -1,7 +1,7 @@
 'use client';
 
-export * from './errors';
 export * from './error-emitter';
+export * from './errors';
 
 export * from './init';
 export * from './provider';
