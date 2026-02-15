@@ -6,7 +6,8 @@ import { FirebaseApp } from 'firebase/app';
 import { Firestore, doc, onSnapshot } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 // import { errorEmitter } from './error-emitter';
-import { FirestorePermissionError } from './firestore-permission-error';
+// import { errorEmitter } from './error-emitter';
+// import { FirestorePermissionError } from './firestore-permission-error';
 
 // Define a type for the user profile data from Firestore
 interface UserProfile {
@@ -154,11 +155,8 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       (error) => {
         // Handle errors, particularly permission errors.
         console.error("FirebaseProvider: Error fetching user profile:", error);
-        const permError = new (FirestorePermissionError as any)({
-          path: userDocRef.path,
-          operation: 'get'
-        });
-        console.error('[FirebaseProvider] Permission error:', permError);
+        // Using standard error logging instead of custom class to avoid circular dependencies
+        console.error('[FirebaseProvider] Permission error:', error);
         setUserAuthState(prevState => ({ ...prevState, userProfile: null }));
       }
     );
